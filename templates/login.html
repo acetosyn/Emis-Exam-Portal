@@ -1,0 +1,216 @@
+{% extends "base.html" %}
+
+{% block title %}Login - EMIS Exam Portal{% endblock %}
+
+{% block header_actions %}
+<div class="flex items-center space-x-4">
+    <span class="text-sm text-gray-600 font-medium">Student Portal</span>
+</div>
+{% endblock %}
+
+{% block content %}
+<!-- Modern hero section with gradient background -->
+<div class="min-h-screen bg-gradient-to-br from-light via-white to-gray-100 flex items-center justify-center py-12 px-4">
+    <div class="max-w-md w-full">
+        <!-- Modern login card with professional styling -->
+        <div class="modern-card fade-in text-center">
+            <!-- Logo and Title -->
+            <div class="mb-8">
+                <div class="w-20 h-20 bg-gradient-to-br from-primary to-primary-dark rounded-2xl flex items-center justify-center mx-auto mb-6">
+                    <span class="text-white font-bold text-3xl">E</span>
+                </div>
+                <h2 class="text-3xl font-bold text-navy mb-2 font-poppins">Welcome Back</h2>
+                <p class="text-gray-600 font-medium">Sign in to access your student portal</p>
+            </div>
+
+            <!-- Modern form with updated styling -->
+            <form method="POST" class="space-y-6 text-left">
+                <div class="form-field">
+                    <label for="username">Username or Student ID</label>
+                    <input 
+                        type="text" 
+                        id="username" 
+                        name="username" 
+                        required 
+                        placeholder="Enter your username"
+                        autocomplete="username"
+                    >
+                </div>
+
+                <div class="form-field">
+                    <label for="password">Password</label>
+                    <div class="relative">
+                        <input 
+                            type="password" 
+                            id="password" 
+                            name="password" 
+                            required 
+                            placeholder="Enter your password"
+                            autocomplete="current-password"
+                            class="pr-12"
+                        >
+                        <button 
+                            type="button" 
+                            id="togglePassword" 
+                            class="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
+                        >
+                            <svg id="eyeIcon" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Updated remember me and forgot password -->
+                <div class="flex items-center justify-between text-sm">
+                    <label class="flex items-center">
+                        <input type="checkbox" id="remember" name="remember" class="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary">
+                        <span class="ml-2 text-gray-700">Remember me</span>
+                    </label>
+                    <a href="#" class="text-primary hover:text-primary-dark font-medium transition-colors">
+                        Forgot password?
+                    </a>
+                </div>
+
+                <!-- Modern login button -->
+                <button 
+                    type="submit" 
+                    id="loginBtn"
+                    class="w-full modern-btn modern-btn-primary text-lg"
+                >
+                    <span id="loginText">Sign In</span>
+                    <div id="loginSpinner" class="loading-spinner hidden"></div>
+                </button>
+            </form>
+
+            <!-- Quick access section -->
+            <div class="mt-8 pt-6 border-t border-gray-200">
+                <p class="text-center text-sm text-gray-600 mb-4 font-medium">Quick Access</p>
+                <div class="grid grid-cols-2 gap-3">
+                    <button 
+                        type="button" 
+                        onclick="quickLogin('student')"
+                        class="modern-btn modern-btn-secondary text-sm py-3"
+                    >
+                        Student Demo
+                    </button>
+                    <button 
+                        type="button" 
+                        onclick="window.location.href='/admin'"
+                        class="modern-btn modern-btn-secondary text-sm py-3"
+                    >
+                        Admin Panel
+                    </button>
+                </div>
+            </div>
+
+            <!-- Updated demo credentials styling -->
+            <div class="mt-6 p-4 bg-blue-50 rounded-xl border border-blue-200">
+                <h4 class="text-sm font-semibold text-blue-900 mb-2">Demo Credentials</h4>
+                <div class="text-xs text-blue-700 space-y-1 font-medium">
+                    <p><strong>Student:</strong> student123 / password123</p>
+                    <p><strong>Admin:</strong> admin / admin123</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Updated footer info -->
+        <div class="text-center mt-8">
+            <p class="text-sm text-gray-500 font-medium">
+                Need help? Contact your system administrator
+            </p>
+            <p class="text-xs text-gray-400 mt-2">
+                Powered by EMIS - Epitome Model Islamic Schools
+            </p>
+        </div>
+    </div>
+</div>
+
+<!-- Modern loading overlay -->
+<div id="loadingOverlay" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 hidden">
+    <div class="bg-white rounded-2xl p-8 flex flex-col items-center space-y-4 scale-in">
+        <div class="loading-spinner w-8 h-8"></div>
+        <span class="text-gray-700 font-medium">Signing you in...</span>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const loginForm = document.querySelector('form');
+    const loginBtn = document.getElementById('loginBtn');
+    const loginText = document.getElementById('loginText');
+    const loginSpinner = document.getElementById('loginSpinner');
+    const loadingOverlay = document.getElementById('loadingOverlay');
+    const togglePassword = document.getElementById('togglePassword');
+    const passwordInput = document.getElementById('password');
+    const eyeIcon = document.getElementById('eyeIcon');
+
+    togglePassword.addEventListener('click', function() {
+        const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+        passwordInput.setAttribute('type', type);
+        
+        if (type === 'text') {
+            eyeIcon.innerHTML = `
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21" />
+            `;
+        } else {
+            eyeIcon.innerHTML = `
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+            `;
+        }
+    });
+
+    loginForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const username = document.getElementById('username').value.trim();
+        const password = document.getElementById('password').value;
+
+        if (!username || !password) {
+            showNotification('Please fill in all fields', 'error');
+            return;
+        }
+
+        // Show loading state
+        loginText.textContent = 'Signing In...';
+        loginSpinner.classList.remove('hidden');
+        loginBtn.disabled = true;
+        loadingOverlay.classList.remove('hidden');
+        
+        // Submit form after delay for UX
+        setTimeout(() => {
+            loginForm.submit();
+        }, 1500);
+    });
+
+    // Auto-focus username field
+    document.getElementById('username').focus();
+});
+
+function quickLogin(role) {
+    const username = role === 'admin' ? 'admin' : 'student123';
+    const password = role === 'admin' ? 'admin123' : 'password123';
+    
+    document.getElementById('username').value = username;
+    document.getElementById('password').value = password;
+    
+    showNotification(`Demo credentials loaded for ${role}`, 'info');
+}
+
+function showNotification(message, type) {
+    const notification = document.createElement('div');
+    notification.className = `notification notification-${type} fixed top-4 right-4 z-50 fade-in`;
+    notification.textContent = message;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.remove();
+    }, 3000);
+}
+</script>
+{% endblock %}

@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}EMIS Exam Portal{% endblock %}</title>
+    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='images/logo-placeholder.svg') }}">
+    
+    <!-- Updated fonts to match modern design -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'primary': '#dc2626',
+                        'primary-dark': '#b91c1c',
+                        'navy': '#0f2b46',
+                        'light': '#f9fafb',
+                        'skyblue': '#38bdf8',
+                        'skyblueDark': '#0284c7'
+                    },
+                    fontFamily: {
+                        'inter': ['Inter', 'sans-serif'],
+                        'poppins': ['Poppins', 'sans-serif']
+                    },
+                    borderRadius: {
+                        'xl': '18px'
+                    },
+                    boxShadow: {
+                        'modern': '0 12px 40px rgba(0, 0, 0, 0.12)',
+                        'hover': '0 12px 28px rgba(0,0,0,0.25)'
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="font-inter bg-light min-h-screen">
+    <!-- Redesigned header with modern styling -->
+    <header class="bg-white shadow-modern border-b border-gray-100">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-20">
+                <div class="flex items-center space-x-4">
+                    <div class="w-12 h-12 bg-gradient-to-br from-primary to-primary-dark rounded-xl flex items-center justify-center">
+                        <span class="text-white font-bold text-xl">E</span>
+                    </div>
+                    <div>
+                        <h1 class="text-2xl font-bold text-navy font-poppins">EMIS</h1>
+                        <p class="text-sm text-gray-600 font-medium">Epitome Model Islamic Schools</p>
+                    </div>
+                </div>
+                {% block header_actions %}{% endblock %}
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-1 min-h-screen">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Updated footer with modern styling -->
+    <footer class="bg-white border-t border-gray-100 mt-auto">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div class="text-center">
+                <p class="text-gray-600 font-medium">&copy; 2025 EMIS - Epitome Model Islamic Schools. All rights reserved.</p>
+                <p class="text-sm text-gray-500 mt-2">Empowering minds through Islamic education</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Base JavaScript -->
+    <script src="{{ url_for('static', filename='js/utils.js') }}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
