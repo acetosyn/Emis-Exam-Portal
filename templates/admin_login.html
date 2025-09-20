@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Login - EMIS Exam Portal{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="login-page bg-admin">
+  <div class="login-card zoom-card">
+    <div class="logo-container">
+      <img src="{{ url_for('static', filename='images/logo.jpg') }}" alt="EMIS Logo" class="logo">
+      <h2 class="school-name">EMIS – Admin Portal</h2>
+    </div>
+
+    <form id="adminLoginForm" method="POST" action="{{ url_for('admin_login') }}" class="login-form">
+      <div class="form-field">
+        <label for="admin-username">Admin Username</label>
+        <input type="text" id="admin-username" name="username" required placeholder="Enter admin username">
+      </div>
+      <div class="form-field">
+        <label for="admin-password">Password</label>
+        <div class="password-wrapper">
+          <input type="password" id="admin-password" name="password" required placeholder="Enter password">
+          <button type="button" class="toggle-password" data-target="admin-password" aria-label="Show/Hide password">👁️</button>
+        </div>
+      </div>
+      <button type="submit" class="login-btn">
+        <span class="btn-text">Login</span>
+        <div class="loading-spinner hidden"></div>
+      </button>
+    </form>
+
+    <p class="footer-text">Powered by EMIS – Epitome Model Islamic Schools</p>
+  </div>
+</div>
+
+<div id="loadingOverlay" class="loading-overlay hidden">
+  <div class="loading-box">
+    <div class="loading-spinner big"></div>
+    <p>Signing you in...</p>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/login.js') }}"></script>
+{% endblock %}
