@@ -19,13 +19,14 @@
 {% endblock %}
 
 {% block content %}
-<!-- Page background (reuses the same classes as login background; style in admin.css) -->
 <div class="dashboard-page bg-admin bg-frost">
   <main class="py-12 px-4 min-h-screen">
     <!-- Welcome -->
     <section class="max-w-7xl mx-auto mb-10 text-center">
-      <h1 class="text-3xl md:text-4xl font-bold text-white drop-shadow mb-2">Welcome, {{ session.username }}</h1>
-      <p class="text-white/90">Manage exams, monitor candidates, and control notifications.</p>
+      <h1 class="text-3xl md:text-4xl font-bold text-white drop-shadow mb-2">
+        Welcome, {{ session.username }}
+      </h1>
+      <p class="text-white/90">Manage exams, upload content, and automate candidate access.</p>
     </section>
 
     <!-- Stats -->
@@ -35,7 +36,6 @@
         <h2 id="totalStudents">0</h2>
       </div>
 
-      <!-- navy variant for variety -->
       <div class="stat-card stat-card--navy zoom-card">
         <p class="text-sm text-white/80">Active Exams</p>
         <h2 id="activeExams" class="text-white">0</h2>
@@ -46,7 +46,6 @@
         <h2 id="pendingResults">0</h2>
       </div>
 
-      <!-- navy variant -->
       <div class="stat-card stat-card--navy zoom-card">
         <p class="text-sm text-white/80">Avg Score</p>
         <h2 id="avgScore" class="text-white">--</h2>
@@ -56,146 +55,142 @@
     <!-- Main Grid -->
     <section class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8">
 
-      <!-- Left Column -->
+      <!-- LEFT: Stepper + Tabs -->
       <div class="lg:col-span-2 space-y-8">
+        <div class="card giant-card">
+          
+          <!-- Stepper -->
+          <ol class="stepper mb-6" id="stepper">
+            <li class="step active cursor-pointer" data-target="#stepA" role="button" tabindex="0">
+              <span class="step-index">A</span>
+              <span class="step-label">Upload & Push to Exam</span>
+            </li>
+            <li class="step cursor-pointer" data-target="#stepB" role="button" tabindex="0">
+              <span class="step-index">B</span>
+              <span class="step-label">Generate Links & Credentials</span>
+            </li>
+            <li class="step cursor-pointer" data-target="#stepC" role="button" tabindex="0">
+              <span class="step-index">C</span>
+              <span class="step-label">Manage Credentials & Results</span>
+            </li>
+          </ol>
 
-        <!-- Generate Candidate Login Link -->
-        <div class="card">
-          <div class="flex items-center justify-between mb-4">
-            <h2 class="text-xl font-semibold text-navy">Generate Candidate Login Link</h2>
+          <!-- Tabs -->
+          <div class="segment-tabs flex flex-wrap gap-2 border-b pb-2 mb-4" id="segmentTabs">
+            <button type="button" class="tab active btn-secondary px-3 py-1.5"
+                    data-parent="#stepA" data-tab="#tab-upload">Upload</button>
+            <button type="button" class="tab btn-secondary px-3 py-1.5"
+                    data-parent="#stepA" data-tab="#tab-push">Push to Exam</button>
+
+            <button type="button" class="tab hidden btn-secondary px-3 py-1.5"
+                    data-parent="#stepB" data-tab="#tab-link">Generate Link</button>
+            <button type="button" class="tab hidden btn-secondary px-3 py-1.5"
+                    data-parent="#stepB" data-tab="#tab-credentials">Generate Credentials</button>
+
+            <button type="button" class="tab hidden btn-secondary px-3 py-1.5"
+                    data-parent="#stepC" data-tab="#tab-manage">Manage Credentials</button>
+            <button type="button" class="tab hidden btn-secondary px-3 py-1.5"
+                    data-parent="#stepC" data-tab="#tab-results">Results</button>
           </div>
 
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-            <div class="md:col-span-2">
-              <label class="form-label">Link</label>
-              <input id="candidateLink" class="form-input" type="text" readonly
-                     placeholder="Click Generate to create a shareable link">
+          <!-- STEP A -->
+          <section id="stepA" class="step-panel active">
+            <!-- Upload -->
+            <div id="tab-upload" class="tab-panel active">
+              <h2 class="panel-title">Upload Document</h2>
+              <p class="panel-subtitle">Accepted: .pdf, .doc, .docx, .xls, .xlsx</p>
+
+              <div id="dropzone" class="dropzone cursor-pointer" tabindex="0" aria-label="Upload document">
+                <input id="fileInput" type="file" class="file-input" accept=".pdf,.doc,.docx,.xls,.xlsx" />
+                <div class="dz-art">
+                  <div class="dz-icon">📄</div>
+                  <div class="dz-text">
+                    <strong>Drag & drop</strong> your document here or <span class="link">browse</span>
+                  </div>
+                  <div class="dz-hint">Max size depends on your browser. Only one file per push.</div>
+                </div>
+              </div>
+
+              <div id="uploadMeta" class="upload-meta hidden">
+                <div class="meta-row"><span class="meta-label">Selected:</span><span id="selectedFileName">—</span></div>
+                <div class="meta-row"><span class="meta-label">Type:</span><span id="selectedFileType">—</span></div>
+                <div class="meta-row"><span class="meta-label">Size:</span><span id="selectedFileSize">—</span></div>
+              </div>
+
+              <div class="flex items-center gap-3 mt-4">
+                <button id="saveDocBtn" type="button" class="btn-primary">Save to Dashboard</button>
+                <button id="clearDocBtn" type="button" class="btn-secondary">Clear</button>
+              </div>
+
+              <hr class="section-divider" />
+
+              <!-- Document History -->
+              <div class="doc-history">
+                <div class="flex items-center justify-between mb-3">
+                  <h3 class="text-lg font-semibold text-navy">Document History</h3>
+                  <div class="flex gap-2">
+                    <input id="docSearch" type="text" class="form-input w-56" placeholder="Search documents..." />
+                    <button id="clearHistoryBtn" class="btn-secondary">Clear History</button>
+                  </div>
+                </div>
+                <div id="docList" class="doc-grid"></div>
+              </div>
             </div>
-            <div class="flex items-end gap-2">
-              <button type="button" class="btn-primary w-full accent-hover" onclick="generateCandidateLink()">
-                Generate
-              </button>
+
+            <!-- Push -->
+            <div id="tab-push" class="tab-panel">
+              <h2 class="panel-title">PUSH to Exam</h2>
+              <p class="panel-subtitle">Convert the selected or uploaded document into a JSON payload.</p>
+              <div class="grid md:grid-cols-2 gap-4">
+                <div>
+                  <label class="form-label">Active Document</label>
+                  <select id="activeDocSelect" class="form-input"></select>
+                </div>
+                <div class="flex items-end">
+                  <button id="pushToExamBtn" class="btn-primary w-full accent-hover">PUSH to Exam</button>
+                </div>
+              </div>
+              <div id="jsonPreviewWrap" class="json-preview hidden mt-4">
+                <div class="flex items-center justify-between mb-2">
+                  <h4 class="text-navy font-semibold">Generated JSON</h4>
+                  <div class="flex gap-2">
+                    <button id="copyJsonBtn" class="btn-secondary">Copy</button>
+                    <button id="downloadJsonBtn" class="btn-secondary">Download JSON</button>
+                  </div>
+                </div>
+                <textarea id="jsonPreview" class="code-area" rows="10" readonly></textarea>
+              </div>
             </div>
-          </div>
+          </section>
 
-          <div class="flex gap-2">
-            <button type="button" class="btn-secondary" onclick="copyCandidateLink()">Copy</button>
-            <button type="button" class="btn-secondary" onclick="openCandidateLink()">Open in New Tab</button>
-          </div>
+          <!-- STEP B -->
+          <section id="stepB" class="step-panel">
+            <div id="tab-link" class="tab-panel"> ... </div>
+            <div id="tab-credentials" class="tab-panel"> ... </div>
+          </section>
 
-          <p class="text-xs text-gray-500 mt-3">
-            Tip: This link opens the candidate login page in a new tab. You can share it with staff taking the exam.
-          </p>
-        </div>
-
-        <!-- Generate Credentials (separate card) -->
-        <div class="card">
-          <div class="flex justify-between items-center mb-6">
-            <h2 class="text-xl font-semibold text-navy">Generate Candidate Credentials</h2>
-            <button onclick="clearAllCredentials()" class="text-sm text-red-600 hover:text-red-800">Clear All</button>
-          </div>
-
-          <form id="credentialForm" class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label class="form-label">Number of Candidates</label>
-              <input type="number" id="studentCount" min="1" max="200" value="5" class="form-input">
-            </div>
-            <div>
-              <label class="form-label">Username Prefix</label>
-              <input type="text" id="usernamePrefix" value="candidate" class="form-input">
-            </div>
-            <div>
-              <label class="form-label">Password Length</label>
-              <select id="passwordLength" class="form-input">
-                <option value="6">6</option>
-                <option value="8" selected>8</option>
-                <option value="10">10</option>
-              </select>
-            </div>
-            <div class="flex items-end">
-              <button type="submit" class="btn-primary w-full accent-hover">Generate</button>
-            </div>
-          </form>
-        </div>
-
-        <!-- Manage Credentials (search + table in its own card) -->
-        <div class="card">
-          <div class="flex items-center justify-between mb-4">
-            <h2 class="text-xl font-semibold text-navy">Manage Credentials</h2>
-            <div class="space-x-2">
-              <button onclick="downloadCredentials()" class="btn-secondary">Download CSV</button>
-              <button onclick="printCredentials()" class="btn-secondary">Print</button>
-            </div>
-          </div>
-
-          <div class="mb-4">
-            <input type="text" id="searchCredentials" placeholder="Search username..." class="form-input">
-          </div>
-
-          <div id="credentialsSection" class="hidden overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200 text-sm">
-              <thead class="bg-gray-100">
-                <tr>
-                  <th class="px-4 py-2 text-left">ID</th>
-                  <th class="px-4 py-2 text-left">Username</th>
-                  <th class="px-4 py-2 text-left">Password</th>
-                  <th class="px-4 py-2 text-left">Status</th>
-                </tr>
-              </thead>
-              <tbody id="credentialsTable" class="bg-white divide-y divide-gray-200"></tbody>
-            </table>
-          </div>
-        </div>
-
-        <!-- Candidate Results -->
-        <div class="card">
-          <div class="flex items-center justify-between mb-4">
-            <h2 class="text-xl font-semibold text-navy">Candidate Results</h2>
-            <div class="space-x-2">
-              <button onclick="downloadResults()" class="btn-secondary">Download CSV</button>
-              <button onclick="printResults()" class="btn-secondary">Print</button>
-            </div>
-          </div>
-
-          <div class="mb-4">
-            <input type="text" id="searchResults" placeholder="Search candidate..." class="form-input">
-          </div>
-
-          <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200 text-sm">
-              <thead class="bg-gray-100">
-                <tr>
-                  <th class="px-4 py-2 text-left">Name</th>
-                  <th class="px-4 py-2 text-left">Score</th>
-                  <th class="px-4 py-2 text-left">Status</th>
-                  <th class="px-4 py-2 text-left">Actions</th>
-                </tr>
-              </thead>
-              <tbody id="resultsTable" class="bg-white divide-y divide-gray-200">
-                <!-- injected by admin.js -->
-              </tbody>
-            </table>
-          </div>
+          <!-- STEP C -->
+          <section id="stepC" class="step-panel">
+            <div id="tab-manage" class="tab-panel"> ... </div>
+            <div id="tab-results" class="tab-panel"> ... </div>
+          </section>
         </div>
       </div>
 
-      <!-- Right Column -->
+      <!-- RIGHT: Quick Actions + Panels -->
       <div class="space-y-8">
-
-        <!-- Quick Actions (navy card variant) -->
         <div class="card card--navy">
           <h3 class="text-lg font-semibold text-white mb-4">Quick Actions</h3>
           <div class="space-y-3">
             <button onclick="window.open('{{ url_for('user_login') }}','_blank')" class="btn-primary w-full accent-hover">
               Open Candidate Login (New Tab)
             </button>
-            <button onclick="notifyDirector()" class="btn-secondary w-full">Notify Director (Latest Results)</button>
-            <button onclick="sendAdmitMails()" class="btn-secondary w-full">Send Admit Emails</button>
-            <button onclick="sendRejectMails()" class="btn-secondary w-full">Send Reject Emails</button>
+            <button onclick="notifyDirector()" class="btn-secondary w-full accent-hover">Notify Director</button>
+            <button onclick="sendAdmitMails()" class="btn-secondary w-full accent-hover">Send Admit Emails</button>
+            <button onclick="sendRejectMails()" class="btn-secondary w-full accent-hover">Send Reject Emails</button>
           </div>
         </div>
 
-        <!-- Live Notifications -->
         <div class="card">
           <h3 class="text-lg font-semibold text-navy mb-4">Live Notifications</h3>
           <div id="notificationsPanel" class="space-y-3 text-sm max-h-64 overflow-y-auto">
@@ -203,7 +198,6 @@
           </div>
         </div>
 
-        <!-- Recent Activity -->
         <div class="card">
           <h3 class="text-lg font-semibold text-navy mb-4">Recent Activity</h3>
           <div id="recentActivity" class="space-y-3 text-sm">
@@ -211,7 +205,6 @@
           </div>
         </div>
 
-        <!-- System Status -->
         <div class="card">
           <h3 class="text-lg font-semibold text-navy mb-4">System Status</h3>
           <ul class="space-y-2 text-sm">
@@ -228,8 +221,26 @@
 <!-- Toast + Overlay -->
 <div class="toast-container"></div>
 <div class="loading-overlay hidden"><div class="loading-spinner"></div></div>
+
+<!-- JSON Modal -->
+<div id="modalRoot" class="modal-root hidden" aria-hidden="true">
+  <div class="modal-card">
+    <div class="modal-head">
+      <h3 class="text-navy font-semibold">Preview</h3>
+      <button id="modalClose" class="modal-close">✕</button>
+    </div>
+    <div class="modal-body">
+      <textarea id="modalTextarea" class="code-area" rows="16" readonly></textarea>
+    </div>
+    <div class="modal-foot">
+      <button id="modalCopy" class="btn-secondary">Copy</button>
+      <button id="modalDownload" class="btn-primary">Download</button>
+    </div>
+  </div>
+</div>
 {% endblock %}
 
 {% block extra_js %}
-<script src="{{ url_for('static', filename='js/admin.js') }}"></script>
+<script src="{{ url_for('static', filename='js/admin1.js') }}"></script>
+<script src="{{ url_for('static', filename='js/admin2.js') }}"></script>
 {% endblock %}
