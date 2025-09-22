@@ -1,4 +1,9 @@
-:root {
+/* ============================
+   Admin Dashboard Styles
+   Scoped to .dashboard-page
+=============================== */
+
+.dashboard-page {
   --primary: #38bdf8;        /* sky blue */
   --primary-dark: #0284c7;   /* darker sky blue */
   --secondary: #0f2b46;      /* navy */
@@ -35,44 +40,44 @@
 }
 
 /* ===== Cards ===== */
-.card {
+.dashboard-page .card {
   background: var(--white);
   border-radius: var(--radius);
   box-shadow: var(--shadow-md);
   padding: 1.25rem;
   transition: var(--transition);
 }
-.card:hover { 
+.dashboard-page .card:hover { 
   transform: translateY(-3px); 
   box-shadow: var(--shadow-lg); 
 }
-.giant-card { padding: 1.5rem; }
-.section-divider {
+.dashboard-page .giant-card { padding: 1.5rem; }
+.dashboard-page .section-divider {
   border: 0; height: 1px; background: var(--border); margin: 1.25rem 0;
 }
-.card--navy { background: var(--secondary); color: #fff; }
+.dashboard-page .card--navy { background: var(--secondary); color: #fff; }
 
 /* 🚫 Disable zoom for upload card */
-.card.no-zoom:hover {
+.dashboard-page .card.no-zoom:hover {
   transform: none !important;
   box-shadow: var(--shadow-md) !important;
 }
 
 /* ===== Stats ===== */
-.stat-card {
+.dashboard-page .stat-card {
   background: #fff;
   border-radius: var(--radius);
   box-shadow: var(--shadow-md);
   padding: 1.25rem;
   text-align: center;
 }
-.stat-card h2 { font-size: 1.8rem; font-weight: 700; }
-.stat-card--navy { background: var(--secondary); color: #fff; }
+.dashboard-page .stat-card h2 { font-size: 1.8rem; font-weight: 700; }
+.dashboard-page .stat-card--navy { background: var(--secondary); color: #fff; }
 
 /* ===== Buttons ===== */
-.btn-primary,
-.btn-secondary,
-.btn-logout {
+.dashboard-page .btn-primary,
+.dashboard-page .btn-secondary,
+.dashboard-page .btn-logout {
   display: inline-block;
   border-radius: var(--radius);
   font-weight: 600;
@@ -81,41 +86,24 @@
   border: none;
   cursor: pointer;
 }
-.btn-primary { background: var(--primary); color: #fff; }
-.btn-primary:hover { background: var(--primary-dark); }
-.btn-secondary { background: #f3f4f6; color: #374151; }
-.btn-secondary:hover { background: #e5e7eb; color: var(--secondary); }
-.btn-logout {
+.dashboard-page .btn-primary { background: var(--primary); color: #fff; }
+.dashboard-page .btn-primary:hover { background: var(--primary-dark); }
+.dashboard-page .btn-secondary { background: #f3f4f6; color: #374151; }
+.dashboard-page .btn-secondary:hover { background: #e5e7eb; color: var(--secondary); }
+.dashboard-page .btn-logout {
   background: var(--danger);
   color: #fff;
   padding: 0.9rem 1.5rem;
   font-size: 1rem;
 }
-.btn-logout:hover { background: var(--accent); }
-
-/* ===== Forms ===== */
-.form-label {
-  font-size: 0.9rem; font-weight: 600; color: #374151;
-  margin-bottom: 0.3rem; display: block;
-}
-.form-input {
-  width: 100%; padding: 0.7rem 1rem;
-  border: 1px solid #d1d5db; border-radius: var(--radius);
-  font-size: 0.95rem; background: #fff;
-  transition: border-color 0.2s, box-shadow 0.2s;
-}
-.form-input:focus {
-  outline: none;
-  border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(56,189,248,0.3);
-}
+.dashboard-page .btn-logout:hover { background: var(--accent); }
 
 /* ===== Stepper & Tabs ===== */
-.stepper {
+.dashboard-page .stepper {
   display: grid; grid-template-columns: repeat(3, 1fr);
   gap: 0.75rem;
 }
-.step {
+.dashboard-page .step {
   background: var(--soft);
   border: 1px solid var(--border);
   border-radius: 12px;
@@ -123,44 +111,72 @@
   display: flex; align-items: center; gap: 0.6rem;
   cursor: pointer; transition: var(--transition);
 }
-.step.active { background: #e0f2fe; border-color: #bae6fd; }
-.step-index {
+.dashboard-page .step.active { background: #e0f2fe; border-color: #bae6fd; }
+.dashboard-page .step-index {
   width: 28px; height: 28px; border-radius: 50%;
   background: var(--primary); color: #fff;
   display: inline-flex; align-items: center; justify-content: center;
   font-weight: 700;
 }
-.step-label { color: var(--secondary); font-weight: 600; font-size: 0.95rem; }
+.dashboard-page .step-label { color: var(--secondary); font-weight: 600; font-size: 0.95rem; }
 
-.segment-tabs {
+.dashboard-page .segment-tabs {
   margin: 1rem 0; background: #f3f4f6;
   border-radius: 12px; padding: 0.35rem;
   display: flex; flex-wrap: wrap; gap: 0.35rem;
 }
-.segment-tabs .tab {
+.dashboard-page .segment-tabs .tab {
   background: #f9fafb;
   border: 1px solid var(--border);
   padding: 0.55rem 1rem;
   border-radius: 10px; font-weight: 600;
   color: #374151; cursor: pointer;
 }
-.segment-tabs .tab.active { background: var(--primary); color: #fff; }
+.dashboard-page .segment-tabs .tab.active { background: var(--primary); color: #fff; }
 
 .step-panel, .tab-panel { display: none; }
 .step-panel.active, .tab-panel.active { display: block; }
 
 /* ===== Doc History ===== */
-.doc-grid {
-  display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  gap: 12px;
-}
-.doc-card {
+.dashboard-page .doc-card {
   border: 1px solid var(--border);
   border-radius: 12px;
   padding: 0.9rem; background: #fff;
   transition: var(--transition);
 }
-.doc-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
-.doc-title { font-weight: 700; color: var(--secondary); }
-.doc-meta { font-size: 0.85rem; color: var(--muted); }
-.doc-actions { display: flex; gap: 8px; margin-top: 10px; }
+.dashboard-page .doc-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+.dashboard-page .doc-title { font-weight: 700; color: var(--secondary); }
+.dashboard-page .doc-meta { font-size: 0.85rem; color: var(--muted); }
+.dashboard-page .doc-actions { display: flex; gap: 8px; margin-top: 10px; }
+
+/* === NEW: History Controls === */
+.dashboard-page .doc-history-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  align-items: center;
+}
+.dashboard-page .doc-history-controls input {
+  flex: 1 1 240px;
+}
+.dashboard-page .doc-history-controls button {
+  flex-shrink: 0;
+}
+
+
+/* Document History Controls */
+.doc-history-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.doc-history-controls input {
+  flex: 1 1 auto;
+  min-width: 200px;
+}
+
+.doc-history-controls button {
+  flex-shrink: 0;
+}
