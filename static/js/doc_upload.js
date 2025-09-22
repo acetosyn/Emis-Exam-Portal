@@ -38,6 +38,8 @@
       fileChosen.classList.add("hidden");
       previewCard.classList.add("hidden");
       clearBtn.classList.add("hidden");
+      previewFrame.src = "";
+      previewFrame.classList.add("hidden");
       if (uploadSummary) uploadSummary.innerHTML = "";
       console.log("[doc_upload] Cleared file selection");
     });
@@ -53,13 +55,17 @@
         fileChosen.textContent = `Selected: ${fileName}`;
         fileChosen.classList.remove("hidden");
 
-        // Show preview card
+        // Show preview card info
         previewFileName.textContent = fileName;
         previewFileType.textContent = `Type: ${fileType}`;
         previewCard.classList.remove("hidden");
         clearBtn.classList.remove("hidden");
 
-        // If PDF, preview in iframe
+        // Reset preview frame
+        previewFrame.src = "";
+        previewFrame.classList.add("hidden");
+
+        // PDF inline preview
         if (file.type === "application/pdf") {
           const reader = new FileReader();
           reader.onload = (e) => {
@@ -67,35 +73,50 @@
             previewFrame.classList.remove("hidden");
           };
           reader.readAsDataURL(file);
+        }
+
+        // Build Upload Summary card
+        let summaryHTML = `
+          <div class="border rounded-lg p-3 bg-gray-50 shadow-sm">
+            <p class="font-medium text-navy">${fileName}</p>
+            <p class="text-xs text-gray-500">${fileType}</p>
+        `;
+
+        if (file.type === "application/pdf") {
+          summaryHTML += `<iframe class="w-full h-32 border rounded mt-2" src="${URL.createObjectURL(
+            file
+          )}"></iframe>`;
+        } else if (
+          file.type ===
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
+          fileName.endsWith(".doc") ||
+          fileName.endsWith(".docx")
+        ) {
+          summaryHTML += `<div class="mt-2 text-sm text-blue-600">📄 Word document selected</div>`;
+        } else if (
+          file.type ===
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ||
+          fileName.endsWith(".xls") ||
+          fileName.endsWith(".xlsx")
+        ) {
+          summaryHTML += `<div class="mt-2 text-sm text-green-600">📊 Excel spreadsheet selected</div>`;
         } else {
-          previewFrame.src = "";
-          previewFrame.classList.add("hidden");
+          summaryHTML += `<div class="mt-2 text-sm text-gray-600">📎 Preview not available</div>`;
         }
 
-        // Also show preview in Upload Summary (right column)
-        if (uploadSummary) {
-          uploadSummary.innerHTML = `
-            <div class="border rounded-lg p-3 bg-gray-50 shadow-sm">
-              <p class="font-medium text-navy">${fileName}</p>
-              <p class="text-xs text-gray-500">${fileType}</p>
-              ${
-                file.type === "application/pdf"
-                  ? `<iframe class="w-full h-32 border rounded mt-2" src="${URL.createObjectURL(
-                      file
-                    )}"></iframe>`
-                  : ""
-              }
-            </div>
-          `;
-        }
+        summaryHTML += `</div>`;
 
-        console.log("[doc_upload] File selected:", fileName);
+        if (uploadSummary) uploadSummary.innerHTML = summaryHTML;
+
+        console.log("[doc_upload] File selected:", fileName, fileType);
       } else {
         // No file selected
         fileChosen.textContent = "";
         fileChosen.classList.add("hidden");
         previewCard.classList.add("hidden");
         clearBtn.classList.add("hidden");
+        previewFrame.src = "";
+        previewFrame.classList.add("hidden");
         if (uploadSummary) uploadSummary.innerHTML = "";
       }
     });
