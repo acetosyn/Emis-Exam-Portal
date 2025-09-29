@@ -1,5 +1,5 @@
 /* admin1.js — CORE (frontend only)
-   Handles stepper and tabs only (upload logic removed).
+   Handles sidebar toggle, layout, stepper, and tabs
 */
 
 (() => {
@@ -16,10 +16,33 @@
 
   const qsa = (sel, root = document) => Array.from(root.querySelectorAll(sel));
 
+  // ---------------- Sidebar Toggle ----------------
+  function initSidebarToggle() {
+    const sidebar = document.getElementById("adminSidebar");
+    const toggleBtn = document.getElementById("sidebarToggle");
+
+    if (!sidebar || !toggleBtn) {
+      log("Sidebar or toggle button not found");
+      return;
+    }
+
+    toggleBtn.addEventListener("click", () => {
+      sidebar.classList.toggle("collapsed");
+      log("Sidebar toggled:", sidebar.classList.contains("collapsed"));
+    });
+
+    log("Sidebar toggle initialized");
+  }
+
   // ---------------- Stepper + Tabs ----------------
   function initStepperAndTabs() {
     const steps = qsa("#stepper .step");
     const allTabs = qsa("#segmentTabs .tab");
+
+    if (!steps.length && !allTabs.length) {
+      log("No stepper/tabs found, skipping init");
+      return;
+    }
 
     function showStep(stepSel) {
       steps.forEach((s) =>
@@ -58,18 +81,22 @@
     }
 
     steps.forEach((step) =>
-      step.addEventListener("click", () => showStep(step.getAttribute("data-target")))
+      step.addEventListener("click", () =>
+        showStep(step.getAttribute("data-target"))
+      )
     );
     allTabs.forEach((btn) =>
       btn.addEventListener("click", () => activateTab(btn))
     );
 
     showStep("#stepA"); // default
+    log("Stepper + Tabs initialized");
   }
 
   // ---------------- Init ----------------
   ready(() => {
-    log("Core initialized (frontend only)");
+    log("Admin core initialized");
+    initSidebarToggle();
     initStepperAndTabs();
   });
 })();

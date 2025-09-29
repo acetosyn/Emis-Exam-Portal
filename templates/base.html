@@ -5,10 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{% block title %}EMIS Exam Portal{% endblock %}</title>
   <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/logo.jpg') }}">
-  
+
   <!-- Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-  
+
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
@@ -37,11 +37,12 @@
       }
     }
   </script>
-  
-  <!-- Base CSS -->
+
+  <!-- Global CSS -->
   <link rel="stylesheet" href="{{ url_for('static', filename='css/base_general.css') }}">
-   <link rel="stylesheet" href="{{ url_for('static', filename='css/base_component.css') }}">
-      <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/base_component.css') }}">
+
+  <!-- Page-specific CSS -->
   {% block styles %}{% endblock %}
 </head>
 <body class="font-inter bg-light min-h-screen">
@@ -49,15 +50,15 @@
   <header class="bg-white shadow-modern border-b border-gray-100">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="flex justify-between items-center h-20">
-       <div class="flex items-center space-x-4">
-  <img src="{{ url_for('static', filename='images/logo.jpg') }}" 
-       alt="EMIS Logo" 
-       class="w-12 h-12 object-contain rounded-lg shadow" />
-  <div>
-    <h1 class="text-2xl font-bold text-navy font-poppins">EMIS</h1>
-    <p class="text-sm text-gray-600 font-medium">Epitome Model Islamic Schools</p>
-  </div>
-</div>
+        <div class="flex items-center space-x-4">
+          <img src="{{ url_for('static', filename='images/logo.jpg') }}" 
+               alt="EMIS Logo" 
+               class="w-12 h-12 object-contain rounded-lg shadow" />
+          <div>
+            <h1 class="text-2xl font-bold text-navy font-poppins">EMIS</h1>
+            <p class="text-sm text-gray-600 font-medium">Epitome Model Islamic Schools</p>
+          </div>
+        </div>
 
         {% block header_actions %}{% endblock %}
       </div>
@@ -77,11 +78,7 @@
     </div>
   </footer>
 
-  <!-- JS -->
-  {% block scripts %}
-  <script src="{{ url_for('static', filename='js/doc_upload.js') }}"></script>
-  <script src="{{ url_for('static', filename='js/admin1.js') }}"></script>
-  <script src="{{ url_for('static', filename='js/admin2.js') }}"></script>
-  {% endblock scripts %}
+  <!-- Page-specific JS -->
+  {% block scripts %}{% endblock %}
 </body>
 </html>

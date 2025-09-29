@@ -11,12 +11,11 @@
       ? cb()
       : document.addEventListener("DOMContentLoaded", cb);
 
+  // ---------------- Popup UI ----------------
   function showCredentials(creds) {
-    // Create overlay
     const overlay = document.createElement("div");
     overlay.className = "cred-overlay";
 
-    // Create modal card
     const modal = document.createElement("div");
     modal.className = "cred-modal scale-in";
 
@@ -85,25 +84,61 @@
     });
   }
 
-  function initGenerateHandler() {
-    const btn = document.getElementById("autoCredsBtn");
-    if (!btn) return;
+  // Expose globally so admin2.js can reuse it
+  window.showCredentials = showCredentials;
 
-    btn.addEventListener("click", async () => {
+  // ---------------- API Call ----------------
+  async function requestCredentials(count = 1) {
+    try {
+      console.log(`▶️ Requesting ${count} credential(s)...`);
+
       const response = await fetch("/generate_credentials", {
         method: "POST",
-        body: new URLSearchParams({ count: 1 }),
+        body: new URLSearchParams({ count }),
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
       });
-      const creds = await response.json();
-      if (creds && creds.length > 0) {
-        showCredentials(creds);
+
+      console.log("📡 Response status:", response.status);
+
+      const data = await response.json();
+      console.log("📦 Response JSON:", data);
+
+      if (response.ok && Array.isArray(data) && data.length > 0) {
+        showCredentials(data);
+      } else {
+        console.error("❌ Failed to generate credentials:", data);
+        alert(data.error || "Failed to generate credentials. See console.");
       }
-    });
+    } catch (err) {
+      console.error("🚨 Network or script error:", err);
+      alert("Network error while generating credentials. See console.");
+    }
   }
 
-  // Init
+  // ---------------- Init Handlers ----------------
+  function initGenerateHandlers() {
+    const autoBtn = document.getElementById("autoCredsBtn");
+    const genAllBtn = document.getElementById("generateAllBtn");
+    const countInput = document.getElementById("studentCount");
+
+    if (autoBtn) {
+      autoBtn.addEventListener("click", () => {
+        const count = parseInt(countInput?.value || "1", 10);
+        requestCredentials(count);
+      });
+    }
+
+    if (genAllBtn) {
+      genAllBtn.addEventListener("click", () => {
+        const count = parseInt(countInput?.value || "1", 10);
+        requestCredentials(count);
+        // 🔗 TODO: hook in link generation after credentials
+      });
+    }
+  }
+
+  // ---------------- Init ----------------
   ready(() => {
-    initGenerateHandler();
+    initGenerateHandlers();
   });
 })();
