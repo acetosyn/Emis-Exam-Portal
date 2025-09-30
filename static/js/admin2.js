@@ -1,7 +1,4 @@
-/* admin2.js — UI placeholders only
-   All backend/logic removed.
-   Just keeps Quick Actions + minimal tab structure.
-*/
+/* admin2.js — UI placeholders and test generate link */
 
 (() => {
   if (window.__ADMIN_FEATURES_INIT__) return;
@@ -25,7 +22,41 @@
   window.sendAdmitMails = sendAdmitMails;
   window.sendRejectMails = sendRejectMails;
 
+  // ---------------- Test Generate Link ----------------
   ready(() => {
-    console.log("[admin2] initialized (frontend only)");
+    const testLink = document.getElementById("testGenLink");
+    if (!testLink) return;
+
+    testLink.addEventListener("click", async (e) => {
+      e.preventDefault(); // prevent page jump
+      console.log("[TEST] Test Generate link clicked");
+
+      try {
+        const res = await fetch("/generate_credentials", {
+          method: "POST",
+          body: new URLSearchParams({ count: 2 }),
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        });
+
+        const data = await res.json();
+        console.log("[TEST] API response:", data);
+
+        if (res.ok && Array.isArray(data) && data.length > 0) {
+          if (window.showCredentials) {
+            window.showCredentials(data); // use popup from user-credential.js
+          } else {
+            alert("Generated " + data.length + " creds. Check console.");
+          }
+        } else {
+          alert(data.error || "Error generating creds. See console.");
+        }
+      } catch (err) {
+        console.error("[TEST] Error:", err);
+        alert("Network error. See console.");
+      }
+    });
+
+    console.log("[admin2] initialized with Test Generate support");
   });
 })();
+
