@@ -12,16 +12,12 @@ LOGS_DIR.mkdir(exist_ok=True)
 
 
 def init_db():
-    """Recreate candidates table fresh with latest schema"""
+    """Ensure candidates table exists (without wiping existing data)."""
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
 
-    # Drop old table if it exists (wipes previous data)
-    cursor.execute("DROP TABLE IF EXISTS candidates")
-
-    # Create fresh table with proper schema
     cursor.execute("""
-        CREATE TABLE candidates (
+        CREATE TABLE IF NOT EXISTS candidates (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             username TEXT UNIQUE NOT NULL,
             password TEXT NOT NULL,
@@ -48,7 +44,7 @@ def generate_password(length: int = 8) -> str:
 
 def generate_credentials(count=1, prefix="candidate", pwd_length=8):
     """Generate and save new candidate credentials"""
-    init_db()
+    init_db()  # make sure table exists
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
 
@@ -132,7 +128,7 @@ def mark_issued(usernames):
 
 
 def validate_credentials(username, password):
-    """Check if given credentials exist"""
+    """Check if given credentials exist and were issued"""
     init_db()
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()

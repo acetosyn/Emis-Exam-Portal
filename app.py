@@ -1,8 +1,8 @@
-from flask import Flask, render_template, request, redirect, url_for, session, jsonify, send_from_directory, Response
+from flask import Flask, render_template, request, redirect, url_for, session, jsonify, send_from_directory
 from dotenv import load_dotenv
 import os
-import user_credentials  # our credential generator / DB handler
-import engine  # new import for document handling
+import user_credentials  # credential generator / DB handler
+import engine            # file upload handler
 import mimetypes
 
 # Load environment variables
@@ -17,7 +17,7 @@ ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD")
 
 @app.route('/')
 def home():
-    # First landing page → admin login
+    """Landing page redirects to admin login by default."""
     return redirect(url_for('admin_login'))
 
 
@@ -25,10 +25,11 @@ def home():
 @app.route('/admin_login', methods=['GET', 'POST'])
 def admin_login():
     if request.method == 'POST':
-        username = request.form.get('username')
-        password = request.form.get('password')
+        username = request.form.get('username', '').strip()
+        password = request.form.get('password', '').strip()
 
         if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
+            session.clear()
             session['user_type'] = 'admin'
             session['username'] = username
             return redirect(url_for('admin_dashboard'))
@@ -41,15 +42,25 @@ def admin_login():
 # -------------------- USER LOGIN --------------------
 @app.route('/user_login', methods=['GET', 'POST'])
 def user_login():
+    # Admin opens this page for candidates (public page)
     if request.method == 'POST':
-        username = request.form.get('username')
-        password = request.form.get('password')
+        full_name = request.form.get('full_name', '').strip()
+        email = request.form.get('email', '').strip()
+        gender = request.form.get('gender', '').strip()
+        username = request.form.get('username', '').strip()
+        password = request.form.get('password', '').strip()
 
-        # Validate against generated user accounts
+        # Validate against generated + issued accounts
         if user_credentials.validate_credentials(username, password):
+            session.clear()
             session['user_type'] = 'user'
             session['username'] = username
-            return redirect(url_for('user_dashboard'))
+            session['full_name'] = full_name
+            session['email'] = email
+            session['gender'] = gender
+            session['exam_started'] = False
+            session['exam_submitted'] = False
+            return redirect(url_for('user_portal'))
 
         return render_template('user_login.html', error="Invalid login details")
 
@@ -64,28 +75,82 @@ def admin_dashboard():
     return render_template('admin.html')
 
 
-# -------------------- USER DASHBOARD --------------------
-@app.route('/user')
-def user_dashboard():
+# -------------------- USER PORTAL (Dashboard-first) --------------------
+@app.route('/user_portal')
+def user_portal():
     if session.get('user_type') != 'user':
         return redirect(url_for('user_login'))
-    return render_template('user.html')
+
+    return render_template(
+        'user_portal.html',
+        full_name=session.get('full_name'),
+        username=session.get('username'),
+        email=session.get('email'),
+        gender=session.get('gender'),
+        exam_started=session.get('exam_started', False),
+        exam_submitted=session.get('exam_submitted', False)
+    )
 
 
-# -------------------- EXAM PAGE --------------------
+# -------------------- START EXAM (sets flag, then go to /exam) --------------------
+@app.route('/start_exam', methods=['POST'])
+def start_exam():
+    if session.get('user_type') != 'user':
+        return redirect(url_for('user_login'))
+
+    # Gate: only allow if not already submitted
+    if session.get('exam_submitted'):
+        return redirect(url_for('result'))
+
+    session['exam_started'] = True
+    return redirect(url_for('exam'))
+
+
+# -------------------- EXAM PAGE (blocked unless started) --------------------
 @app.route('/exam')
 def exam():
     if session.get('user_type') != 'user':
         return redirect(url_for('user_login'))
-    return render_template('exam.html')
+
+    if not session.get('exam_started'):
+        # Must click "Start Exam" from user_portal first
+        return redirect(url_for('user_portal'))
+
+    # Render your exam UI (which can include an instructions modal inside the page)
+    return render_template(
+        'exam.html',
+        full_name=session.get('full_name'),
+        username=session.get('username')
+    )
+
+
+# -------------------- SUBMIT / END EXAM --------------------
+@app.route('/submit_exam', methods=['POST'])
+def submit_exam():
+    if session.get('user_type') != 'user':
+        return redirect(url_for('user_login'))
+
+    # Mark submitted, clear started flag
+    session['exam_submitted'] = True
+    session['exam_started'] = False
+    return redirect(url_for('result'))
 
 
 # -------------------- RESULT PAGE --------------------
 @app.route('/result')
 def result():
-    if 'user_type' not in session:
+    if session.get('user_type') != 'user':
         return redirect(url_for('user_login'))
-    return render_template('result.html')
+
+    # Optional gate: only show result after submitted
+    # if not session.get('exam_submitted'):
+    #     return redirect(url_for('user_portal'))
+
+    return render_template(
+        'result.html',
+        full_name=session.get('full_name'),
+        username=session.get('username')
+    )
 
 
 # -------------------- API: Generate Credentials --------------------
@@ -120,13 +185,11 @@ def mark_issued():
     return jsonify({"success": ok})
 
 
-
 # -------------------- LOGOUT --------------------
 @app.route('/logout')
 def logout():
     session.clear()
     return redirect(url_for('admin_login'))
-
 
 
 # -------------------- API: Document Upload --------------------
@@ -153,10 +216,6 @@ def upload_document():
         return jsonify({"error": result["error"]}), 400
 
 
-
-
-# ... existing imports
-
 # -------------------- API: List/Search Documents --------------------
 @app.route('/documents')
 def list_documents_route():
@@ -169,9 +228,8 @@ def list_documents_route():
         d["url"] = url_for('serve_upload', filename=d["name"])
     return jsonify({"documents": docs})
 
+
 # -------------------- Serve uploaded files inline --------------------
-
-
 @app.route('/uploads/<path:filename>')
 def serve_upload(filename):
     if session.get('user_type') != 'admin':
@@ -192,6 +250,6 @@ def serve_upload(filename):
 
 
 if __name__ == '__main__':
-    # Initialize DB on startup
+    # Make sure DB exists (your updated user_credentials.init_db should NOT drop data)
     user_credentials.init_db()
     app.run(host='0.0.0.0', port=5000, debug=True)

@@ -108,14 +108,30 @@
   font-weight: 500;
 }
 
+/* Submenu container (collapsed by default) */
 .nav-group .nav-sub {
-  display: none;
+  max-height: 0;
+  overflow: hidden;
   flex-direction: column;
   background: rgba(255, 255, 255, 0.05);
+  transition: max-height 0.3s ease, opacity 0.3s ease;
+  opacity: 0;
 }
 
+/* Expanded state */
 .nav-group.open .nav-sub {
-  display: flex;
+  max-height: 500px; /* large enough to fit submenu */
+  opacity: 1;
+}
+
+/* Caret animation */
+.nav-caret {
+  margin-left: auto;
+  transition: transform 0.3s ease;
+}
+
+.nav-caret.rotate {
+  transform: rotate(90deg);
 }
 
 /* Sidebar Footer */
@@ -160,6 +176,7 @@
   font-size: 0.7rem;   /* shrink text even more */
   padding: 0.4rem;
 }
+
 
 /* Content Area */
 .content-area {
