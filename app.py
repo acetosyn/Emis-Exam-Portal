@@ -1,7 +1,9 @@
-from flask import Flask, render_template, request, redirect, url_for, session, jsonify
+from flask import Flask, render_template, request, redirect, url_for, session, jsonify, send_from_directory, Response
 from dotenv import load_dotenv
 import os
-import user_gen  # our credential generator / DB handler
+import user_credentials  # our credential generator / DB handler
+import engine  # new import for document handling
+import mimetypes
 
 # Load environment variables
 load_dotenv()
@@ -44,7 +46,7 @@ def user_login():
         password = request.form.get('password')
 
         # Validate against generated user accounts
-        if user_gen.validate_credentials(username, password):
+        if user_credentials.validate_credentials(username, password):
             session['user_type'] = 'user'
             session['username'] = username
             return redirect(url_for('user_dashboard'))
@@ -88,13 +90,15 @@ def result():
 
 # -------------------- API: Generate Credentials --------------------
 @app.route('/generate_credentials', methods=['POST'])
-def generate_credentials():
+def generate_credentials_route():
     if session.get('user_type') != 'admin':
         return jsonify({"error": "Unauthorized"}), 403
 
     count = int(request.form.get("count", 1))
-    creds = user_gen.generate_credentials(count)
-    return jsonify(creds)
+    prefix = request.form.get("prefix", "candidate")
+    pwd_length = int(request.form.get("pwd_length", 8))
+    result = user_credentials.generate_credentials(count, prefix, pwd_length)
+    return jsonify(result)
 
 
 # -------------------- API: List Credentials --------------------
@@ -102,8 +106,19 @@ def generate_credentials():
 def list_credentials():
     if session.get('user_type') != 'admin':
         return jsonify({"error": "Unauthorized"}), 403
+    return jsonify(user_credentials.get_credentials())
 
-    return jsonify(user_gen.get_credentials())
+
+# -------------------- API: Mark Issued --------------------
+@app.route('/mark_issued', methods=['POST'])
+def mark_issued():
+    if session.get('user_type') != 'admin':
+        return jsonify({"error": "Unauthorized"}), 403
+
+    usernames = request.json.get("usernames", [])
+    ok = user_credentials.mark_issued(usernames)
+    return jsonify({"success": ok})
+
 
 
 # -------------------- LOGOUT --------------------
@@ -113,7 +128,70 @@ def logout():
     return redirect(url_for('admin_login'))
 
 
+
+# -------------------- API: Document Upload --------------------
+@app.route('/upload_document', methods=['POST'])
+def upload_document():
+    if session.get('user_type') != 'admin':
+        return jsonify({"error": "Unauthorized"}), 403
+
+    if 'file' not in request.files:
+        return jsonify({"error": "No file part"}), 400
+
+    file = request.files['file']
+    if file.filename == "":
+        return jsonify({"error": "No selected file"}), 400
+
+    result = engine.save_uploaded_file(file)
+    if result["success"]:
+        return jsonify({
+            "message": "File uploaded successfully",
+            "filename": result["filename"],
+            "path": result["path"]
+        })
+    else:
+        return jsonify({"error": result["error"]}), 400
+
+
+
+
+# ... existing imports
+
+# -------------------- API: List/Search Documents --------------------
+@app.route('/documents')
+def list_documents_route():
+    if session.get('user_type') != 'admin':
+        return jsonify({"error": "Unauthorized"}), 403
+    q = request.args.get("q", "", type=str)
+    docs = engine.list_documents(q)
+    # attach URLs for frontend
+    for d in docs:
+        d["url"] = url_for('serve_upload', filename=d["name"])
+    return jsonify({"documents": docs})
+
+# -------------------- Serve uploaded files inline --------------------
+
+
+@app.route('/uploads/<path:filename>')
+def serve_upload(filename):
+    if session.get('user_type') != 'admin':
+        return jsonify({"error": "Unauthorized"}), 403
+    
+    file_path = os.path.join(engine.UPLOAD_FOLDER, filename)
+    if not os.path.exists(file_path):
+        return jsonify({"error": "File not found"}), 404
+
+    # guess mime type (important for inline preview)
+    mime, _ = mimetypes.guess_type(file_path)
+    mime = mime or "application/octet-stream"
+
+    # force Content-Disposition:inline so browser tries preview, not download
+    resp = send_from_directory(engine.UPLOAD_FOLDER, filename, as_attachment=False, mimetype=mime)
+    resp.headers["Content-Disposition"] = f'inline; filename="{filename}"'
+    return resp
+
+
 if __name__ == '__main__':
     # Initialize DB on startup
-    user_gen.init_db()
+    user_credentials.init_db()
     app.run(host='0.0.0.0', port=5000, debug=True)

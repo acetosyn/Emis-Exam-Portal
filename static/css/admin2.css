@@ -130,3 +130,16 @@
   flex-wrap: wrap;
   gap: 0.5rem;
 }
+
+
+
+/* Center and constrain panels */
+.route {
+  display: none;
+  max-width: 1200px;   /* keep content centered */
+  margin: 0 auto;
+}
+
+.route.is-active {
+  display: block;
+}
