@@ -2,7 +2,9 @@ document.addEventListener("DOMContentLoaded", () => {
   /* ----- Typewriter Banner ----- */
   const el = document.getElementById("typewriter");
   if (el) {
+    const subject = sessionStorage.getItem("chosenSubject") || "your exam";
     const messages = [
+      `📘 You are about to take ${subject.toUpperCase()}`,
       "✅ Ensure a stable internet connection",
       "🌐 Use a modern browser (Chrome, Edge, Safari, Firefox)",
       "🚫 Close other apps/tabs to avoid distractions",
@@ -68,7 +70,14 @@ document.addEventListener("DOMContentLoaded", () => {
     div.innerHTML = `<div class="dot"></div><div><div class="title">${title}</div><div class="meta">${meta}</div></div>`;
     activityList.prepend(div);
   }
+
   logActivity("Portal Accessed");
+
+  // log chosen subject
+  const subject = sessionStorage.getItem("chosenSubject");
+  if (subject) {
+    logActivity(`Subject chosen: ${subject}`);
+  }
 
   document.querySelectorAll("button, a").forEach(el => {
     el.addEventListener("click", () => logActivity(el.textContent.trim()));

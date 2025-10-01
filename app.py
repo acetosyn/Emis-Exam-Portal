@@ -4,6 +4,7 @@ import os
 import user_credentials  # credential generator / DB handler
 import engine            # file upload handler
 import mimetypes
+import user_exam   # new module for exam results
 
 # Load environment variables
 load_dotenv()
@@ -47,6 +48,7 @@ def user_login():
         full_name = request.form.get('full_name', '').strip()
         email = request.form.get('email', '').strip()
         gender = request.form.get('gender', '').strip()
+        subject = request.form.get('subject', '').strip()   # <-- NEW
         username = request.form.get('username', '').strip()
         password = request.form.get('password', '').strip()
 
@@ -58,6 +60,7 @@ def user_login():
             session['full_name'] = full_name
             session['email'] = email
             session['gender'] = gender
+            session['subject'] = subject                   # <-- NEW
             session['exam_started'] = False
             session['exam_submitted'] = False
             return redirect(url_for('user_portal'))
@@ -87,6 +90,7 @@ def user_portal():
         username=session.get('username'),
         email=session.get('email'),
         gender=session.get('gender'),
+        subject=session.get('subject'),        # <-- NEW
         exam_started=session.get('exam_started', False),
         exam_submitted=session.get('exam_submitted', False)
     )
@@ -257,7 +261,62 @@ def serve_upload(filename):
     return resp
 
 
+
+# -------------------- API: Exam Submission (Realtime) --------------------
+@app.route('/api/exam/submit', methods=['POST'])
+def api_exam_submit():
+    if session.get('user_type') != 'user':
+        return jsonify({"error": "Unauthorized"}), 403
+
+    data = request.json or {}
+    username = session.get("username")
+    fullname = session.get("full_name")
+    subject = session.get("subject")
+    email = session.get("email")
+
+    # Extract score data from JS payload
+    score = data.get("score", 0)
+    correct = data.get("correct", 0)
+    total = data.get("total", 0)
+    answered = data.get("answered", 0)
+    time_taken = data.get("timeTaken", 0)
+    submitted_at = data.get("submittedAt")
+
+    # Save result into DB
+    user_exam.save_exam_result(
+        username=username,
+        fullname=fullname,
+        email=email,
+        subject=subject,
+        score=score,
+        correct=correct,
+        total=total,
+        answered=answered,
+        time_taken=time_taken,
+        submitted_at=submitted_at
+    )
+
+    # Mark session flags
+    session['exam_submitted'] = True
+    session['exam_started'] = False
+
+    return jsonify({"success": True, "message": "Exam result recorded"})
+
+
+
+# -------------------- API: Get All Exam Results (for Admin Dashboard) --------------------
+# -------------------- API: Get All Exam Results (for Admin Dashboard) --------------------
+@app.route('/api/exam/results')
+def api_exam_results():
+    if session.get('user_type') != 'admin':
+        return jsonify({"error": "Unauthorized"}), 403
+
+    results = user_exam.get_exam_results()
+    return jsonify(results)
+
+
 if __name__ == '__main__':
-    # Make sure DB exists (your updated user_credentials.init_db should NOT drop data)
     user_credentials.init_db()
+    user_exam.init_db()   # ensure exam_results table exists
     app.run(host='0.0.0.0', port=5000, debug=True)
+

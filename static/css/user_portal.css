@@ -71,14 +71,12 @@
   align-items: center;
   background: var(--card);
   border-radius: var(--radius);
-  padding: 22px 26px;
+  padding: 20px 24px;
   border: 1px solid var(--border);
   box-shadow: var(--shadow);
   backdrop-filter: blur(10px);
   animation: fadeIn 1s ease;
 }
-
-/* Welcome styled */
 .up-hero-greeting {
   font-size: 1rem;
   color: var(--text-dim);
@@ -91,11 +89,6 @@
   background-clip: text;
   -webkit-text-fill-color: transparent;
   letter-spacing: 0.6px;
-  animation: shimmer 3s infinite linear;
-}
-@keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
 }
 .up-hero-sub {
   color: var(--text-dim);
@@ -110,8 +103,6 @@
   align-items: flex-end;
   gap: 12px;
 }
-
-/* Pills */
 .up-pill {
   padding: 6px 14px;
   border-radius: 999px;
@@ -140,19 +131,21 @@
 .up-grid {
   margin-top: 24px;
   display: grid;
-  gap: 24px;
+  gap: 22px;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
 }
 .up-card {
   background: var(--card);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 20px;
+  padding: 18px 20px;
   box-shadow: var(--shadow);
   backdrop-filter: blur(14px);
   transition: transform .3s, box-shadow .3s;
   position: relative;
   animation: fadeIn 1.2s ease;
+  max-height: 320px; /* shorter cards */
+  overflow: hidden;
 }
 .up-card::before {
   content: "";
@@ -167,7 +160,7 @@
   box-shadow: 0 14px 36px rgba(37, 99, 235, 0.35);
 }
 .up-card-head {
-  font-size: 1.2rem;
+  font-size: 1.15rem;
   font-weight: 700;
   margin-bottom: 14px;
   background: linear-gradient(90deg, #1e3a8a, #2563eb);
@@ -176,14 +169,60 @@
   -webkit-text-fill-color: transparent;
 }
 
+/* Candidate Info rows */
+.up-profile-content {
+  display: grid;
+  gap: 14px;
+  font-size: 0.97rem;
+  line-height: 1.6;
+}
+.up-profile-row span {
+  color: var(--text-dim);
+}
+.up-profile-row strong, 
+.up-profile-row code {
+  font-weight: 600;
+  color: var(--text);
+}
+
+/* Exam card redesigned */
+.up-list {
+  list-style: none;
+  margin: 0;
+  padding: 0 0 16px 0;
+  border-bottom: 1px dashed var(--border);
+}
+
+.up-list li {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  font-size: 1rem;
+  margin-bottom: 16px;   /* spacing between each line */
+  line-height: 1.8;
+}
+
+.up-list li span {
+  min-width: 120px;     /* keeps labels aligned */
+  font-weight: 600;
+  color: var(--text-dim);
+  margin-right: 20px;   /* spacing before the colon/value */
+}
+
+.up-list li strong {
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: 0.5px;
+}
+
 /* Buttons */
 .btn-primary,
 .btn-secondary,
 .btn-danger,
 .btn-success {
-  padding: 10px 18px;
-  border-radius: 10px;
-  font-weight: 600;
+  padding: 12px 22px;
+  border-radius: 12px;
+  font-weight: 700;
   cursor: pointer;
   border: none;
   transition: all .3s ease;
@@ -191,21 +230,6 @@
   overflow: hidden;
   box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
-.btn-primary::after,
-.btn-danger::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: rgba(255,255,255,0.25);
-  opacity: 0;
-  transition: opacity .3s;
-}
-.btn-primary:hover::after,
-.btn-danger:hover::after {
-  opacity: 1;
-}
-
-/* Gradient buttons */
 .btn-primary {
   background: linear-gradient(135deg, #1e40af, #2563eb, #3b82f6);
   color: #fff;
@@ -214,8 +238,8 @@
 .btn-primary:hover {
   background-position: right center;
   transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(37, 99, 235, 0.35);
 }
-
 .btn-secondary {
   background: linear-gradient(135deg, #ede9fe, #c7d2fe);
   color: #4338ca;
@@ -227,6 +251,14 @@
 .btn-success {
   background: linear-gradient(135deg, #16a34a, #22c55e, #4ade80);
   color: #fff;
+}
+
+/* Exam hint spacing */
+.up-hint {
+  margin-top: 18px;
+  font-size: 0.9rem;
+  color: var(--text-dim);
+  line-height: 1.5;
 }
 
 /* Checklist */
@@ -248,7 +280,6 @@
   font-weight: 500;
   transition: all .3s ease;
   border-left: 4px solid var(--accent);
-  animation: fadeIn 0.8s ease;
 }
 .up-bullets li:nth-child(even) {
   background: #e0ecff;
@@ -267,7 +298,6 @@
   background: var(--accent);
   border-radius: 50%;
   flex-shrink: 0;
-  animation: pulse 2s infinite;
 }
 .up-bullets li:hover {
   transform: translateX(6px);
@@ -284,7 +314,6 @@
   align-items: flex-start;
   border-left: 3px solid var(--accent);
   position: relative;
-  animation: fadeIn 1.4s ease;
 }
 .up-activity-item .dot {
   width: 8px; height: 8px; border-radius: 50%;

@@ -9,15 +9,15 @@
 {% block header_actions %}
 <div class="flex items-center space-x-4">
     <!-- Timer -->
-    <div id="examTimer" class="flex items-center space-x-2 bg-red-100 text-red-800 px-3 py-1 rounded-lg font-mono text-sm">
+    <div id="examTimer" class="flex items-center space-x-2 bg-red-100 text-red-800 px-3 py-1 rounded-lg font-mono text-sm hidden">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
         </svg>
-        <span id="timerDisplay">30:00</span>
+        <span id="timerDisplay">20:00</span>
     </div>
-    
+
     <!-- Fullscreen Toggle -->
-    <button id="fullscreenBtn" onclick="toggleFullscreen()" class="text-gray-600 hover:text-gray-800">
+    <button id="fullscreenBtn" onclick="toggleFullscreen()" class="text-gray-600 hover:text-gray-800 hidden">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path>
         </svg>
@@ -26,60 +26,80 @@
 {% endblock %}
 
 {% block content %}
+
 <!-- Exam Instructions Modal -->
-<div id="instructionsModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-    <div class="bg-white rounded-lg max-w-2xl mx-4 p-6 max-h-[90vh] overflow-y-auto">
-        <div class="flex items-center justify-between mb-6">
-            <h2 class="text-2xl font-bold text-gray-900">Exam Instructions</h2>
-            <div class="text-sm text-gray-600">
-                Duration: <span class="font-semibold">30 minutes</span>
-            </div>
-        </div>
-        
-        <div class="space-y-4 text-gray-700">
-            <div>
-                <h3 class="font-semibold text-gray-900 mb-2">General Instructions:</h3>
-                <ul class="list-disc list-inside space-y-1 text-sm">
-                    <li>This exam contains multiple-choice questions</li>
-                    <li>You have 30 minutes to complete all questions</li>
-                    <li>Each question has only one correct answer</li>
-                    <li>You can navigate between questions using Previous/Next buttons</li>
-                    <li>You can flag questions for review</li>
-                </ul>
-            </div>
-            
-            <div>
-                <h3 class="font-semibold text-gray-900 mb-2">Anti-Cheat Measures:</h3>
-                <ul class="list-disc list-inside space-y-1 text-sm text-red-700">
-                    <li>Switching tabs will trigger a warning (2nd time ends exam)</li>
-                    <li>Right-click and copy/paste are disabled</li>
-                    <li>Fullscreen mode is recommended</li>
-                    <li>Your progress is automatically saved</li>
-                </ul>
-            </div>
-            
-            <div>
-                <h3 class="font-semibold text-gray-900 mb-2">Keyboard Shortcuts:</h3>
-                <div class="grid grid-cols-2 gap-2 text-sm">
-                    <div><kbd class="px-2 py-1 bg-gray-100 rounded">←</kbd> Previous Question</div>
-                    <div><kbd class="px-2 py-1 bg-gray-100 rounded">→</kbd> Next Question</div>
-                    <div><kbd class="px-2 py-1 bg-gray-100 rounded">1-4</kbd> Select Option</div>
-                    <div><kbd class="px-2 py-1 bg-gray-100 rounded">F</kbd> Flag Question</div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="flex items-center justify-between mt-8 pt-6 border-t border-gray-200">
-            <div class="flex items-center space-x-2 text-sm text-gray-600">
-                <input type="checkbox" id="agreeTerms" class="rounded">
-                <label for="agreeTerms">I have read and understood the instructions</label>
-            </div>
-            <button id="startExamBtn" onclick="startExam()" disabled class="btn-primary px-6 py-2 disabled:opacity-50 disabled:cursor-not-allowed">
-                Start Exam
-            </button>
-        </div>
+<div id="instructionsModal" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
+  <div class="bg-white rounded-2xl max-w-2xl mx-4 w-full shadow-2xl relative animate-fadeInUp flex flex-col max-h-[90vh]">
+    
+    <!-- Close Button -->
+    <button onclick="closeInstructions()" class="absolute top-4 right-4 text-gray-500 hover:text-red-600 transition text-xl">
+      ✕
+    </button>
+
+    <!-- Header -->
+    <div class="modal-header flex items-center justify-between p-6 border-b border-gray-200">
+      <h2 class="text-2xl font-extrabold text-gray-900">Exam Instructions</h2>
+      <div class="text-base text-gray-700">
+        Duration: <span class="font-bold text-red-600">20 minutes</span>
+      </div>
     </div>
+
+    <!-- Body (scrollable) -->
+    <div class="modal-body flex-1 overflow-y-auto p-6 space-y-6 text-gray-800 leading-relaxed text-lg font-medium">
+      <div>
+        <h3 class="text-xl font-bold text-blue-700 mb-3">General Instructions</h3>
+        <ul class="space-y-3">
+          <li>📘 This exam contains <b>40 multiple-choice questions (MCQs)</b>.</li>
+          <li>🔢 Each question has options <b>A–D</b>. Select the most appropriate answer.</li>
+          <li>⏳ You have <b>20 minutes</b> to complete all questions.</li>
+          <li>➡️ Navigate between questions using the <b>Previous</b> and <b>Next</b> buttons.</li>
+          <li>🚩 You may <b>flag questions</b> to review them before submission.</li>
+          <li>⚠️ Once the exam starts, you must finish it in one sitting.</li>
+          <li>✅ When done, click <b>Submit</b> to finalize your score.</li>
+          <li>❌ Closing this page/tab will <b>end your exam automatically</b> and only answered questions will be graded.</li>
+        </ul>
+      </div>
+
+      <div>
+        <h3 class="text-xl font-bold text-red-700 mb-3">Anti-Cheat Measures</h3>
+        <ul class="space-y-3 text-red-700">
+          <li>⚠️ Switching tabs will trigger a warning. A second attempt will <b>end the exam immediately</b>.</li>
+          <li>🚫 Right-click, copy, paste, and text selection are disabled.</li>
+          <li>🖥️ Fullscreen mode is recommended for the best experience.</li>
+          <li>💾 Your progress is <b>automatically saved</b> as you answer.</li>
+        </ul>
+      </div>
+
+      <div>
+        <h3 class="text-xl font-bold text-green-700 mb-3">Keyboard Shortcuts</h3>
+        <div class="grid grid-cols-2 gap-3 text-base">
+          <div><kbd class="px-3 py-1 bg-gray-200 rounded-md font-bold">←</kbd> Previous Question</div>
+          <div><kbd class="px-3 py-1 bg-gray-200 rounded-md font-bold">→</kbd> Next Question</div>
+          <div><kbd class="px-3 py-1 bg-gray-200 rounded-md font-bold">1–4</kbd> Select Option</div>
+          <div><kbd class="px-3 py-1 bg-gray-200 rounded-md font-bold">F</kbd> Flag Question</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="modal-footer flex items-center justify-between p-6 border-t border-gray-200">
+      <div class="flex items-center space-x-2 text-gray-700">
+        <input type="checkbox" id="agreeTerms" class="rounded">
+        <label for="agreeTerms" class="text-base">I have read and understood the instructions</label>
+      </div>
+      <div class="flex space-x-3">
+        <button onclick="closeInstructions()" class="btn-secondary px-6 py-2">
+          Back to Dashboard
+        </button>
+        <button id="startExamBtn" onclick="startExam()" disabled class="btn-primary px-8 py-2 disabled:opacity-50 disabled:cursor-not-allowed">
+          🚀 Start Exam
+        </button>
+      </div>
+    </div>
+
+  </div>
 </div>
+
 
 <!-- Main Exam Interface -->
 <div id="examInterface" class="hidden min-h-screen bg-gray-50">
@@ -89,8 +109,6 @@
             <!-- Progress Header -->
             <div class="p-6 border-b border-gray-200">
                 <h3 class="text-lg font-semibold text-gray-900 mb-4">Progress Overview</h3>
-                
-                <!-- Progress Stats -->
                 <div class="grid grid-cols-3 gap-3 mb-4">
                     <div class="text-center">
                         <div class="text-2xl font-bold text-green-600" id="answeredCount">0</div>
@@ -105,8 +123,6 @@
                         <div class="text-xs text-gray-600">Remaining</div>
                     </div>
                 </div>
-                
-                <!-- Progress Bar -->
                 <div class="w-full bg-gray-200 rounded-full h-2">
                     <div id="progressBar" class="bg-sky-blue h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
                 </div>
@@ -114,15 +130,13 @@
                     <span id="progressText">0% Complete</span>
                 </div>
             </div>
-            
+
             <!-- Question Navigation -->
             <div class="flex-1 overflow-y-auto p-4">
                 <h4 class="text-sm font-medium text-gray-900 mb-3">Question Navigation</h4>
-                <div id="questionGrid" class="grid grid-cols-5 gap-2">
-                    <!-- Question buttons will be generated here -->
-                </div>
+                <div id="questionGrid" class="grid grid-cols-5 gap-2"></div>
             </div>
-            
+
             <!-- Action Buttons -->
             <div class="p-4 border-t border-gray-200 space-y-2">
                 <button onclick="showSummary()" class="w-full btn-secondary py-2 text-sm">
@@ -133,10 +147,9 @@
                 </button>
             </div>
         </div>
-        
+
         <!-- Question Area -->
         <div class="flex-1 flex flex-col">
-            <!-- Question Header -->
             <div class="bg-white border-b border-gray-200 p-6">
                 <div class="flex items-center justify-between">
                     <div>
@@ -145,7 +158,7 @@
                         </h2>
                         <p class="text-sm text-gray-600 mt-1">Choose the best answer</p>
                     </div>
-                    <button id="flagBtn" onclick="toggleFlag()" class="flex items-center space-x-2 px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+                    <button id="flagBtn" onclick="toggleFlag()" class="flex items-center space-x-2 px-3 py-2 border border-gray-300 rounded-lg hover:bg-yellow-50">
                         <svg id="flagIcon" class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 2H21l-3 6 3 6h-8.5l-1-2H5a2 2 0 00-2 2zm9-13.5V9"></path>
                         </svg>
@@ -153,25 +166,21 @@
                     </button>
                 </div>
             </div>
-            
+
             <!-- Question Content -->
             <div class="flex-1 p-6 overflow-y-auto">
-                <div id="questionContent" class="max-w-4xl">
-                    <!-- Question will be loaded here -->
-                </div>
+                <div id="questionContent" class="max-w-4xl"></div>
             </div>
-            
+
             <!-- Navigation Footer -->
             <div class="bg-white border-t border-gray-200 p-6">
                 <div class="flex items-center justify-between">
                     <button id="prevBtn" onclick="previousQuestion()" disabled class="btn-secondary px-6 py-2 disabled:opacity-50 disabled:cursor-not-allowed">
                         ← Previous
                     </button>
-                    
                     <div class="text-sm text-gray-600">
                         Press <kbd class="px-2 py-1 bg-gray-100 rounded text-xs">F</kbd> to flag question
                     </div>
-                    
                     <button id="nextBtn" onclick="nextQuestion()" class="btn-primary px-6 py-2">
                         Next →
                     </button>
@@ -183,7 +192,7 @@
 
 <!-- Summary Modal -->
 <div id="summaryModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
-    <div class="bg-white rounded-lg max-w-2xl mx-4 p-6 max-h-[90vh] overflow-y-auto">
+    <div class="bg-white rounded-xl max-w-2xl mx-4 p-6 shadow-lg">
         <div class="flex items-center justify-between mb-6">
             <h2 class="text-2xl font-bold text-gray-900">Exam Summary</h2>
             <button onclick="closeSummary()" class="text-gray-400 hover:text-gray-600">
@@ -192,11 +201,7 @@
                 </svg>
             </button>
         </div>
-        
-        <div id="summaryContent">
-            <!-- Summary content will be generated here -->
-        </div>
-        
+        <div id="summaryContent"></div>
         <div class="flex items-center justify-between mt-8 pt-6 border-t border-gray-200">
             <button onclick="closeSummary()" class="btn-secondary px-6 py-2">
                 Continue Exam
@@ -218,5 +223,15 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="{{ url_for('static', filename='js/exam.js') }}"></script>
+<!-- in exam.html footer, before </body> -->
+<script src="{{ url_for('static', filename='js/exam-core.js') }}"></script>
+<script src="{{ url_for('static', filename='js/exam-features.js') }}"></script>
+<script src="{{ url_for('static', filename='js/exam-realtime.js') }}"></script> <!-- (coming next) -->
+
+<script>
+function closeInstructions() {
+  // Close modal and go back to dashboard
+  window.location.href = "{{ url_for('user_portal') }}";
+}
+</script>
 {% endblock %}

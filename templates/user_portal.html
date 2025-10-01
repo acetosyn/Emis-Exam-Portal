@@ -48,6 +48,7 @@
         <div class="up-profile-row"><span>Email:</span> <strong>{{ email or '-' }}</strong></div>
         <div class="up-profile-row"><span>Username:</span> <code>{{ username or '-' }}</code></div>
         <div class="up-profile-row"><span>Gender:</span> <strong>{{ gender or '-' }}</strong></div>
+        <div class="up-profile-row"><span>Subject:</span> <strong>{{ subject or '-' }}</strong></div>
       </div>
     </section>
 
@@ -58,10 +59,12 @@
         <li><span>Status</span><strong>{% if exam_submitted %}Submitted{% elif exam_started %}In Progress{% else %}Not Started{% endif %}</strong></li>
         <li><span>Mode</span><strong>Multiple Choice</strong></li>
         <li><span>Duration</span><strong>30 minutes</strong></li>
+        <li><span>Subject</span><strong>{{ subject or '-' }}</strong></li>
       </ul>
       <div class="up-actions-row">
         {% if not exam_started and not exam_submitted %}
           <form action="{{ url_for('start_exam') }}" method="POST">
+            <input type="hidden" name="subject" value="{{ subject }}">
             <button type="submit" class="btn-primary">🚀 Start Exam</button>
           </form>
         {% elif exam_submitted %}
@@ -75,11 +78,11 @@
     <section class="up-card up-help">
       <h2 class="up-card-head">⚡ Before You Begin</h2>
       <ul class="up-bullets">
-        <li>Ensure a stable internet connection.</li>
+        <li>Ensure a stable internet connection & keep your device plugged in or fully charged.</li>
         <li>Use a modern browser (Chrome, Edge, Safari, Firefox).</li>
-        <li>Close other apps/tabs to avoid distractions.</li>
-        <li>Keep your device plugged in or fully charged.</li>
+        <li>Close other apps/tabs to avoid distractions during your exam.</li>
       </ul>
+
       <div class="up-cta-row">
         <button class="btn-link" id="openSupport">Need help?</button>
       </div>
