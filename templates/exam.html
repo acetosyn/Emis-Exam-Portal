@@ -5,6 +5,7 @@
 {% block extra_css %}
 <meta name="exam-subject" content="{{ session.get('subject', 'exam') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/exam.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/exam-core.css') }}">
 {% endblock %}
 
 {% block header_actions %}
@@ -199,8 +200,13 @@
 </div>
 {% endblock %}
 
-{% block extra_js %}
+{% block scripts %}
 <script src="{{ url_for('static', filename='js/exam-core.js') }}"></script>
 <script src="{{ url_for('static', filename='js/exam-features.js') }}"></script>
 <script src="{{ url_for('static', filename='js/exam-realtime.js') }}"></script>
+
+<!-- 🔍 Debug -->
+<script>
+  console.log("✅ exam.html inline test script is running");
+</script>
 {% endblock %}
