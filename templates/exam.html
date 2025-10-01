@@ -32,13 +32,8 @@
 <!-- Exam Instructions Modal -->
 <div id="instructionsModal" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 {% if exam_started %}hidden{% endif %}">
   <div class="bg-white rounded-2xl max-w-2xl mx-4 w-full shadow-2xl relative animate-fadeInUp flex flex-col max-h-[90vh]">
-
-    <!-- Modern Close Button -->
-    <a href="{{ url_for('user_portal') }}" 
-       class="absolute -top-3 -right-3 bg-red-600 hover:bg-red-700 text-white rounded-full w-10 h-10 flex items-center justify-center shadow-lg transform transition hover:rotate-90"
-       aria-label="Close">
-      ✕
-    </a>
+    <!-- Close -->
+    <a href="{{ url_for('user_portal') }}" class="absolute -top-3 -right-3 bg-red-600 hover:bg-red-700 text-white rounded-full w-10 h-10 flex items-center justify-center shadow-lg transform transition hover:rotate-90">✕</a>
 
     <!-- Header -->
     <div class="modal-header flex items-center justify-between p-6 border-b border-gray-200">
@@ -56,44 +51,17 @@
           <li>📘 This exam contains <b>40 multiple-choice questions (MCQs)</b>.</li>
           <li>🔢 Each question has options <b>A–D</b>. Select the most appropriate answer.</li>
           <li>⏳ You have <b>20 minutes</b> to complete all questions.</li>
-          <li>➡️ Navigate between questions using the <b>Previous</b> and <b>Next</b> buttons.</li>
+          <li>➡️ Navigate using the <b>Previous</b> and <b>Next</b> buttons.</li>
           <li>🚩 You may <b>flag questions</b> to review them before submission.</li>
-          <li>⚠️ Once the exam starts, you must finish it in one sitting.</li>
-          <li>✅ When done, click <b>Submit</b> to finalize your score.</li>
-          <li>❌ Closing this page/tab will <b>end your exam automatically</b>.</li>
+          <li>⚠️ Once started, you must finish it in one sitting.</li>
         </ul>
-      </div>
-
-      <div>
-        <h3 class="text-xl font-bold text-red-700 mb-3">Anti-Cheat Measures</h3>
-        <ul class="space-y-3 text-red-700">
-          <li>⚠️ Switching tabs will trigger a warning. A second attempt will <b>end the exam immediately</b>.</li>
-          <li>🚫 Right-click, copy, paste, and text selection are disabled.</li>
-          <li>🖥️ Fullscreen mode is recommended for the best experience.</li>
-          <li>💾 Your progress is <b>automatically saved</b>.</li>
-        </ul>
-      </div>
-
-      <div>
-        <h3 class="text-xl font-bold text-green-700 mb-3">Keyboard Shortcuts</h3>
-        <div class="grid grid-cols-2 gap-3 text-base">
-          <div><kbd class="px-3 py-1 bg-gray-200 rounded-md font-bold">←</kbd> Previous</div>
-          <div><kbd class="px-3 py-1 bg-gray-200 rounded-md font-bold">→</kbd> Next</div>
-          <div><kbd class="px-3 py-1 bg-gray-200 rounded-md font-bold">1–4</kbd> Select Option</div>
-          <div><kbd class="px-3 py-1 bg-gray-200 rounded-md font-bold">F</kbd> Flag Question</div>
-        </div>
       </div>
     </div>
 
- <!-- Footer -->
-<!-- Footer -->
-<div class="modal-footer flex items-center justify-end p-6 border-t border-gray-200 space-x-4">
-  <a href="{{ url_for('user_portal') }}" class="btn-secondary px-6 py-2">Back to Dashboard</a>
-  <button id="startExamBtn" type="button" class="btn-primary px-8 py-2">🚀 Start Exam</button>
-</div>
-
-
-
+    <!-- Footer -->
+    <div class="modal-footer flex items-center justify-end p-6 border-t border-gray-200 space-x-4">
+      <a href="{{ url_for('user_portal') }}" class="btn-secondary px-6 py-2">Back to Dashboard</a>
+      <button id="startExamBtn" type="button" class="btn-primary px-8 py-2">🚀 Start Exam</button>
     </div>
   </div>
 </div>
@@ -101,7 +69,7 @@
 <!-- Main Exam Interface -->
 <div id="examInterface" class="{% if not exam_started %}hidden{% endif %} min-h-screen bg-gray-50">
   <div class="flex h-screen">
-    <!-- Progress Sidebar -->
+    <!-- Sidebar -->
     <div class="w-80 bg-white shadow-lg border-r border-gray-200 flex flex-col">
       <div class="p-6 border-b border-gray-200">
         <h3 class="text-lg font-semibold text-gray-900 mb-4">Progress Overview</h3>
@@ -140,33 +108,29 @@
 
     <!-- Question Area -->
     <div class="flex-1 flex flex-col">
-      <div class="bg-white border-b border-gray-200 p-6">
-        <div class="flex items-center justify-between">
-          <div>
-            <h2 class="text-xl font-semibold text-gray-900">
-              Question <span id="currentQuestionNumber">1</span> of <span id="totalQuestions">0</span>
-            </h2>
-            <p class="text-sm text-gray-600 mt-1">Choose the best answer</p>
-          </div>
-          <button id="flagBtn" onclick="toggleFlag()" class="flex items-center space-x-2 px-3 py-2 border border-gray-300 rounded-lg hover:bg-yellow-50">
-            <svg id="flagIcon" class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 2H21l-3 6 3 6h-8.5l-1-2H5a2 2 0 00-2 2zm9-13.5V9"></path>
-            </svg>
-            <span id="flagText">Flag</span>
-          </button>
+      <div class="bg-white border-b border-gray-200 p-6 flex items-center justify-between">
+        <div>
+          <h2 class="text-xl font-semibold text-gray-900">
+            Question <span id="currentQuestionNumber">1</span> of <span id="totalQuestions">0</span>
+          </h2>
+          <p class="text-sm text-gray-600 mt-1">Choose the best answer</p>
         </div>
+        <button id="flagBtn" onclick="toggleFlag()" class="flex items-center space-x-2 px-3 py-2 border border-gray-300 rounded-lg hover:bg-yellow-50">
+          <svg id="flagIcon" class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 2H21l-3 6 3 6h-8.5l-1-2H5a2 2 0 00-2 2z"></path>
+          </svg>
+          <span id="flagText">Flag</span>
+        </button>
       </div>
 
       <div class="flex-1 p-6 overflow-y-auto">
         <div id="questionContent" class="max-w-4xl"></div>
       </div>
 
-      <div class="bg-white border-t border-gray-200 p-6">
-        <div class="flex items-center justify-between">
-          <button id="prevBtn" onclick="previousQuestion()" disabled class="btn-secondary px-6 py-2 disabled:opacity-50 disabled:cursor-not-allowed">← Previous</button>
-          <div class="text-sm text-gray-600">Press <kbd class="px-2 py-1 bg-gray-100 rounded text-xs">F</kbd> to flag question</div>
-          <button id="nextBtn" onclick="nextQuestion()" class="btn-primary px-6 py-2">Next →</button>
-        </div>
+      <div class="bg-white border-t border-gray-200 p-6 flex items-center justify-between">
+        <button id="prevBtn" onclick="previousQuestion()" disabled class="btn-secondary px-6 py-2 disabled:opacity-50 disabled:cursor-not-allowed">← Previous</button>
+        <div class="text-sm text-gray-600">Press <kbd class="px-2 py-1 bg-gray-100 rounded text-xs">F</kbd> to flag question</div>
+        <button id="nextBtn" onclick="nextQuestion()" class="btn-primary px-6 py-2">Next →</button>
       </div>
     </div>
   </div>
@@ -204,9 +168,5 @@
 <script src="{{ url_for('static', filename='js/exam-core.js') }}"></script>
 <script src="{{ url_for('static', filename='js/exam-features.js') }}"></script>
 <script src="{{ url_for('static', filename='js/exam-realtime.js') }}"></script>
-
-<!-- 🔍 Debug -->
-<script>
-  console.log("✅ exam.html inline test script is running");
-</script>
+<script>console.log("✅ exam.html loaded")</script>
 {% endblock %}
