@@ -128,14 +128,28 @@ def mark_issued(usernames):
 
 
 def validate_credentials(username, password):
-    """Check if given credentials exist and were issued"""
+    """
+    Check if given credentials exist.
+    If found but not issued, mark them as issued now (first login).
+    """
     init_db()
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.execute(
-        "SELECT * FROM candidates WHERE username=? AND password=? AND issued=1",
+        "SELECT id, issued FROM candidates WHERE username=? AND password=?",
         (username, password)
     )
     row = cursor.fetchone()
+    if row:
+        # If not marked issued, mark it at first login
+        if row[1] == 0:
+            issued_at = datetime.utcnow().isoformat()
+            cursor.execute(
+                "UPDATE candidates SET issued=1, issued_at=? WHERE id=?",
+                (issued_at, row[0])
+            )
+            conn.commit()
+        conn.close()
+        return True
     conn.close()
-    return row is not None
+    return False

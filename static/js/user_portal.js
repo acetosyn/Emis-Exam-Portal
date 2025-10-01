@@ -1,34 +1,76 @@
-// user_portal.js — Candidate Portal (Dashboard interactivity)
-
 document.addEventListener("DOMContentLoaded", () => {
-  const supportModal = document.getElementById("supportModal");
-  const openSupport = document.getElementById("openSupport");
-  const closeSupport = document.getElementById("closeSupport");
-  const dismissSupport = document.getElementById("dismissSupport");
+  /* ----- Typewriter Banner ----- */
+  const el = document.getElementById("typewriter");
+  if (el) {
+    const messages = [
+      "✅ Ensure a stable internet connection",
+      "🌐 Use a modern browser (Chrome, Edge, Safari, Firefox)",
+      "🚫 Close other apps/tabs to avoid distractions",
+      "🔋 Keep your device fully charged",
+      "📝 Verify your full name is correct (first & last)",
+      "🎥 Ensure camera/mic are allowed if required"
+    ];
+    let msgIndex = 0, charIndex = 0, deleting = false;
 
-  // Open support modal
-  openSupport?.addEventListener("click", () => {
-    supportModal?.classList.remove("hidden");
+    function type() {
+      const current = messages[msgIndex];
+      if (!deleting) {
+        el.textContent = current.substring(0, charIndex++) + "▋";
+        if (charIndex > current.length) {
+          deleting = true;
+          setTimeout(type, 1000);
+          return;
+        }
+      } else {
+        el.textContent = current.substring(0, charIndex--) + "▋";
+        if (charIndex === 0) {
+          deleting = false;
+          msgIndex = (msgIndex + 1) % messages.length;
+        }
+      }
+      setTimeout(type, deleting ? 40 : 70);
+    }
+    type();
+  }
+
+  /* ----- Reveal on scroll ----- */
+  const cards = document.querySelectorAll(".up-card");
+  const io = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.classList.add("in-view");
+        io.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.2 });
+  cards.forEach(c => io.observe(c));
+
+  /* ----- Modal Support ----- */
+  const modal = document.getElementById("supportModal");
+  const openBtn = document.getElementById("openSupport");
+  const closeBtn = document.getElementById("closeSupport");
+  const dismissBtn = document.getElementById("dismissSupport");
+
+  const open = () => modal.classList.remove("hidden");
+  const close = () => modal.classList.add("hidden");
+  openBtn?.addEventListener("click", open);
+  closeBtn?.addEventListener("click", close);
+  dismissBtn?.addEventListener("click", close);
+  modal.addEventListener("click", e => { if (e.target === modal) close(); });
+  document.addEventListener("keydown", e => { if (e.key === "Escape") close(); });
+
+  /* ----- Activity Feed ----- */
+  const activityList = document.getElementById("activityList");
+  function logActivity(title) {
+    const meta = new Date().toLocaleString();
+    const div = document.createElement("div");
+    div.className = "up-activity-item";
+    div.innerHTML = `<div class="dot"></div><div><div class="title">${title}</div><div class="meta">${meta}</div></div>`;
+    activityList.prepend(div);
+  }
+  logActivity("Portal Accessed");
+
+  document.querySelectorAll("button, a").forEach(el => {
+    el.addEventListener("click", () => logActivity(el.textContent.trim()));
   });
-
-  function closeModal() {
-    supportModal?.classList.add("hidden");
-  }
-
-  closeSupport?.addEventListener("click", closeModal);
-  dismissSupport?.addEventListener("click", closeModal);
-
-  // Add recent activity on load
-  const list = document.getElementById("activityList");
-  if (list) {
-    const item = document.createElement("div");
-    item.className = "up-activity-item";
-    item.innerHTML = `
-      <div class="dot"></div>
-      <div>
-        <div class="title">Signed in</div>
-        <div class="meta">${new Date().toLocaleString()}</div>
-      </div>`;
-    list.prepend(item);
-  }
 });
