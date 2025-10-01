@@ -79,6 +79,7 @@ document.addEventListener("DOMContentLoaded", () => {
     logActivity(`Subject chosen: ${subject}`);
   }
 
+  // track button clicks
   document.querySelectorAll("button, a").forEach(el => {
     el.addEventListener("click", () => logActivity(el.textContent.trim()));
   });

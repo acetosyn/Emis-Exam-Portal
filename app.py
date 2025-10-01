@@ -110,21 +110,19 @@ def start_exam():
     return redirect(url_for('exam'))
 
 
-# -------------------- EXAM PAGE (blocked unless started) --------------------
+# -------------------- EXAM PAGE --------------------
 @app.route('/exam')
 def exam():
     if session.get('user_type') != 'user':
         return redirect(url_for('user_login'))
 
-    if not session.get('exam_started'):
-        # Must click "Start Exam" from user_portal first
-        return redirect(url_for('user_portal'))
-
-    # Render your exam UI (which can include an instructions modal inside the page)
+    # Always render exam.html
+    # exam_started flag decides whether modal is shown
     return render_template(
         'exam.html',
         full_name=session.get('full_name'),
-        username=session.get('username')
+        username=session.get('username'),
+        exam_started=session.get('exam_started', False)  # pass flag to template
     )
 
 

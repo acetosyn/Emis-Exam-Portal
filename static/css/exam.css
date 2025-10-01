@@ -15,6 +15,53 @@
 }
 
 /* ==============================
+   Universal Buttons (Dynamic)
+================================ */
+.btn-primary,
+.btn-secondary,
+.btn-danger,
+.btn-success {
+  padding: 12px 22px;
+  border-radius: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  border: none;
+  transition: all .3s ease;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #1e40af, #2563eb, #3b82f6);
+  color: #fff;
+  background-size: 200% auto;
+}
+.btn-primary:hover {
+  background-position: right center;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(37, 99, 235, 0.35);
+}
+
+.btn-secondary {
+  background: linear-gradient(135deg, #ede9fe, #c7d2fe);
+  color: #4338ca;
+}
+.btn-secondary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(67, 56, 202, 0.25);
+}
+
+.btn-danger {
+  background: linear-gradient(135deg, #dc2626, #ef4444);
+  color: #fff;
+}
+.btn-success {
+  background: linear-gradient(135deg, #16a34a, #22c55e, #4ade80);
+  color: #fff;
+}
+
+/* ==============================
    Instructions Modal
 ================================ */
 #instructionsModal {
@@ -29,7 +76,7 @@
   box-shadow: var(--shadow-lg);
   animation: slideUp 0.7s ease;
   transform-origin: bottom;
-  max-height: 85vh;            /* limit modal height */
+  max-height: 85vh;
   display: flex;
   flex-direction: column;
 }
@@ -44,36 +91,42 @@
 #instructionsModal .modal-body {
   flex: 1;
   overflow-y: auto;
-  padding-right: 6px; /* for scrollbar spacing */
+  padding-right: 6px;
 }
 
-/* Close button */
-#instructionsModal button[onclick="closeInstructions()"] {
-  font-size: 1.4rem;
-  transition: all 0.3s ease;
+/* Floating modern close button */
+#instructionsModal a[aria-label="Close"] {
+  font-size: 1.2rem;
+  background: #f1f5f9;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  transition: all .3s ease;
 }
-#instructionsModal button[onclick="closeInstructions()"]:hover {
-  transform: rotate(90deg);
-  color: var(--danger);
+#instructionsModal a[aria-label="Close"]:hover {
+  background: #dc2626;
+  color: #fff;
+  transform: rotate(90deg) scale(1.05);
 }
 
-/* Title */
+/* Titles */
 #instructionsModal h2 {
-  font-size: 1.8rem;  /* slightly reduced */
+  font-size: 1.8rem;
   font-weight: 800;
   background: linear-gradient(90deg, #1e3a8a, #2563eb, #3b82f6);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
-  letter-spacing: 0.6px;
 }
-
-/* Section headings */
 #instructionsModal h3 {
   font-weight: 800;
   font-size: 1.15rem;
   margin-bottom: 8px;
-  position: sticky;       /* keep headings visible */
+  position: sticky;
   top: 0;
   background: var(--card);
   padding: 6px 0;
@@ -94,7 +147,7 @@
   border-left: 4px solid var(--accent);
   padding: 10px 12px;
   border-radius: 10px;
-  font-size: 1rem;      /* compact but clear */
+  font-size: 1rem;
   font-weight: 500;
   margin-bottom: 8px;
   color: var(--text);
@@ -143,38 +196,6 @@
   background: #e2e8f0;
   transform: scale(1.05);
 }
-
-/* Footer */
-#instructionsModal label {
-  font-size: 0.95rem;
-  font-weight: 500;
-  color: var(--text-dim);
-}
-#instructionsModal .btn-primary {
-  background: linear-gradient(135deg, #1e40af, #2563eb, #3b82f6);
-  color: #fff;
-  font-weight: 700;
-  border-radius: 12px;
-  transition: all .3s ease;
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
-}
-#instructionsModal .btn-primary:hover:enabled {
-  background-position: right center;
-  transform: translateY(-2px);
-  box-shadow: 0 6px 18px rgba(37, 99, 235, 0.35);
-}
-#instructionsModal .btn-secondary {
-  background: #f1f5f9;
-  border: 1px solid #cbd5e1;
-  border-radius: 10px;
-  font-weight: 600;
-  transition: all 0.3s ease;
-}
-#instructionsModal .btn-secondary:hover {
-  background: #e2e8f0;
-  transform: translateY(-1px);
-}
-
 
 /* ==============================
    Exam Interface
@@ -239,4 +260,29 @@
 }
 @keyframes listFadeIn {
   to { opacity: 1; transform: translateY(0); }
+}
+
+/* ==============================
+   Mobile Responsiveness
+================================ */
+@media (max-width: 768px) {
+  #examInterface {
+    flex-direction: column;
+  }
+  #examInterface .w-80 {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+  }
+  #questionContent {
+    padding: 1rem;
+  }
+  .modal-footer {
+    flex-direction: column;
+    gap: 10px;
+  }
+  .btn-primary, .btn-secondary {
+    width: 100%;
+    text-align: center;
+  }
 }
