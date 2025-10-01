@@ -20,7 +20,7 @@
       <div class="up-hero-greeting">Welcome back,</div>
       <h1 class="up-hero-name">{{ full_name or "Candidate" }}</h1>
       <p class="up-hero-sub">
-        This is your exam dashboard. Review your details and start when ready.
+        This is your exam dashboard. Review your details and proceed when ready.
       </p>
     </div>
     <div class="up-hero-right">
@@ -48,6 +48,7 @@
         <div class="up-profile-row"><span>Email:</span> <strong>{{ email or '-' }}</strong></div>
         <div class="up-profile-row"><span>Username:</span> <code>{{ username or '-' }}</code></div>
         <div class="up-profile-row"><span>Gender:</span> <strong>{{ gender or '-' }}</strong></div>
+        <div class="up-profile-row"><span>Subject:</span> <strong>{{ subject or '-' }}</strong></div>
       </div>
     </section>
 
@@ -58,28 +59,33 @@
         <li><span>Status</span><strong>{% if exam_submitted %}Submitted{% elif exam_started %}In Progress{% else %}Not Started{% endif %}</strong></li>
         <li><span>Mode</span><strong>Multiple Choice</strong></li>
         <li><span>Duration</span><strong>30 minutes</strong></li>
+        <li><span>Subject</span><strong>{{ subject or '-' }}</strong></li>
       </ul>
       <div class="up-actions-row">
         {% if not exam_started and not exam_submitted %}
-          <form action="{{ url_for('start_exam') }}" method="POST">
-            <button type="submit" class="btn-primary">🚀 Start Exam</button>
-          </form>
+          <!-- Changed: no POST, just link to /exam -->
+          <a href="{{ url_for('exam') }}" class="btn-primary">📖 View Exam Instructions</a>
         {% elif exam_submitted %}
           <a href="{{ url_for('result') }}" class="btn-success">📊 View Results</a>
+        {% elif exam_started %}
+          <a href="{{ url_for('exam') }}" class="btn-warning">⏳ Resume Exam</a>
         {% endif %}
       </div>
-      <p class="up-hint">Click <strong>Start Exam</strong> to begin. You’ll first see instructions.</p>
+      <p class="up-hint">
+        You’ll first see <strong>instructions</strong>.  
+        The exam will only begin when you click <strong>🚀 Start Exam</strong> inside the instructions modal.
+      </p>
     </section>
 
     <!-- Pre-exam Checklist -->
     <section class="up-card up-help">
       <h2 class="up-card-head">⚡ Before You Begin</h2>
       <ul class="up-bullets">
-        <li>Ensure a stable internet connection.</li>
+        <li>Ensure a stable internet connection & keep your device plugged in or fully charged.</li>
         <li>Use a modern browser (Chrome, Edge, Safari, Firefox).</li>
-        <li>Close other apps/tabs to avoid distractions.</li>
-        <li>Keep your device plugged in or fully charged.</li>
+        <li>Close other apps/tabs to avoid distractions during your exam.</li>
       </ul>
+
       <div class="up-cta-row">
         <button class="btn-link" id="openSupport">Need help?</button>
       </div>

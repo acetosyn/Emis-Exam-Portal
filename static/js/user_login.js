@@ -1,4 +1,4 @@
-// user_login.js — Candidate Login interactions
+// user_login.js — Candidate Login interactions with subject selection
 
 document.addEventListener("DOMContentLoaded", () => {
   const form = document.getElementById("userLoginForm");
@@ -8,6 +8,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const loginBtn = document.querySelector(".login-btn");
   const btnText = loginBtn.querySelector(".btn-text");
   const btnSpinner = loginBtn.querySelector(".loading-spinner");
+  const subjectSelect = document.getElementById("subject"); // new subject dropdown
 
   // Toggle password visibility
   if (passwordToggle) {
@@ -33,7 +34,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     if (!valid) {
-      alert("⚠️ Please fill in all required fields");
+      alert("⚠️ Please fill in all required fields (including subject)");
       return;
     }
 
@@ -41,6 +42,11 @@ document.addEventListener("DOMContentLoaded", () => {
     btnText.classList.add("hidden");
     btnSpinner.classList.remove("hidden");
     overlay.classList.remove("hidden");
+
+    // Save subject choice in sessionStorage (optional: helpful for front-end display)
+    if (subjectSelect) {
+      sessionStorage.setItem("chosenSubject", subjectSelect.value);
+    }
 
     // Simulate login delay
     setTimeout(() => {
