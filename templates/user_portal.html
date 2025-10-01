@@ -8,6 +8,12 @@
 
 {% block content %}
 <div class="up-shell">
+  
+  <!-- Typewriter Banner -->
+  <div class="up-typewriter">
+    <span id="typewriter"></span>
+  </div>
+
   <!-- Welcome / Header strip -->
   <header class="up-hero">
     <div class="up-hero-left">
@@ -58,12 +64,7 @@
           <form action="{{ url_for('start_exam') }}" method="POST">
             <button type="submit" class="btn-primary">🚀 Start Exam</button>
           </form>
-        {% elif exam_started and not exam_submitted %}
-          <a href="{{ url_for('exam') }}" class="btn-secondary">▶️ Resume Exam</a>
-          <form action="{{ url_for('submit_exam') }}" method="POST" onsubmit="return confirm('Submit your exam now?');">
-            <button type="submit" class="btn-danger">🛑 Submit Now</button>
-          </form>
-        {% else %}
+        {% elif exam_submitted %}
           <a href="{{ url_for('result') }}" class="btn-success">📊 View Results</a>
         {% endif %}
       </div>

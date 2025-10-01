@@ -186,10 +186,18 @@ def mark_issued():
 
 
 # -------------------- LOGOUT --------------------
+# -------------------- LOGOUT --------------------
 @app.route('/logout')
 def logout():
+    # capture user type before clearing the session
+    user_type = session.get('user_type')
     session.clear()
+
+    # send candidates back to candidate login; admins to admin login
+    if user_type == 'user':
+        return redirect(url_for('user_login'))
     return redirect(url_for('admin_login'))
+
 
 
 # -------------------- API: Document Upload --------------------
