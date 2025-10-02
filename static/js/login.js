@@ -1,6 +1,6 @@
 document.addEventListener("DOMContentLoaded", () => {
-  const form = document.querySelector("#adminLoginForm") || document.querySelector("#userLoginForm");
-  const overlay = document.querySelector(".loading-overlay");
+  const form = document.querySelector("#adminLoginForm");
+  const overlay = document.querySelector("#loadingOverlay");
 
   // ================= PASSWORD TOGGLE =================
   document.querySelectorAll(".toggle-password").forEach(btn => {
@@ -12,10 +12,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (input.type === "password") {
         input.type = "text";
-        btn.textContent = "🙈";
+        btn.innerHTML = `<i class="fas fa-eye-slash"></i>`;
       } else {
         input.type = "password";
-        btn.textContent = "👁️";
+        btn.innerHTML = `<i class="fas fa-eye"></i>`;
       }
     });
   });
@@ -31,16 +31,58 @@ document.addEventListener("DOMContentLoaded", () => {
       });
 
       if (!valid) {
-        e.preventDefault(); // stop form from submitting
+        e.preventDefault();
         showToast("⚠️ Please fill in all fields", "error");
         return;
       }
 
-      // Show loading overlay while backend processes
       if (overlay) overlay.classList.remove("hidden");
-
-      // No redirect logic here → Flask will handle validation and redirect
     });
+  }
+
+  // ================= TYPEWRITER EFFECT =================
+  const el = document.getElementById("typewriter");
+  if (el) {
+    const messages = [
+      "Welcome to EMIS exam Portal",
+      "Login below to access your home dashboard",
+      "Contact admin for support and assistance"
+    ];
+
+    let msgIndex = 0;
+    let charIndex = 0;
+    let deleting = false;
+
+    // wrap text inside span, keep cursor separate
+    const textSpan = document.createElement("span");
+    const cursor = document.createElement("span");
+    cursor.className = "typewriter-cursor";
+    cursor.textContent = "|";
+
+    el.innerHTML = ""; // clear
+    el.appendChild(textSpan);
+    el.appendChild(cursor);
+
+    function type() {
+      const current = messages[msgIndex];
+      if (!deleting) {
+        textSpan.textContent = current.substring(0, charIndex++);
+        if (charIndex > current.length) {
+          deleting = true;
+          setTimeout(type, 1200); // pause before deleting
+          return;
+        }
+      } else {
+        textSpan.textContent = current.substring(0, charIndex--);
+        if (charIndex === 0) {
+          deleting = false;
+          msgIndex = (msgIndex + 1) % messages.length;
+        }
+      }
+      setTimeout(type, deleting ? 40 : 70);
+    }
+
+    type();
   }
 });
 
