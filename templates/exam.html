@@ -47,47 +47,74 @@
 </header>
 
 
-    <div class="modal-body instructions-body">
-      <div class="instruction-card">
-        <span class="instr-icon">📘</span>
-        <p>This exam contains <b>40 multiple-choice questions (MCQs)</b>.</p>
-      </div>
+<div class="modal-body instructions-body">
+  <div class="instruction-card">
+    <span class="instr-icon">📘</span>
+    <p>This exam contains <b>40 multiple-choice questions (MCQs)</b>.</p>
+  </div>
 
-   <div class="instruction-card">
-        <span class="instr-icon">🚩</span>
-        <p>You can only <b>answer a question once.</b> Ensure to check questions carefully before answering.</p>
-      </div>
+  <div class="instruction-card">
+    <span class="instr-icon">🚩</span>
+    <p>You can only <b>answer a question once.</b> Ensure to check questions carefully before answering.</p>
+  </div>
 
-      <div class="instruction-card">
-        <span class="instr-icon">🔢</span>
-        <p>Each question has options <b>A–D</b>. Select the most appropriate answer.</p>
-      </div>
+  <!-- 🚨 NEW IMPORTANT RULE (moved up so it's always visible without scrolling) -->
+  <div class="instruction-card">
+    <span class="instr-icon">🛑</span>
+    <p>
+      Opening a <b>new browser tab</b> or <b>leaving this page</b> while the exam is in progress 
+      is strictly prohibited. A second violation will result in <b>automatic disqualification</b>.
+    </p>
+  </div>
 
-      <div class="instruction-card">
-        <span class="instr-icon">⏳</span>
-        <p>You have <b>20 minutes</b> to complete all questions.</p>
-      </div>
+  <div class="instruction-card">
+    <span class="instr-icon">🔢</span>
+    <p>Each question has options <b>A–D</b>. Select the most appropriate answer.</p>
+  </div>
 
-      <div class="instruction-card">
-        <span class="instr-icon">➡️</span>
-        <p>Navigate using the <b>Previous</b> and <b>Next</b> buttons or the question grid.</p>
-      </div>
+  <div class="instruction-card">
+    <span class="instr-icon">⏳</span>
+    <p>You have <b>20 minutes</b> to complete all questions.</p>
+  </div>
 
-      <div class="instruction-card">
-        <span class="instr-icon">🚩</span>
-        <p>You may <b>flag questions</b> to review them before submission.</p>
-      </div>
+  <div class="instruction-card">
+    <span class="instr-icon">➡️</span>
+    <p>Navigate using the <b>Previous</b> and <b>Next</b> buttons or the question grid.</p>
+  </div>
 
-      <div class="instruction-card">
-        <span class="instr-icon">⚠️</span>
-        <p>Once started, you must finish in one sitting.</p>
-      </div>
-    </div>
+  <div class="instruction-card">
+    <span class="instr-icon">🚩</span>
+    <p>You may <b>flag questions</b> to review them before submission.</p>
+  </div>
+
+  <div class="instruction-card">
+    <span class="instr-icon">⚠️</span>
+    <p>Once started, you must finish in one sitting.</p>
+  </div>
+</div>
+
 
     <footer class="modal-foot">
       <a href="{{ url_for('user_portal') }}" class="btn-secondary">Back to Dashboard</a>
       <button id="startExamBtn" class="btn-primary">🚀 Start Exam</button>
     </footer>
+  </div>
+</div>
+
+<!-- End Exam Confirmation Modal -->
+<div id="endExamModal" class="modal-backdrop hidden" role="dialog" aria-modal="true">
+  <div class="modal-card small">
+    <div class="modal-head">
+      <h2>Confirm End Exam</h2>
+      <button onclick="closeEndExam()" class="close-x" aria-label="Close">✕</button>
+    </div>
+    <div class="modal-body">
+      <p id="endExamMessage" class="mb-4 text-gray-700"></p>
+    </div>
+    <div class="modal-foot">
+      <button onclick="closeEndExam()" class="btn-secondary">No, Continue Exam</button>
+      <button onclick="submitExam(false)" class="btn-danger">Yes, End Exam</button>
+    </div>
   </div>
 </div>
 
@@ -205,6 +232,7 @@
 
 {% block scripts %}
 <script src="{{ url_for('static', filename='js/exam-core.js') }}"></script>
+<script src="{{ url_for('static', filename='js/shuffle.js') }}"></script>
 <script src="{{ url_for('static', filename='js/exam-features.js') }}"></script>
 <script src="{{ url_for('static', filename='js/exam-realtime.js') }}"></script>
 <script src="{{ url_for('static', filename='js/hour-glass.js') }}"></script>
