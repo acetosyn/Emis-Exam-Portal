@@ -8,12 +8,11 @@ DB_PATH = Path("database.db")
 LOGS_DIR = Path("logs")
 LOGS_DIR.mkdir(exist_ok=True)
 
-
 # ==========================
 #   INIT
 # ==========================
 def init_db():
-    """Ensure exam_results table exists (without wiping existing data)."""
+    """Ensure exam_results table exists (with status column)."""
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.execute("""
@@ -28,19 +27,20 @@ def init_db():
             total INTEGER,
             answered INTEGER,
             time_taken INTEGER,
-            submitted_at TEXT NOT NULL
+            submitted_at TEXT NOT NULL,
+            status TEXT DEFAULT 'completed'
         )
     """)
     conn.commit()
     conn.close()
-
 
 # ==========================
 #   SAVE RESULT
 # ==========================
 def save_exam_result(username, fullname, email, subject,
                      score, correct, total, answered,
-                     time_taken, submitted_at=None):
+                     time_taken, submitted_at=None,
+                     status="completed"):
     """Save candidate exam results into DB and CSV log."""
     init_db()
     conn = sqlite3.connect(DB_PATH)
@@ -53,37 +53,34 @@ def save_exam_result(username, fullname, email, subject,
         INSERT INTO exam_results (
             username, fullname, email, subject,
             score, correct, total, answered,
-            time_taken, submitted_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            time_taken, submitted_at, status
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, (
         username, fullname, email, subject,
         score, correct, total, answered,
-        time_taken, submitted_at
+        time_taken, submitted_at, status
     ))
     conn.commit()
     conn.close()
 
-    # Save to CSV for redundancy/logging
     save_exam_to_csv(username, fullname, email, subject,
                      score, correct, total, answered,
-                     time_taken, submitted_at)
+                     time_taken, submitted_at, status)
 
     return True
 
-
 def save_exam_to_csv(username, fullname, email, subject,
                      score, correct, total, answered,
-                     time_taken, submitted_at):
+                     time_taken, submitted_at, status):
     """Append exam results to CSV log file."""
     today = datetime.now().strftime("%Y-%m-%d")
     log_file = LOGS_DIR / f"exam_results_{today}.csv"
-
     new_file = not log_file.exists()
     with open(log_file, "a", newline="") as csvfile:
         fieldnames = [
             "username", "fullname", "email", "subject",
             "score", "correct", "total", "answered",
-            "time_taken", "submitted_at"
+            "time_taken", "submitted_at", "status"
         ]
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         if new_file:
@@ -98,9 +95,9 @@ def save_exam_to_csv(username, fullname, email, subject,
             "total": total,
             "answered": answered,
             "time_taken": time_taken,
-            "submitted_at": submitted_at
+            "submitted_at": submitted_at,
+            "status": status
         })
-
 
 # ==========================
 #   GET RESULTS
@@ -113,7 +110,7 @@ def get_exam_results(limit=100):
     cursor.execute("""
         SELECT username, fullname, email, subject,
                score, correct, total, answered,
-               time_taken, submitted_at
+               time_taken, submitted_at, status
         FROM exam_results
         ORDER BY id DESC
         LIMIT ?
@@ -133,6 +130,45 @@ def get_exam_results(limit=100):
             "answered": r[7],
             "time_taken": r[8],
             "submitted_at": r[9],
+            "status": r[10]
         }
         for r in rows
     ]
+
+
+def get_user_latest_result(username):
+    """Fetch the most recent exam result for a given username."""
+    init_db()
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT username, fullname, email, subject,
+               score, correct, total, answered,
+               time_taken, submitted_at, status
+        FROM exam_results
+        WHERE username = ?
+        ORDER BY id DESC
+        LIMIT 1
+    """, (username,))
+    row = cursor.fetchone()
+    conn.close()
+
+    if not row:
+        return None
+
+    return {
+        "username": row[0],
+        "fullname": row[1],
+        "email": row[2],
+        "subject": row[3],
+        "score": row[4],
+        "correct": row[5],
+        "total": row[6],
+        "answered": row[7],
+        "time_taken": row[8],
+        "submitted_at": row[9],
+        "status": row[10],
+        # add placeholders for frontend
+        "flagged": 0,
+        "tabSwitches": 0
+    }

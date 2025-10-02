@@ -117,12 +117,12 @@ def exam():
         return redirect(url_for('user_login'))
 
     # Always render exam.html
-    # exam_started flag decides whether modal is shown
     return render_template(
         'exam.html',
         full_name=session.get('full_name'),
         username=session.get('username'),
-        exam_started=session.get('exam_started', False)  # pass flag to template
+        subject=session.get('subject'),   # ✅ inject subject here
+        exam_started=session.get('exam_started', False)
     )
 
 
@@ -144,16 +144,15 @@ def result():
     if session.get('user_type') != 'user':
         return redirect(url_for('user_login'))
 
-    # Optional gate: only show result after submitted
-    # if not session.get('exam_submitted'):
-    #     return redirect(url_for('user_portal'))
+    username = session.get('username')
+    latest = user_exam.get_user_latest_result(username)
 
     return render_template(
         'result.html',
         full_name=session.get('full_name'),
-        username=session.get('username')
+        username=username,
+        result=latest or {}
     )
-
 
 # -------------------- API: Generate Credentials --------------------
 @app.route('/generate_credentials', methods=['POST'])
@@ -279,8 +278,9 @@ def api_exam_submit():
     answered = data.get("answered", 0)
     time_taken = data.get("timeTaken", 0)
     submitted_at = data.get("submittedAt")
+    status = data.get("status", "completed")   # <-- NEW (default fallback)
 
-    # Save result into DB
+    # Save result into DB with status
     user_exam.save_exam_result(
         username=username,
         fullname=fullname,
@@ -291,18 +291,17 @@ def api_exam_submit():
         total=total,
         answered=answered,
         time_taken=time_taken,
-        submitted_at=submitted_at
+        submitted_at=submitted_at,
+        status=status
     )
 
     # Mark session flags
     session['exam_submitted'] = True
     session['exam_started'] = False
 
-    return jsonify({"success": True, "message": "Exam result recorded"})
+    return jsonify({"success": True, "message": f"Exam result recorded ({status})"})
 
 
-
-# -------------------- API: Get All Exam Results (for Admin Dashboard) --------------------
 # -------------------- API: Get All Exam Results (for Admin Dashboard) --------------------
 @app.route('/api/exam/results')
 def api_exam_results():
@@ -317,4 +316,3 @@ if __name__ == '__main__':
     user_credentials.init_db()
     user_exam.init_db()   # ensure exam_results table exists
     app.run(host='0.0.0.0', port=5000, debug=True)
-
