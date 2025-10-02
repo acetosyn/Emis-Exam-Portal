@@ -5,7 +5,9 @@ import user_credentials  # credential generator / DB handler
 import engine            # file upload handler
 import mimetypes
 import user_exam   # new module for exam results
-
+import email_server 
+from datetime import datetime
+from threading import Thread
 # Load environment variables
 load_dotenv()
 
@@ -14,6 +16,16 @@ app.secret_key = os.getenv("SECRET_KEY", "fallback_secret_key")
 
 ADMIN_USERNAME = os.getenv("ADMIN_USERNAME")
 ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD")
+
+
+
+def _send_emails_async(result_payload: dict):
+    """Fire-and-forget email sending so the HTTP response is snappy."""
+    try:
+        status = email_server.send_result_emails(result_payload)
+        app.logger.info(f"[email] send_result_emails -> {status}")
+    except Exception as e:
+        app.logger.exception(f"[email] send_result_emails failed: {e}")
 
 
 @app.route('/')
@@ -260,6 +272,7 @@ def serve_upload(filename):
 
 
 # -------------------- API: Exam Submission (Realtime) --------------------
+# -------------------- API: Exam Submission (Realtime) --------------------
 @app.route('/api/exam/submit', methods=['POST'])
 def api_exam_submit():
     if session.get('user_type') != 'user':
@@ -268,17 +281,17 @@ def api_exam_submit():
     data = request.json or {}
     username = session.get("username")
     fullname = session.get("full_name")
-    subject = session.get("subject")
-    email = session.get("email")
+    subject  = session.get("subject")
+    email    = session.get("email")
 
     # Extract score data from JS payload
-    score = data.get("score", 0)
-    correct = data.get("correct", 0)
-    total = data.get("total", 0)
-    answered = data.get("answered", 0)
-    time_taken = data.get("timeTaken", 0)
-    submitted_at = data.get("submittedAt")
-    status = data.get("status", "completed")   # <-- NEW (default fallback)
+    score        = data.get("score", 0)          # percentage
+    correct      = data.get("correct", 0)
+    total        = data.get("total", 0)
+    answered     = data.get("answered", 0)
+    time_taken   = data.get("timeTaken", 0)
+    submitted_at = data.get("submittedAt") or datetime.utcnow().isoformat()
+    status       = data.get("status", "completed")  # completed | timeout | disqualified, etc.
 
     # Save result into DB with status
     user_exam.save_exam_result(
@@ -295,11 +308,30 @@ def api_exam_submit():
         status=status
     )
 
+    # Prepare payload for email_server
+    result_payload = {
+        "username": username,
+        "fullname": fullname,
+        "email": email,            # candidate email (may be blank)
+        "subject": subject,
+        "score": score,            # percent
+        "correct": correct,
+        "total": total,
+        "answered": answered,
+        "time_taken": time_taken,
+        "submitted_at": submitted_at,
+        "status": status
+    }
+
+    # Send emails in the background (admin + candidate)
+    Thread(target=_send_emails_async, args=(result_payload,), daemon=True).start()
+
     # Mark session flags
     session['exam_submitted'] = True
     session['exam_started'] = False
 
     return jsonify({"success": True, "message": f"Exam result recorded ({status})"})
+
 
 
 # -------------------- API: Get All Exam Results (for Admin Dashboard) --------------------

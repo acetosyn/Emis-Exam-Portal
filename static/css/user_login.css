@@ -10,14 +10,17 @@ body, html {
   overflow: hidden;
 }
 
-/* Background with blur effect */
+/* ============================== */
+/* Background with blur effect — FINAL TWEAK */
+/* ============================== */
 .login-page {
   position: relative;
   min-height: 100vh;
   display: flex;
-  align-items: flex-start;   /* shift upward */
+  align-items: flex-start;  
   justify-content: center;
-  padding: 2rem 1rem 1rem;
+  padding-top: 0;            
+  padding-bottom: 1rem;
   z-index: 1;
 }
 
@@ -31,19 +34,32 @@ body, html {
   z-index: -1;
 }
 
-/* Login Card */
+/* ============================== */
+/* Login Card — adjusted for spacing */
+/* ============================== */
 .login-card {
   background: rgba(255, 255, 255, 0.92);
   border-radius: 1rem;
   padding: 1.2rem 1.5rem;
-  max-width: 360px;          /* even narrower */
+  max-width: 360px;
   width: 100%;
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.18);
   text-align: center;
   position: relative;
   z-index: 2;
-  margin-top: 2vh;          /* move it up from exact center */
+  margin-top: 0;
+  transform: translateY(-1%);   /* ⬅️ Reduced upward shift */
 }
+
+/* Mobile tweak: keep it neat on small screens */
+@media (max-width: 480px) {
+  .login-card {
+    padding: 1rem 1.2rem;
+    max-width: 95%;
+    transform: translateY(-2%); /* slightly less on mobile */
+  }
+}
+
 
 .logo-container {
   margin-bottom: 0.8rem;

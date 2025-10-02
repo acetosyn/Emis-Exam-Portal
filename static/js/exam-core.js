@@ -80,7 +80,9 @@ window.loadExamData = async function(subject){
   try {
     const res = await fetch(`/static/data/${subject}.json`,{cache:"no-store"});
     if (!res.ok) throw new Error(`Failed ${res.status}`);
-    window.examData = await res.json();
+    
+    // 👇 shuffle applied here
+    window.examData = shuffleQuestions(await res.json());
 
     window.timeRemaining = (Number(window.examData.time_allowed_minutes)||20)*60;
     $("#timerDisplay") && ($("#timerDisplay").textContent = formatTime(window.timeRemaining));
@@ -289,23 +291,38 @@ window.toggleFullscreen=function(){
 // Results & Submit
 // --------------------
 function calculateResults(){
-  const total=window.examData.questions.length;
-  let correct=0;
+  if (!window.examData || !Array.isArray(window.examData.questions)) {
+    return {
+      totalQuestions: 0,
+      answeredQuestions: 0,
+      correctAnswers: 0,
+      score: 0,
+      timeTaken: 0
+    };
+  }
+
+  const total = window.examData.questions.length;
+  let correct = 0;
+
   window.examData.questions.forEach((q,i)=>{
-    const qid=q.id??i;
-    const ua=window.userAnswers[qid];
+    const qid = q.id ?? i;
+    const ua = window.userAnswers[qid];
     if (!ua) return;
-    const right=getCorrectIndex(q);
-    if (ua.index===right) correct++;
+    const right = getCorrectIndex(q);
+    if (ua.index === right) correct++;
   });
+
   return {
     totalQuestions: total,
     answeredQuestions: Object.keys(window.userAnswers).length,
     correctAnswers: correct,
-    score: total? Math.round((correct/total)*100):0,
-    timeTaken: Math.round((Date.now()-(window.examStartTime||Date.now()))/1000)
+    score: total ? Math.round((correct/total) * 100) : 0,
+    timeTaken: Math.round((Date.now() - (window.examStartTime || Date.now()))/1000)
   };
 }
+
+
+
 window.submitExam = async function(timeUp=false){
   if (window.__examFinished) return;
   window.__examFinished=true;
@@ -344,7 +361,9 @@ window.startExam = async function(){
     const subject = (document.querySelector('meta[name="exam-subject"]')?.content || "biology").toLowerCase();
     const res = await fetch(`/static/data/${subject}.json`, {cache:"no-store"});
     if (!res.ok) throw new Error(`Failed ${res.status}`);
-    window.examData = await res.json();
+    
+    // 👇 shuffle applied here too
+    window.examData = shuffleQuestions(await res.json());
 
     // Try to load saved state first
     if (loadProgress()) {
@@ -405,3 +424,32 @@ document.addEventListener("visibilitychange", () => {
     }
   }
 });
+
+
+
+
+window.endExam = function() {
+  if (!window.examData) return;
+
+  const total = window.examData.questions.length;
+  const answered = Object.keys(window.userAnswers).length;
+  const remaining = total - answered;
+
+  const msg = `
+    Are you sure you want to end this exam?<br><br>
+    <ul style="margin-left:1.2em;list-style:disc;">
+      <li>You have answered <b>${answered}</b> out of <b>${total}</b> questions.</li>
+      <li><b>${remaining}</b> unanswered questions will be marked incorrect.</li>
+      <li>You will not be able to retake this exam.</li>
+    </ul>
+  `;
+
+  const modal = document.getElementById("endExamModal");
+  const msgEl = document.getElementById("endExamMessage");
+  if (msgEl) msgEl.innerHTML = msg;
+  if (modal) modal.classList.remove("hidden");
+};
+
+window.closeEndExam = function() {
+  document.getElementById("endExamModal")?.classList.add("hidden");
+};
