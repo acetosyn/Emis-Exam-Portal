@@ -29,108 +29,106 @@
 
     <!-- ______________________ SIDEBAR ______________________ -->
     ...  <!-- (your sidebar remains exactly as-is) -->
+<!-- Sidebar (collapsible) -->
+<aside id="adminSidebar" class="sidebar">
+  <div class="sidebar-head">
+    <div class="brand nav-item" data-panel="#panel-dashboard" style="cursor: pointer;">
+      <img src="{{ url_for('static', filename='images/logo.jpg') }}" alt="EMIS" class="brand-logo" />
+      <div class="brand-text">
+        <div class="brand-title">EMIS Admin</div>
+        <div class="brand-sub">Epitome Model Islamic Schools</div>
+      </div>
+    </div>
+    <button id="sidebarToggle" class="sidebar-toggle" aria-label="Toggle sidebar">
+      <span class="bar"></span>
+      <span class="bar"></span>
+      <span class="bar"></span>
+    </button>
+  </div>
 
- <!-- Sidebar (collapsible) -->
-    <aside id="adminSidebar" class="sidebar">
-        <div class="sidebar-head">
-            <div class="brand">
-                <img src="{{ url_for('static', filename='images/logo.jpg') }}" alt="EMIS" class="brand-logo">
-                <div class="brand-text">
-                    <div class="brand-title">EMIS Admin</div>
-                    <div class="brand-sub">Epitome Model Islamic Schools</div>
-                </div>
-            </div>
-            <button id="sidebarToggle" class="sidebar-toggle" aria-label="Toggle sidebar">
-                <span class="bar"></span>
-                <span class="bar"></span>
-                <span class="bar"></span>
-            </button>
+  <nav class="sidebar-nav" role="navigation" aria-label="Admin Navigation">
+    <!-- Dashboard -->
+    <button class="nav-item is-active" data-panel="#panel-dashboard">
+      <span class="nav-ico">🏠</span>
+      <span class="nav-label">Dashboard</span>
+    </button>
 
-        </div>
+    <!-- Uploads -->
+    <button class="nav-item" data-panel="#panel-uploads">
+      <span class="nav-ico">📂</span>
+      <span class="nav-label">Uploads</span>
+    </button>
 
-        <nav class="sidebar-nav" role="navigation" aria-label="Admin Navigation">
-            <!-- Dashboard -->
-            <button class="nav-item is-active" data-panel="#panel-dashboard">
-                <span class="nav-ico">🏠</span>
-                <span class="nav-label">Dashboard</span>
-            </button>
+    <!-- Exams (collapsible group) -->
+    <div class="nav-group" data-group="exams">
+      <button class="nav-item nav-parent" data-submenu="#menu-exams">
+        <span class="nav-ico">🧪</span>
+        <span class="nav-label">Exams</span>
+        <span class="nav-caret">▸</span>
+      </button>
+      <div id="menu-exams" class="nav-sub">
+        <button class="nav-subitem" data-panel="#panel-push"><span>Push to Exam</span></button>
+        <button class="nav-subitem" data-panel="#panel-link"><span>Generate Link</span></button>
+        <button id="generateCredsBtnSidebar" class="btn-secondary">🔑 Generate Credentials</button>
+        <button class="nav-subitem" data-panel="#panel-manage"><span>Manage Credentials</span></button>
+        <button class="nav-subitem" data-panel="#panel-results"><span>Results</span></button>
+      </div>
+    </div>
 
-            <!-- Uploads -->
-            <button class="nav-item" data-panel="#panel-uploads">
-                <span class="nav-ico">📂</span>
-                <span class="nav-label">Uploads</span>
-            </button>
+    <!-- Candidates -->
+    <button class="nav-item" data-panel="#panel-candidates">
+      <span class="nav-ico">👥</span>
+      <span class="nav-label">Candidates</span>
+    </button>
 
-            <!-- Exams (collapsible group) -->
-            <div class="nav-group" data-group="exams">
-                <button class="nav-item nav-parent" data-submenu="#menu-exams">
-                    <span class="nav-ico">🧪</span>
-                    <span class="nav-label">Exams</span>
-                    <span class="nav-caret">▸</span>
-                </button>
-                <div id="menu-exams" class="nav-sub">
-                    <button class="nav-subitem" data-panel="#panel-push"><span>Push to Exam</span></button>
-                    <button class="nav-subitem" data-panel="#panel-link"><span>Generate Link</span></button>
-                    <button id="generateCredsBtnSidebar" class="btn-secondary">🔑 Generate Credentials</button>
-                    <button class="nav-subitem" data-panel="#panel-manage"><span>Manage Credentials</span></button>
-                    <button class="nav-subitem" data-panel="#panel-results"><span>Results</span></button>
-                </div>
-            </div>
+    <!-- Notifications -->
+    <button class="nav-item" data-panel="#panel-notifications">
+      <span class="nav-ico">🔔</span>
+      <span class="nav-label">Notifications</span>
+    </button>
 
-            <!-- Candidates -->
-            <button class="nav-item" data-panel="#panel-candidates">
-                <span class="nav-ico">👥</span>
-                <span class="nav-label">Candidates</span>
-            </button>
+    <!-- Activity -->
+    <button class="nav-item" data-panel="#panel-activity">
+      <span class="nav-ico">🕒</span>
+      <span class="nav-label">Activity</span>
+    </button>
 
-            <!-- Notifications -->
-            <button class="nav-item" data-panel="#panel-notifications">
-                <span class="nav-ico">🔔</span>
-                <span class="nav-label">Notifications</span>
-            </button>
+    <!-- System Status -->
+    <button class="nav-item" data-panel="#panel-status">
+      <span class="nav-ico">⚙️</span>
+      <span class="nav-label">System Status</span>
+    </button>
 
-            <!-- Activity -->
-            <button class="nav-item" data-panel="#panel-activity">
-                <span class="nav-ico">🕒</span>
-                <span class="nav-label">Activity</span>
-            </button>
+    <!-- Quick Tools -->
+    <button class="nav-item" data-panel="#panel-tools">
+      <span class="nav-ico">⚡</span>
+      <span class="nav-label">Quick Tools</span>
+    </button>
 
-            <!-- System Status -->
-            <button class="nav-item" data-panel="#panel-status">
-                <span class="nav-ico">⚙️</span>
-                <span class="nav-label">System Status</span>
-            </button>
+    <!-- Settings -->
+    <button class="nav-item" data-panel="#panel-settings">
+      <span class="nav-ico">🛠️</span>
+      <span class="nav-label">Settings</span>
+    </button>
 
-            <!-- Quick Tools -->
-            <button class="nav-item" data-panel="#panel-tools">
-                <span class="nav-ico">⚡</span>
-                <span class="nav-label">Quick Tools</span>
-            </button>
+    <!-- Help -->
+    <button class="nav-item" data-panel="#panel-help">
+      <span class="nav-ico">❓</span>
+      <span class="nav-label">Help</span>
+    </button>
 
-            <!-- Settings -->
-            <button class="nav-item" data-panel="#panel-settings">
-                <span class="nav-ico">🛠️</span>
-                <span class="nav-label">Settings</span>
-            </button>
+    <!-- Candidate Login (opens new tab via JS) -->
+    <button class="nav-item" data-action="open-candidate-login">
+      <span class="nav-ico">🔗</span>
+      <span class="nav-label">Candidate Login</span>
+    </button>
+  </nav>
 
-            <!-- Help -->
-            <button class="nav-item" data-panel="#panel-help">
-                <span class="nav-ico">❓</span>
-                <span class="nav-label">Help</span>
-            </button>
-
-            <!-- Candidate Login (opens new tab via JS) -->
-            <button class="nav-item" data-action="open-candidate-login">
-                <span class="nav-ico">🔗</span>
-                <span class="nav-label">Candidate Login</span>
-            </button>
-        </nav>
-
-        <div class="sidebar-foot">
-            <button id="themeToggle" class="sidebar-foot-btn" title="Toggle theme">🌗 Theme</button>
-            <a href="{{ url_for('logout') }}" class="sidebar-foot-btn" title="Logout">🚪 Logout</a>
-        </div>
-    </aside>
+  <div class="sidebar-foot">
+    <button id="themeToggle" class="sidebar-foot-btn" title="Toggle theme">🌗 Theme</button>
+    <a href="{{ url_for('logout') }}" class="sidebar-foot-btn" title="Logout">🚪 Logout</a>
+  </div>
+</aside>
 
     <!-- ______________________ MAIN CONTENT ______________________ -->
     <section class="content-area">
@@ -191,17 +189,19 @@
                     </div>
                 </div>
 
-                <div class="grid-cols responsive-3 mt-6">
-                    <div class="card tall">
-                        <h3 class="card-title">Quick Actions</h3>
-                        <div class="actions-col">
-                            <button class="btn-primary" data-action="new-exam">➕ New Exam</button>
-                            <button class="btn-secondary" data-panel="#panel-uploads">📂 Upload Document</button>
-                            <button id="generateCredsBtnQuick" class="btn-secondary">🔑 Generate Credentials</button>
-                            <button class="btn-secondary" data-panel="#panel-results">📊 View Results</button>
-                            <button class="btn-secondary" data-action="open-candidate-login">🔗 Open Candidate Login</button>
-                        </div>
-                    </div>
+               <div class="grid-cols responsive-3 mt-6">
+  <div class="card tall">
+    <h3 class="card-title">Quick Actions</h3>
+    <div class="actions-col">
+      <button class="btn-primary" data-action="new-exam">➕ New Exam</button>
+      <button class="btn-secondary" data-panel="#panel-uploads">📂 Upload Document</button>
+      <button class="btn-secondary" data-panel="#panel-push">🚀 Push to Exam</button>
+      <button id="generateCredsBtnQuick" class="btn-secondary">🔑 Generate Credentials</button>
+      <button class="btn-secondary" data-panel="#panel-results">📊 View Results</button>
+      <button class="btn-secondary" data-action="open-candidate-login">🔗 Open Candidate Login</button>
+    </div>
+  </div>
+
 
                     <div class="card">
                         <h3 class="card-title">Live Notifications</h3>
@@ -633,9 +633,15 @@
 
 {% block scripts %}
 <!-- ______________________ SCRIPTS ______________________ -->
+<script>
+  // Inject dynamic Flask URL for candidate login
+  window.USER_LOGIN_URL = "{{ url_for('user_login') }}";
+</script>
+
 <script src="{{ url_for('static', filename='js/admin1.js') }}"></script>
 <script src="{{ url_for('static', filename='js/admin2.js') }}"></script>
 <script src="{{ url_for('static', filename='js/admin-routes.js') }}"></script>
+<script src="{{ url_for('static', filename='js/admin_exam_collapse.js') }}"></script>
 <script src="{{ url_for('static', filename='js/search_hist.js') }}"></script>
 <script src="{{ url_for('static', filename='js/user_credentials.js') }}"></script>
 <script src="{{ url_for('static', filename='js/doc_upload.js') }}"></script>

@@ -12,19 +12,16 @@ LOGS_DIR.mkdir(exist_ok=True)
 
 
 def init_db():
-    """Recreate candidates table fresh with latest schema"""
+    """Ensure candidates table exists (without wiping existing data)."""
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
 
-    # Drop old table if it exists (wipes previous data)
-    cursor.execute("DROP TABLE IF EXISTS candidates")
-
-    # Create fresh table with proper schema
     cursor.execute("""
-        CREATE TABLE candidates (
+        CREATE TABLE IF NOT EXISTS candidates (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             username TEXT UNIQUE NOT NULL,
             password TEXT NOT NULL,
+            subject TEXT NOT NULL,
             created_at TEXT NOT NULL,
             issued INTEGER DEFAULT 0,
             issued_at TEXT
@@ -46,8 +43,11 @@ def generate_password(length: int = 8) -> str:
     return ''.join(random.choices(chars, k=length))
 
 
-def generate_credentials(count=1, prefix="candidate", pwd_length=8):
-    """Generate and save new candidate credentials"""
+def generate_credentials(count=1, prefix="candidate", pwd_length=8, subject="GENERAL"):
+    """
+    Generate and save new candidate credentials
+    Each candidate is tied to a subject (default = GENERAL)
+    """
     init_db()
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
@@ -60,11 +60,16 @@ def generate_credentials(count=1, prefix="candidate", pwd_length=8):
         password = generate_password(pwd_length)
 
         cursor.execute(
-            "INSERT INTO candidates (username, password, created_at, issued) VALUES (?, ?, ?, 0)",
-            (username, password, datetime.utcnow().isoformat())
+            "INSERT INTO candidates (username, password, subject, created_at, issued) VALUES (?, ?, ?, ?, 0)",
+            (username, password, subject.upper(), datetime.utcnow().isoformat())
         )
         conn.commit()
-        credentials.append({"username": username, "password": password, "issued": 0})
+        credentials.append({
+            "username": username,
+            "password": password,
+            "subject": subject.upper(),
+            "issued": 0
+        })
 
     conn.close()
     save_to_csv(credentials)
@@ -85,7 +90,7 @@ def save_to_csv(credentials):
 
     new_file = not log_file.exists()
     with open(log_file, "a", newline="") as csvfile:
-        writer = csv.DictWriter(csvfile, fieldnames=["username", "password", "issued"])
+        writer = csv.DictWriter(csvfile, fieldnames=["username", "password", "subject", "issued"])
         if new_file:
             writer.writeheader()
         writer.writerows(credentials)
@@ -97,7 +102,7 @@ def get_credentials(limit=100):
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.execute(
-        "SELECT username, password, created_at, issued, issued_at FROM candidates ORDER BY id DESC LIMIT ?",
+        "SELECT username, password, subject, created_at, issued, issued_at FROM candidates ORDER BY id DESC LIMIT ?",
         (limit,)
     )
     creds = cursor.fetchall()
@@ -106,11 +111,12 @@ def get_credentials(limit=100):
         {
             "username": u,
             "password": p,
+            "subject": s,
             "created_at": t,
             "issued": i,
             "issued_at": ia
         }
-        for u, p, t, i, ia in creds
+        for u, p, s, t, i, ia in creds
     ]
 
 
@@ -132,14 +138,30 @@ def mark_issued(usernames):
 
 
 def validate_credentials(username, password):
-    """Check if given credentials exist"""
+    """
+    Check if given credentials exist.
+    If found but not issued, mark them as issued now (first login).
+    Returns subject if valid, else False.
+    """
     init_db()
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.execute(
-        "SELECT * FROM candidates WHERE username=? AND password=? AND issued=1",
+        "SELECT id, issued, subject FROM candidates WHERE username=? AND password=?",
         (username, password)
     )
     row = cursor.fetchone()
+    if row:
+        # If not marked issued, mark it at first login
+        if row[1] == 0:
+            issued_at = datetime.utcnow().isoformat()
+            cursor.execute(
+                "UPDATE candidates SET issued=1, issued_at=? WHERE id=?",
+                (issued_at, row[0])
+            )
+            conn.commit()
+        subject = row[2]
+        conn.close()
+        return subject  # return subject for dashboard display
     conn.close()
-    return row is not None
+    return False

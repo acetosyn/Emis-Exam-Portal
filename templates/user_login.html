@@ -1,18 +1,26 @@
 {% extends "base.html" %}
 
-{% block title %}User Login - EMIS Exam Portal{% endblock %}
+{% block title %}Candidate Login - EMIS Exam Portal{% endblock %}
 
 {% block styles %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/user_login.css') }}">
 {% endblock %}
 
 {% block content %}
-<div class="login-page bg-user">
-  <div class="login-card zoom-card">
+<div class="login-page">
+  <div class="login-card">
     <div class="logo-container">
       <img src="{{ url_for('static', filename='images/logo.jpg') }}" alt="EMIS Logo" class="logo">
       <h2 class="school-name">EMIS – Candidate Login</h2>
+      <p class="login-subtitle">Access your exam portal</p>
     </div>
+
+    <!-- Error Flash -->
+    {% if error %}
+    <div class="error-banner">
+      ❌ {{ error }}
+    </div>
+    {% endif %}
 
     <form id="userLoginForm" method="POST" class="login-form">
       <div class="form-field">
@@ -31,6 +39,24 @@
           <option value="" disabled selected>Select your gender</option>
           <option value="male">Male</option>
           <option value="female">Female</option>
+        </select>
+      </div>
+
+      <!-- NEW: Subject Dropdown -->
+      <div class="form-field">
+        <label for="subject">Subject</label>
+        <select id="subject" name="subject" required>
+          <option value="" disabled selected>Select your subject</option>
+          <option value="BIOLOGY">BIOLOGY</option>
+          <option value="CHEMISTRY">CHEMISTRY</option>
+          <option value="COMPUTER STUDIES">COMPUTER STUDIES</option>
+          <option value="ECONOMICS">ECONOMICS</option>
+          <option value="ENGLISH LANGUAGE">ENGLISH LANGUAGE</option>
+          <option value="GEOGRAPHY">GEOGRAPHY</option>
+          <option value="GOVERNMENT">GOVERNMENT</option>
+          <option value="MATHEMATICS">MATHEMATICS</option>
+          <option value="PHYSICS">PHYSICS</option>
+          <option value="TECHNICAL DRAWING">TECHNICAL DRAWING</option>
         </select>
       </div>
 
@@ -57,6 +83,7 @@
   </div>
 </div>
 
+<!-- Loading Overlay -->
 <div id="loadingOverlay" class="loading-overlay hidden">
   <div class="loading-box">
     <div class="loading-spinner big"></div>
@@ -66,5 +93,5 @@
 {% endblock %}
 
 {% block scripts %}
-<script src="{{ url_for('static', filename='js/login.js') }}"></script>
+<script src="{{ url_for('static', filename='js/user_login.js') }}"></script>
 {% endblock %}
