@@ -2,34 +2,39 @@
    ADMIN 2 (FEATURE-SPECIFIC)
    ============================== */
 
-/* Stat Cards */
+/* ============================
+   Stat Cards (Navy Blue Theme)
+   ============================ */
 .stat-card {
-  background: #fff;
-  padding: 1rem;
-  border-radius: 0.75rem;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-  text-align: center;
-}
-
-.stat-card.stat-dark {
-  background: #0f2b46;
+  background: linear-gradient(135deg, #0f2b46, #1e3a5f);
   color: #fff;
+  padding: 1rem 1.25rem;
+  border-radius: 0.75rem;
+  text-align: center;
+  font-size: 0.9rem;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
-
+.stat-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 18px rgba(0,0,0,0.12);
+}
 .stat-label {
-  font-size: 0.85rem;
-  color: #6b7280;
+  font-size: 0.8rem;
+  opacity: 0.85;
 }
-
-.stat-card.stat-dark .stat-label {
-  color: rgba(255, 255, 255, 0.7);
-}
-
 .stat-value {
-  font-size: 1.5rem;
+  font-size: 1.3rem;
   font-weight: 700;
   margin-top: 0.25rem;
 }
+.stat-ico {
+  font-size: 1.4rem;
+  margin-bottom: 0.25rem;
+  display: block;
+  opacity: 0.9;
+}
+
 
 /* Notifications */
 .list-auto {
@@ -143,3 +148,51 @@
 .route.is-active {
   display: block;
 }
+
+
+/* ============================
+   Notifications, Activity, Status Cards
+   ============================ */
+.card.notifications-card,
+.card.activity-card,
+.card.status-card {
+  background: linear-gradient(135deg, #f0f4f9, #e5eef7); /* soft navy tint */
+  border: 1px solid #d1d9e6;
+  color: #0f2b46;
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card.notifications-card:hover,
+.card.activity-card:hover,
+.card.status-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+}
+
+/* Titles stay navy */
+.card.notifications-card .card-title,
+.card.activity-card .card-title,
+.card.status-card .card-title {
+  color: #0f2b46;
+  font-weight: 700;
+}
+
+/* Muted texts */
+.card.notifications-card .muted,
+.card.activity-card .muted,
+.card.status-card .muted {
+  color: #6b7280;
+}
+
+/* Status Grid inside System Status */
+.status-card .status-grid {
+  background: transparent;
+}
+.status-card .status-grid li {
+  background: rgba(255,255,255,0.7);
+  border: 1px solid #d1d9e6;
+}
+
+
