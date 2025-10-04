@@ -197,13 +197,12 @@ function lockUIForTimeout(){
 
 // Block retake/back-entry if exam was submitted
 function enforceExamLockOnLoad(){
-  if (!window.examUser) return;
-  const locked = localStorage.getItem(`emis_exam_lock_${window.examUser}`) === "1";
+  const locked = localStorage.getItem(LS_EXAM_LOCK) === "1";
   if (locked && location.pathname.toLowerCase().includes("/exam")) {
+    // Don’t allow re-entry into exam once submitted; bounce to result.
     location.replace("/result");
   }
 }
-
 
 // --------------------
 // Load exam data (preview before start)

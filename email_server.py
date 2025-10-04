@@ -345,8 +345,9 @@ def _smtp_send(msg: EmailMessage) -> bool:
 def send_admin_email(result: Dict) -> bool:
     """
     Sends the admin email with PDF and today's CSV attached (if available).
+    Supports multiple recipients (comma-separated in NOTIFY_EMAIL).
     """
-    # Target address: NOTIFY_EMAIL or fallback
+    # Read recipients directly (comma-separated string is valid)
     admin_to = os.getenv("NOTIFY_EMAIL", "spectrobana@gmail.com")
 
     subject = _compose_subject_admin(result)
@@ -357,8 +358,8 @@ def send_admin_email(result: Dict) -> bool:
 
     # Attach PDF
     pdf_bytes = _generate_pdf_bytes(result)
-    username = result.get("username") or "candidate"
-    ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+    username  = result.get("username") or "candidate"
+    ts        = datetime.now().strftime("%Y%m%d_%H%M%S")
     pdf_filename = f"EMIS_Result_{username}_{ts}.pdf"
     msg.add_attachment(pdf_bytes, maintype="application", subtype="pdf", filename=pdf_filename)
 
@@ -376,30 +377,38 @@ def send_admin_email(result: Dict) -> bool:
     return _smtp_send(msg)
 
 
+
 def send_candidate_email(result: Dict) -> bool:
     """
-    Sends the candidate email (with the same one-page PDF). If candidate email
-    is missing, returns False without failing the flow.
+    Sends the candidate email (with the same one-page PDF).
+    Supports multiple addresses if `email` contains commas.
     """
-    candidate_to = result.get("email")
-    if not candidate_to:
+    candidate_env = result.get("email", "").strip()
+    if not candidate_env:
         print("[email_server] Candidate email missing; skipping candidate email.")
         return False
+
+    # Split in case multiple addresses are given
+    candidate_list = [addr.strip() for addr in candidate_env.split(",") if addr.strip()]
 
     subject = _compose_subject_candidate(result)
     text    = _compose_body_candidate_text(result)
     html    = _compose_body_candidate_html(result)
 
-    msg = _build_base_message(candidate_to, subject, text, html)
-
-    # Attach PDF
     pdf_bytes = _generate_pdf_bytes(result)
-    username = result.get("username") or "candidate"
-    ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+    username  = result.get("username") or "candidate"
+    ts        = datetime.now().strftime("%Y%m%d_%H%M%S")
     pdf_filename = f"EMIS_Result_{username}_{ts}.pdf"
-    msg.add_attachment(pdf_bytes, maintype="application", subtype="pdf", filename=pdf_filename)
 
-    return _smtp_send(msg)
+    all_ok = True
+    for to_email in candidate_list:
+        print(f"[email_server] Sending candidate result to {to_email}")
+        msg = _build_base_message(to_email, subject, text, html)
+        msg.add_attachment(pdf_bytes, maintype="application", subtype="pdf", filename=pdf_filename)
+        if not _smtp_send(msg):
+            all_ok = False
+
+    return all_ok
 
 
 def send_result_emails(result: Dict) -> Dict[str, bool]:

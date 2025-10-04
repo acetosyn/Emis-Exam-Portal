@@ -165,68 +165,86 @@
 
 
             <!-- DASHBOARD -->
-            <section id="panel-dashboard" class="route is-active" data-route="dashboard">
-                <div class="grid-cols responsive-4">
-                    <div class="stat-card">
-                        <p class="stat-label">Total Candidates</p>
-                        <h2 id="statTotalStudents" class="stat-value">0</h2>
-                        <div class="sparkline" aria-hidden="true"></div>
-                    </div>
-                    <div class="stat-card stat-dark">
-                        <p class="stat-label">Active Exams</p>
-                        <h2 id="statActiveExams" class="stat-value">0</h2>
-                        <div class="sparkline" aria-hidden="true"></div>
-                    </div>
-                    <div class="stat-card">
-                        <p class="stat-label">Pending Results</p>
-                        <h2 id="statPending" class="stat-value">0</h2>
-                        <div class="sparkline" aria-hidden="true"></div>
-                    </div>
-                    <div class="stat-card stat-dark">
-                        <p class="stat-label">Average Score</p>
-                        <h2 id="statAvg" class="stat-value">--</h2>
-                        <div class="sparkline" aria-hidden="true"></div>
-                    </div>
-                </div>
 
-               <div class="grid-cols responsive-3 mt-6">
-  <div class="card tall">
-    <h3 class="card-title">Quick Actions</h3>
-    <div class="actions-col">
-      <button class="btn-primary" data-action="new-exam">➕ New Exam</button>
-      <button class="btn-secondary" data-panel="#panel-uploads">📂 Upload Document</button>
-      <button class="btn-secondary" data-panel="#panel-push">🚀 Push to Exam</button>
-      <button id="generateCredsBtnQuick" class="btn-secondary">🔑 Generate Credentials</button>
-      <button class="btn-secondary" data-panel="#panel-results">📊 View Results</button>
-      <button class="btn-secondary" data-action="open-candidate-login">🔗 Open Candidate Login</button>
+<section id="panel-dashboard" class="route is-active" data-route="dashboard">
+  <!-- Stats -->
+  <div class="grid-cols responsive-4">
+    <div class="stat-card gradient-blue">
+      <div class="stat-ico">👥</div>
+      <p class="stat-label">Total Candidates</p>
+      <h2 id="statTotalStudents" class="stat-value">0</h2>
+    </div>
+    <div class="stat-card gradient-green">
+      <div class="stat-ico">📝</div>
+      <p class="stat-label">Active Exams</p>
+      <h2 id="statActiveExams" class="stat-value">0</h2>
+    </div>
+    <div class="stat-card gradient-amber">
+      <div class="stat-ico">⏳</div>
+      <p class="stat-label">Pending Results</p>
+      <h2 id="statPending" class="stat-value">0</h2>
+    </div>
+    <div class="stat-card gradient-red">
+      <div class="stat-ico">📊</div>
+      <p class="stat-label">Average Score</p>
+      <h2 id="statAvg" class="stat-value">--</h2>
     </div>
   </div>
 
+  <!-- Quick Actions -->
+  <div class="grid-cols responsive-3 mt-6">
+    <div class="card tall">
+      <h3 class="card-title">🚀 Quick Actions</h3>
+      <div class="quick-actions">
+        <button class="action-card primary" data-action="open-candidate-login">
+          <span>🔗</span> Open Candidate Login
+        </button>
+        <button id="generateCredsBtnQuick" class="action-card primary">
+          <span>🔑</span> Generate Credentials
+        </button>
+        <button class="action-card primary" data-panel="#panel-uploads">
+          <span>📂</span> Upload Document
+        </button>
+        <button class="action-card secondary" data-panel="#panel-push">
+          <span>📦</span> Push to Exam
+        </button>
+        <button class="action-card tertiary" data-action="new-exam">
+          <span>➕</span> New Exam
+        </button>
+        <button class="action-card secondary" data-panel="#panel-results">
+          <span>📊</span> View Results
+        </button>
+      </div>
+    </div>
 
-                    <div class="card">
-                        <h3 class="card-title">Live Notifications</h3>
-                        <div id="notificationsPanel" class="list-auto">
-                            <p class="muted">No notifications yet</p>
-                        </div>
-                    </div>
+<!-- Notifications -->
+<div class="card notifications-card">
+  <h3 class="card-title">🔔 Live Notifications</h3>
+  <div id="notificationsPanel" class="list-auto">
+    <p class="muted">No notifications yet</p>
+  </div>
+</div>
 
-                    <div class="card">
-                        <h3 class="card-title">Recent Activity</h3>
-                        <div id="recentActivity" class="timeline">
-                            <p class="muted">No activity logged</p>
-                        </div>
-                    </div>
-                </div>
+<!-- Activity -->
+<div class="card activity-card">
+  <h3 class="card-title">🕒 Recent Activity</h3>
+  <div id="recentActivity" class="timeline">
+    <p class="muted">No activity logged</p>
+  </div>
+</div>
 
-                <div class="card mt-6">
-                    <h3 class="card-title">System Status</h3>
-                    <ul class="status-grid">
-                        <li><span>Database</span><span class="badge-success">Online</span></li>
-                        <li><span>Exam Server</span><span class="badge-success">Running</span></li>
-                        <li><span>Storage</span><span class="badge-warning">80% Used</span></li>
-                    </ul>
-                </div>
-            </section>
+<!-- System Status -->
+<div class="card status-card mt-6">
+  <h3 class="card-title">⚙️ System Status</h3>
+  <ul class="status-grid">
+    <li><span>Database</span><span class="badge-success">Online</span></li>
+    <li><span>Exam Server</span><span class="badge-success">Running</span></li>
+    <li><span>Storage</span><span class="badge-warning">80% Used</span></li>
+  </ul>
+</div>
+
+
+</section>
 
 
 <!-- UPLOADS -->
@@ -369,62 +387,69 @@
                 </div>
             </section>
 
-            <!-- GENERATE CREDENTIALS -->
-            <section id="panel-credentials" class="route" data-route="credentials">
-                <div class="card">
-                    <h2 class="panel-title">Generate Credentials</h2>
-                    <form id="credentialForm" class="space-y-3">
-                        <div class="grid-cols responsive-3">
-                            <div>
-                                <label class="form-label">Number of students</label>
-                                <input id="studentCount" type="number" class="form-input" min="1" value="10" />
-                            </div>
-                            <div>
-                                <label class="form-label">Username prefix</label>
-                                <input id="usernamePrefix" type="text" class="form-input" value="candidate" />
-                            </div>
-                            <div>
-                                <label class="form-label">Password length</label>
-                                <input id="passwordLength" type="number" class="form-input" min="6" max="20" value="8" />
-                            </div>
-                        </div>
+           <!-- GENERATE CREDENTIALS -->
+<section id="panel-credentials" class="route" data-route="credentials">
+  <div class="card cred-panel">
+    <h2 class="panel-title">🔑 Generate Credentials</h2>
 
-                        <div class="flex flex-wrap gap-2">
-                            <button type="button" class="modern-btn modern-btn-secondary" data-preset="small">Preset: 10</button>
-                            <button type="button" class="modern-btn modern-btn-secondary" data-preset="medium">Preset: 50</button>
-                            <button type="button" class="modern-btn modern-btn-secondary" data-preset="large">Preset: 100</button>
-                        </div>
+    <form id="credentialForm" class="space-y-4">
 
-                        <div class="flex gap-2 flex-wrap">
-                            <button id="autoCredsBtn" type="button" class="btn-primary">Generate</button>
-                            <button id="generateAllBtn" type="button" class="btn-secondary">Generate + Link</button>
-                            <button id="clearCredsBtn" type="button" class="btn-secondary">Clear</button>
-                            <button id="downloadCredsBtn" type="button" class="btn-secondary">Download</button>
-                            <button id="printCredsBtn" type="button" class="btn-secondary">Print</button>
-                        </div>
+      <!-- Input fields -->
+      <div class="grid-cols responsive-3 form-grid">
+        <div class="form-card">
+          <label class="form-label">Number of Students</label>
+          <input id="studentCount" type="number" class="form-input" min="1" value="10" />
+        </div>
+        <div class="form-card">
+          <label class="form-label">Username Prefix</label>
+          <input id="usernamePrefix" type="text" class="form-input" value="candidate" />
+        </div>
+        <div class="form-card">
+          <label class="form-label">Password Length</label>
+          <input id="passwordLength" type="number" class="form-input" min="6" max="20" value="8" />
+        </div>
+      </div>
 
-                        <!-- Bulk Actions Bar -->
-                        <div id="bulkBar" class="hidden bg-soft border rounded-md p-2 flex items-center justify-between">
-                            <div class="text-sm text-navy"><span id="bulkCount">0</span> selected</div>
-                            <div class="flex gap-2">
-                                <button type="button" class="modern-btn modern-btn-secondary" id="bulkCopy">Copy</button>
-                                <button type="button" class="modern-btn modern-btn-secondary" id="bulkDelete">Delete</button>
-                                <button type="button" class="modern-btn modern-btn-secondary" id="bulkExport">Export</button>
-                            </div>
-                        </div>
+      <!-- Presets -->
+      <div class="flex flex-wrap gap-2">
+        <button type="button" class="preset-btn" data-preset="small">Preset: 10</button>
+        <button type="button" class="preset-btn" data-preset="medium">Preset: 50</button>
+        <button type="button" class="preset-btn" data-preset="large">Preset: 100</button>
+      </div>
 
-                        <div class="mt-4">
-                            <div class="flex items-center justify-between mb-2">
-                                <div>Total Students: <span id="totalStudents">0</span></div>
-                                <input id="searchCredentials" class="form-input w-48" placeholder="Search usernames..." />
-                            </div>
-                            <div id="credentialsSection" class="hidden overflow-auto max-h-72">
-                                <table id="credentialsTable" class="w-full table-auto text-sm"></table>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-            </section>
+      <!-- Action buttons -->
+      <div class="flex gap-2 flex-wrap">
+        <button id="autoCredsBtn" type="button" class="modern-btn primary">Generate</button>
+        <button id="generateAllBtn" type="button" class="modern-btn secondary">Generate + Link</button>
+        <button id="clearCredsBtn" type="button" class="modern-btn secondary">Clear</button>
+        <button id="downloadCredsBtn" type="button" class="modern-btn secondary">Download</button>
+        <button id="printCredsBtn" type="button" class="modern-btn secondary">Print</button>
+      </div>
+
+      <!-- Bulk bar -->
+      <div id="bulkBar" class="hidden bulk-bar">
+        <div class="text-sm text-navy"><span id="bulkCount">0</span> selected</div>
+        <div class="flex gap-2">
+          <button type="button" class="modern-btn secondary" id="bulkCopy">Copy</button>
+          <button type="button" class="modern-btn secondary" id="bulkDelete">Delete</button>
+          <button type="button" class="modern-btn secondary" id="bulkExport">Export</button>
+        </div>
+      </div>
+
+      <!-- Results -->
+      <div class="mt-4">
+        <div class="flex items-center justify-between mb-2">
+          <div>Total Students: <span id="totalStudents">0</span></div>
+          <input id="searchCredentials" class="form-input w-48" placeholder="Search usernames..." />
+        </div>
+        <div id="credentialsSection" class="hidden overflow-auto max-h-72 creds-table-wrap">
+          <table id="credentialsTable" class="w-full table-auto text-sm modern-table"></table>
+        </div>
+      </div>
+    </form>
+  </div>
+</section>
+
 
             <!-- MANAGE CREDENTIALS -->
             <section id="panel-manage" class="route" data-route="manage">

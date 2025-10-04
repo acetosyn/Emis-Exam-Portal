@@ -249,21 +249,23 @@
   border-radius: 0.5rem;
   background: #fff;
 }
-
-/* Offset content for fixed topbar */
+/* Offset content for fixed topbar - ultra tight */
 .route-container {
   flex: 1;
-  padding-top: 80px; /* push content below topbar */
+  padding-top: 30px;   /* very close to header height */
+  margin-top: -40px;   /* pull panels even further up */
 }
 
 /* Route panels */
 .route {
   display: none;
+  margin-top: -40px;   /* tighter spacing for all panels */
 }
 
 .route.is-active {
   display: block;
 }
+
 
 /* Cards */
 .card {
@@ -402,4 +404,46 @@
 }
 .sidebar.collapsed .sidebar-toggle .bar:nth-child(3) {
   transform: translateY(-12px) rotate(-45deg);
+}
+
+
+
+/* ============================
+   Quick Actions (Navy → Red)
+   ============================ */
+.quick-actions {
+  display: grid;
+  gap: 0.6rem;
+}
+.action-card {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: .5rem;
+  padding: 0.6rem 0.9rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  font-size: 0.9rem;
+  border: none;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  background: #0f2b46;
+  color: #fff;
+}
+.action-card span {
+  font-size: 1rem;
+}
+.action-card:hover {
+  background: #E30613;  /* red hover */
+  transform: translateY(-2px);
+}
+.action-card.tertiary {
+  background: #fff;
+  color: #6b7280;
+  border: 1px dashed #d1d5db;
+}
+.action-card.tertiary:hover {
+  background: #f9fafb;
+  color: #E30613;
+  transform: none;
 }

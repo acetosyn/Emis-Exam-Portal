@@ -5,6 +5,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
 function loadResultData() {
   const result = window.resultData || null; // injected via Jinja
+
+  // Handle empty / no results
   if (!result || !result.score) {
     const card = document.querySelector(".result-card");
     if (card) {
@@ -18,14 +20,14 @@ function loadResultData() {
     return;
   }
 
-  // Score & Circle (percentage)
+  // Score & progress circle animation
   animateScore(result.score);
 
   // Fraction score (correct / total)
   setText("correctAnswers", result.correct ?? 0);
   setText("totalQuestions", result.total ?? 0);
 
-  // PASS/FAIL
+  // PASS / FAIL label (for quick view only)
   const passFail = document.getElementById("passFail");
   if (passFail) {
     if ((result.correct ?? 0) >= 20) {
@@ -44,12 +46,13 @@ function loadResultData() {
   setText("flaggedQuestions", result.flagged ?? 0);
   setText("tabSwitches", result.tabSwitches ?? 0);
 
-  // Accuracy & Average
+  // Accuracy %
   const accuracy = (result.answered && result.answered > 0)
     ? Math.round((result.correct / result.answered) * 100)
     : 0;
   setText("accuracyRate", accuracy + "%");
 
+  // Avg. time per question
   const avg = (result.answered && result.answered > 0)
     ? Math.round(result.time_taken / result.answered)
     : 0;
@@ -61,14 +64,20 @@ function loadResultData() {
     : "N/A";
   setText("completionDate", completionDate);
 
-  // Performance message
-  showPerformance(result.score);
+  // Header message (just neutral)
+  const headerMsg = document.getElementById("resultHeaderMessage");
+  if (headerMsg) {
+    headerMsg.textContent = "📊 You have completed your exam. Review your performance below.";
+  }
 
-  // Confetti for passes
-  if (result.score >= 70) createConfetti();
+  // Performance feedback box (staff recruitment rules)
+  showPerformance(result.correct ?? 0);
+
+  // Confetti celebration for excellent scores
+  if ((result.correct ?? 0) >= 31) createConfetti();
 }
 
-// Goodbye Modal
+// ===== Goodbye Modal =====
 function endExam() {
   const modal = document.getElementById("goodbyeModal");
   if (modal) modal.style.display = "flex";
@@ -78,6 +87,7 @@ function closeGoodbye() {
   if (modal) modal.style.display = "none";
 }
 
+// ===== Circle Animation =====
 function animateScore(score) {
   const circle = document.getElementById("progressCircle");
   const display = document.getElementById("scoreDisplay");
@@ -86,9 +96,9 @@ function animateScore(score) {
 
   if (circle) {
     circle.style.strokeDashoffset = offset;
-    if (score >= 80) circle.style.stroke = "#16a34a";
-    else if (score >= 70) circle.style.stroke = "#f59e0b";
-    else circle.style.stroke = "#dc2626";
+    if (score >= 80) circle.style.stroke = "#16a34a";   // green
+    else if (score >= 70) circle.style.stroke = "#f59e0b"; // amber
+    else circle.style.stroke = "#dc2626"; // red
   }
 
   if (display) animateCounter(display, score, "%");
@@ -108,6 +118,7 @@ function animateCounter(el, target, suffix = "") {
   }, 30);
 }
 
+// ===== Helpers =====
 function formatTime(seconds) {
   const sec = Number(seconds) || 0;
   const m = Math.floor(sec / 60);
@@ -120,30 +131,32 @@ function setText(id, val) {
   if (el) el.textContent = val;
 }
 
-function showPerformance(score) {
+// ===== Performance Box (Staff Recruitment Rules) =====
+function showPerformance(rawScore) {
   const box = document.getElementById("performanceMessage");
   if (!box) return;
 
-let msg = "", color = "";
-if (score >= 90) {
-  msg = "🌟 Excellent performance. You have demonstrated outstanding subject mastery.";
-  color = "background:#dcfce7;color:#166534";
-} else if (score >= 80) {
-  msg = "👏 Strong performance. You have a solid understanding of the subject.";
-  color = "background:#eff6ff;color:#1e3a8a";
-} else if (score >= 70) {
-  msg = "✅ Satisfactory result. You have met the minimum requirement.";
-  color = "background:#fef9c3;color:#92400e";
-} else {
-  msg = "📖 Unfortunately, you failed and did not meet the required standard. Further preparation is recommended before qualification.";
-  color = "background:#fee2e2;color:#991b1b";
-}
+  let msg = "", color = "";
 
+  if (rawScore <= 19) {
+    msg = "❌ You failed! Unfortunately, your score did not meet the minimum requirement for consideration. Thank you for your interest.";
+    color = "background:#fee2e2;color:#991b1b";
+  } else if (rawScore >= 20 && rawScore <= 25) {
+    msg = "✅ You achieved the minimum requirement.\nYour result will be reviewed by the administration.";
+    color = "background:#fef9c3;color:#92400e";
+  } else if (rawScore >= 26 && rawScore <= 30) {
+    msg = "✅ You successfully passed with a solid score.\nYour performance meets the requirement. Await communication from the administration on the next stage.";
+    color = "background:#eff6ff;color:#1e3a8a";
+  } else if (rawScore >= 31 && rawScore <= 40) {
+    msg = "🌟 Excellent result!\nYour performance has placed you in the top tier. Await further instructions for the next stage of the recruitment process.";
+    color = "background:#dcfce7;color:#166534";
+  }
 
-  box.setAttribute("style", color + ";padding:1rem;border-radius:12px");
+  box.setAttribute("style", color + ";padding:1rem;border-radius:12px;line-height:1.4;white-space:pre-line");
   box.textContent = msg;
 }
 
+// ===== Confetti Animation =====
 function createConfetti() {
   const container = document.getElementById("confetti-container");
   if (!container) return;
@@ -151,7 +164,8 @@ function createConfetti() {
   for (let i = 0; i < 50; i++) {
     const conf = document.createElement("div");
     conf.style.position = "absolute";
-    conf.style.width = "10px"; conf.style.height = "10px";
+    conf.style.width = "10px";
+    conf.style.height = "10px";
     conf.style.background = colors[Math.floor(Math.random() * colors.length)];
     conf.style.left = Math.random() * 100 + "%";
     conf.style.top = "-10px";
@@ -162,5 +176,10 @@ function createConfetti() {
   }
 }
 
-// Actions
-function viewResult() { window.location.reload(); }
+// ===== Actions =====
+function viewResult() {
+  window.location.reload();
+}
+
+
+
