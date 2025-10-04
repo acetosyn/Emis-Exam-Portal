@@ -9,6 +9,13 @@ import email_server
 from datetime import datetime
 from threading import Thread
 # Load environment variables
+from pathlib import Path
+
+# Define logs directory
+BASE_DIR = Path(__file__).resolve().parent
+LOGS_DIR = BASE_DIR / "logs"
+LOGS_DIR.mkdir(exist_ok=True)  # create folder if missing
+
 load_dotenv()
 
 app = Flask(__name__)
@@ -342,6 +349,36 @@ def api_exam_results():
 
     results = user_exam.get_exam_results()
     return jsonify(results)
+
+
+
+@app.route("/view_credentials")
+def view_credentials():
+    creds_file = LOGS_DIR / "credentials.csv"
+    if not creds_file.exists():
+        return jsonify({"credentials": []})
+    creds = []
+    with open(creds_file) as f:
+        for line in f.readlines()[1:]:  # skip header
+            u, p, *_ = line.strip().split(",")
+            creds.append({"username": u, "password": p})
+    return jsonify({"credentials": creds})
+
+
+@app.route("/view_results")
+def view_results():
+    results_file = LOGS_DIR / f"exam_results_{datetime.now().strftime('%Y-%m-%d')}.csv"
+    if not results_file.exists():
+        return jsonify({"results": []})
+    rows = []
+    with open(results_file) as f:
+        headers = f.readline().strip().split(",")
+        for line in f:
+            vals = line.strip().split(",")
+            row = dict(zip(headers, vals))
+            rows.append(row)
+    return jsonify({"results": rows})
+
 
 
 if __name__ == '__main__':
