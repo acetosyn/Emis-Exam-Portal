@@ -33,73 +33,79 @@
 
 <!-- Instructions Modal -->
 <div id="instructionsModal" class="modal-backdrop {% if exam_started %}hidden{% endif %}">
-  <div class="modal-card">
-    <a href="{{ url_for('user_portal') }}" class="close-x" aria-label="Close">✕</a>
-<header class="modal-head">
-  <h2 class="text-xl font-bold">
-    📋 EXAM INSTRUCTIONS:
-    <br>
-    <span class="text-gray-600 font-medium">Read all instructions carefully</span>
-  </h2>
-  <div class="exam-duration-badge">
-    <i class="fas fa-clock"></i> 20 minutes
-  </div>
-</header>
+  <div class="modal-card modern-instr-card">
+    <!-- Floating Close Button -->
+    <button onclick="window.location.href='{{ url_for('user_portal') }}'" class="modern-close" aria-label="Close">
+      <i class="fas fa-times"></i>
+    </button>
 
+    <header class="modal-head instr-head">
+      <h2 class="text-xl font-bold">
+        <i class="fas fa-clipboard-list"></i> Exam Instructions
+        <div class="subtitle">Read carefully before starting</div>
+      </h2>
+      <div class="exam-duration-badge">
+        <i class="fas fa-clock"></i> 20 minutes
+      </div>
+    </header>
 
-<div class="modal-body instructions-body">
+    <!-- Instruction Grid -->
+<div class="instructions-grid">
   <div class="instruction-card">
-    <span class="instr-icon">📘</span>
+    <i class="fas fa-book-open instr-icon"></i>
     <p>This exam contains <b>40 multiple-choice questions (MCQs)</b>.</p>
   </div>
 
-  <div class="instruction-card">
-    <span class="instr-icon">🚩</span>
-    <p>You can only <b>answer a question once.</b> Ensure to check questions carefully before answering.</p>
-  </div>
 
-  <!-- 🚨 NEW IMPORTANT RULE (moved up so it's always visible without scrolling) -->
-  <div class="instruction-card">
-    <span class="instr-icon">🛑</span>
-    <p>
-      Opening a <b>new browser tab</b> or <b>leaving this page</b> while the exam is in progress 
-      is strictly prohibited. A second violation will result in <b>automatic disqualification</b>.
-    </p>
+  <div class="instruction-card danger">
+    <i class="fas fa-stop-circle instr-icon"></i>
+    <p>Opening a <b>new browser tab</b> or <b>leaving this page</b> will result in <b>disqualification</b>.</p>
   </div>
 
   <div class="instruction-card">
-    <span class="instr-icon">🔢</span>
+    <i class="fas fa-check-double instr-icon"></i>
+    <p>You can only <b>answer a question once.</b> Check carefully before answering.</p>
+  </div>
+
+
+
+  <div class="instruction-card">
+    <i class="fas fa-list-ol instr-icon"></i>
     <p>Each question has options <b>A–D</b>. Select the most appropriate answer.</p>
   </div>
-
   <div class="instruction-card">
-    <span class="instr-icon">⏳</span>
+    <i class="fas fa-hourglass-half instr-icon"></i>
     <p>You have <b>20 minutes</b> to complete all questions.</p>
   </div>
-
   <div class="instruction-card">
-    <span class="instr-icon">➡️</span>
-    <p>Navigate using the <b>Previous</b> and <b>Next</b> buttons or the question grid.</p>
+    <i class="fas fa-exchange-alt instr-icon"></i>
+    <p>Navigate using <b>Previous</b> / <b>Next</b> buttons or the question grid.</p>
   </div>
-
   <div class="instruction-card">
-    <span class="instr-icon">🚩</span>
+    <i class="fas fa-flag instr-icon"></i>
     <p>You may <b>flag questions</b> to review them before submission.</p>
   </div>
-
   <div class="instruction-card">
-    <span class="instr-icon">⚠️</span>
+    <i class="fas fa-exclamation-triangle instr-icon"></i>
     <p>Once started, you must finish in one sitting.</p>
   </div>
+  <div class="instruction-card success">
+    <i class="fas fa-paper-plane instr-icon"></i>
+    <p>
+      After completing all questions, ensure you <b>submit your exam.</b>
+    </p>
+  </div>
 </div>
+
 
 
     <footer class="modal-foot">
-      <a href="{{ url_for('user_portal') }}" class="btn-secondary">Back to Dashboard</a>
-      <button id="startExamBtn" class="btn-primary">🚀 Start Exam</button>
+      <a href="{{ url_for('user_portal') }}" class="btn-secondary"><i class="fas fa-arrow-left"></i> Back</a>
+      <button id="startExamBtn" class="btn-primary"><i class="fas fa-rocket"></i> Start Exam</button>
     </footer>
   </div>
 </div>
+
 
 <!-- End Exam Confirmation Modal -->
 <div id="endExamModal" class="modal-backdrop hidden" role="dialog" aria-modal="true">
