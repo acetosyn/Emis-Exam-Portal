@@ -1,7 +1,6 @@
-// admin-routes.js — unified panel routing (sidebar + quick actions + special actions)
+// admin-routes.js — unified panel routing (sidebar + modals + quick actions)
 document.addEventListener("DOMContentLoaded", () => {
   const navItems = document.querySelectorAll(".nav-item, .nav-subitem");
-  const quickActions = document.querySelectorAll("[data-panel]");
   const panels = document.querySelectorAll(".route");
   const breadcrumbs = document.getElementById("breadcrumbs");
   const pageTitle = document.querySelector(".page-title");
@@ -12,22 +11,25 @@ document.addEventListener("DOMContentLoaded", () => {
   function activatePanel(target, triggerEl = null) {
     if (!target) return;
 
-    // hide all panels
+    // Hide all panels
     panels.forEach(panel => panel.classList.remove("is-active"));
 
-    // show selected panel
+    // Show selected panel
     const activePanel = document.querySelector(target);
     if (activePanel) {
       activePanel.classList.add("is-active");
+
+      // Smooth scroll to top of panel for better UX
+      activePanel.scrollIntoView({ behavior: "smooth", block: "start" });
     }
 
-    // highlight sidebar nav items only (not quick actions)
+    // Highlight sidebar nav items only (not quick actions)
     navItems.forEach(btn => btn.classList.remove("is-active"));
     if (triggerEl && triggerEl.classList.contains("nav-item")) {
       triggerEl.classList.add("is-active");
     }
 
-    // update page title + breadcrumbs
+    // Update page title + breadcrumbs
     const label =
       triggerEl?.innerText.trim() ||
       activePanel?.querySelector(".panel-title, .card-title")?.textContent ||
@@ -45,7 +47,6 @@ document.addEventListener("DOMContentLoaded", () => {
       const target = item.dataset.panel;
 
       if (action === "open-candidate-login") {
-        // Always send candidates to login page first
         window.open("/user_login", "_blank");
         return;
       }
@@ -55,75 +56,83 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // -----------------------------
-  // Quick action buttons (by data-panel)
+  // Special Quick Actions (modals, refresh, etc)
   // -----------------------------
-// -----------------------------
-// Quick action buttons (by data-panel)
-// -----------------------------
-quickActions.forEach(btn => {
-  btn.addEventListener("click", e => {
-    // 🛑 Prevent routing for results or credentials popups
-    const action = btn.dataset.action;
-    if (action === "view-results" || action === "view-credentials") {
+  document.querySelectorAll("[data-action]").forEach(btn => {
+    btn.addEventListener("click", async e => {
       e.preventDefault();
-      return; // Skip activating any panel — handled by modal instead
-    }
+      const action = btn.dataset.action;
 
-    const target = btn.dataset.panel;
-    activatePanel(target, btn);
+      switch (action) {
+        case "open-candidate-login":
+          window.open("/user_login", "_blank");
+          break;
+
+        case "refresh-dashboard":
+          location.reload();
+          break;
+
+        // -----------------------------
+        // ✅ NEW: Open Upload Section
+        // -----------------------------
+        case "open-upload":
+          console.log("Navigating to Upload Document panel...");
+          activatePanel("#panel-uploads");
+          break;
+
+        // -----------------------------
+        // 🔹 MODAL ACTIONS — STAY IN DASHBOARD
+        // -----------------------------
+        case "view-credentials":
+          try {
+            const res = await fetch("/view_credentials");
+            const data = await res.json();
+            showCredentialsModal(data.credentials);
+          } catch (err) {
+            console.error("Failed to load credentials", err);
+            showToast("Failed to load credentials", "error");
+          }
+          break;
+
+        case "view-results":
+          try {
+            const res = await fetch("/view_results");
+            const data = await res.json();
+            showResultsModal(data.results);
+          } catch (err) {
+            console.error("Failed to load results", err);
+            showToast("Failed to load results", "error");
+          }
+          break;
+
+        // -----------------------------
+        // 🔹 REFRESH INSIDE MODALS
+        // -----------------------------
+        case "refresh-results-modal":
+          try {
+            const res = await fetch("/view_results");
+            const data = await res.json();
+            showResultsModal(data.results);
+          } catch {
+            showToast("Failed to refresh results", "error");
+          }
+          break;
+
+        case "refresh-creds-modal":
+          try {
+            const res = await fetch("/view_credentials");
+            const data = await res.json();
+            showCredentialsModal(data.credentials);
+          } catch {
+            showToast("Failed to refresh credentials", "error");
+          }
+          break;
+
+        default:
+          console.warn(`⚠️ No handler defined for action: ${action}`);
+      }
+    });
   });
-});
-
-  // -----------------------------
-  // Special quick actions (by data-action)
-  // -----------------------------
-// -----------------------------
-// Special quick actions (by data-action)
-// -----------------------------
-document.querySelectorAll("[data-action]").forEach(btn => {
-  btn.addEventListener("click", async () => {
-    const action = btn.dataset.action;
-
-    switch (action) {
-      case "open-candidate-login":
-        // Always direct candidates to login page (not portal)
-        window.open("/user_login", "_blank");
-        break;
-
-      case "refresh-dashboard":
-        // Refresh current dashboard data without leaving page
-        location.reload();
-        break;
-
-      case "view-credentials":
-        // 🔹 Load credentials dynamically into modal (no routing)
-        try {
-          const res = await fetch("/view_credentials");
-          const data = await res.json();
-          showCredentialsModal(data.credentials);
-        } catch (err) {
-          console.error("Failed to load credentials", err);
-          showToast("Failed to load credentials", "error");
-        }
-        break;
-
-      case "view-results":
-        // 🔹 Load results dynamically into modal (no routing)
-        try {
-          const res = await fetch("/view_results");
-          const data = await res.json();
-          showResultsModal(data.results);
-        } catch (err) {
-          console.error("Failed to load results", err);
-          showToast("Failed to load results", "error");
-        }
-        break;
-
-      default:
-        console.warn(`⚠️ No handler defined for action: ${action}`);
-    }
-  });
-});
 
   // -----------------------------
   // Default active dashboard

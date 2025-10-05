@@ -1,6 +1,6 @@
 /* ======================================================
    dashboard_results.css — Modern Results & Credentials UI
-   Author: Architect Build v6
+   Author: Architect Build v7 (optimized)
    ====================================================== */
 
 #credentialsWrapper,
@@ -71,21 +71,40 @@
   font-size: 0.9rem;
   border-radius: 0.75rem;
   overflow: hidden;
+  table-layout: auto;
 }
+
 .modern-table thead {
-  background: #0f2b46;
+  background: #0f2b46 !important;
   color: #fff;
   text-transform: uppercase;
   letter-spacing: 0.03em;
 }
+
 .modern-table th,
 .modern-table td {
   padding: 10px 12px;
   text-align: left;
   border-bottom: 1px solid #e5e7eb;
 }
-.modern-table th:hover { background: #173b61; cursor: pointer; }
-.modern-table tr:hover { background: #f9fafb; }
+
+/* Keep header color fixed — no hover or flicker */
+.modern-table th {
+  background: #0f2b46;
+  color: #ffffff;
+  font-weight: 600;
+  cursor: default;
+}
+.modern-table th:hover {
+  background: #0f2b46;
+  color: #ffffff;
+}
+
+/* Subtle hover for rows only */
+.modern-table tbody tr:hover {
+  background: #f9fafb;
+  transition: background 0.2s ease;
+}
 
 /* --- Modal --- */
 .results-modal {
@@ -100,6 +119,7 @@
   animation: fadeIn 0.3s ease;
 }
 .results-modal.hidden { display: none; }
+
 .results-content {
   background: #fff;
   border-radius: 1rem;

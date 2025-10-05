@@ -1,15 +1,13 @@
-/* user_credentials.js - dynamic credential generator */
+/* ==========================================================
+   user_credentials.js — Enhanced Dynamic Credential Generator
+   Architect Build v8
+   ========================================================== */
+
 (() => {
   if (window.__CRED_INIT__) return;
   window.__CRED_INIT__ = true;
 
-  const ready = (cb) =>
-    document.readyState !== "loading"
-      ? cb()
-      : document.addEventListener("DOMContentLoaded", cb);
-
-  ready(() => {
-    const overlay = document.getElementById("overlay");
+  document.addEventListener("DOMContentLoaded", () => {
     const modal = document.getElementById("cred-modal");
     const openBtns = [
       document.getElementById("generateCredsBtnSidebar"),
@@ -21,35 +19,49 @@
     const quickBtns = document.querySelectorAll(".quick-gen-btn");
     const results = document.getElementById("credResults");
     const instruction = document.getElementById("credInstruction");
+    const summary = document.getElementById("credSummary");
+    const csvBtn = document.getElementById("downloadCSVBtn");
 
-    function show(el) { el?.classList.remove("hidden"); }
-    function hide(el) { el?.classList.add("hidden"); }
+    // --- Helpers ---
+    const show = (el) => el?.classList.remove("hidden");
+    const hide = (el) => el?.classList.add("hidden");
+    const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-    function openModal() {
-      console.log("[user_credentials] Opening modal");
-      show(modal); show(overlay);
-    }
+    function openModal() { show(modal); }
     function closeModal() {
-      console.log("[user_credentials] Closing modal");
-      hide(modal); hide(overlay);
+      hide(modal);
       results.innerHTML = "";
       hide(instruction);
+      hide(summary);
+      hide(csvBtn);
     }
 
-    // Copy utility
-    function bindCopy(btn, input) {
+    // --- Copy Utility ---
+    async function bindCopy(btn, input) {
       btn.addEventListener("click", async () => {
         try {
           await navigator.clipboard.writeText(input.value);
-          btn.textContent = "✅ Copied";
-          setTimeout(() => (btn.textContent = "📋"), 1500);
+          btn.textContent = "✅";
+          btn.style.animation = "copyFlash 0.8s";
+          await sleep(800);
+          btn.textContent = "📋";
+          btn.style.animation = "";
         } catch {
           btn.textContent = "❌";
         }
       });
     }
 
-    // Mark issued
+    // --- Toggle View ---
+    function bindViewToggle(btn, input) {
+      btn.addEventListener("click", () => {
+        const isHidden = input.type === "password";
+        input.type = isHidden ? "text" : "password";
+        btn.textContent = isHidden ? "🙈" : "👁";
+      });
+    }
+
+    // --- Mark Issued ---
     async function markIssued(username, btn) {
       try {
         const res = await fetch("/mark_issued", {
@@ -60,6 +72,7 @@
         const data = await res.json();
         if (data.success) {
           btn.textContent = "✅ Issued";
+          btn.classList.add("disabled");
           btn.disabled = true;
         }
       } catch (err) {
@@ -67,10 +80,23 @@
       }
     }
 
-    // Generate request
+    // --- CSV Download ---
+    function downloadCSV(creds) {
+      const csvContent =
+        "data:text/csv;charset=utf-8," +
+        ["username,password"]
+          .concat(creds.map((c) => `${c.username},${c.password}`))
+          .join("\n");
+      const link = document.createElement("a");
+      link.href = encodeURI(csvContent);
+      link.download = "generated_credentials.csv";
+      link.click();
+    }
+
+    // --- Generate Credentials ---
     async function generateCreds(count) {
-      console.log("[user_credentials] Requesting", count, "credentials");
       try {
+        results.innerHTML = `<div class="text-center text-navy">⏳ Generating ${count} credentials...</div>`;
         const res = await fetch("/generate_credentials", {
           method: "POST",
           body: new URLSearchParams({ count }),
@@ -80,7 +106,11 @@
 
         results.innerHTML = "";
         show(instruction);
+        show(csvBtn);
+        summary.innerHTML = `✅ Generated ${data.credentials.length} credentials successfully.`;
+        show(summary);
 
+        // Render cards
         data.credentials.forEach((cred, i) => {
           const card = document.createElement("div");
           card.className = "cred-card animate-fadeIn";
@@ -91,34 +121,28 @@
               <button class="view-btn">👁</button>
               <button class="copy-btn">📋</button>
             </div>
-            <div class="cred-field">
+            <div class="cred-field mt-1">
               <input type="password" value="${cred.password}" readonly />
               <button class="view-btn">👁</button>
               <button class="copy-btn">📋</button>
             </div>
-            <div class="mt-2">
-              <button class="issue-btn btn-sm ${cred.issued ? "disabled" : ""}">
+            <div class="mt-2 text-right">
+              <button class="issue-btn ${cred.issued ? "disabled" : ""}">
                 ${cred.issued ? "✅ Issued" : "Mark Issued"}
               </button>
             </div>
           `;
           results.appendChild(card);
 
-          // Toggle view
-          card.querySelectorAll(".view-btn").forEach((btn) => {
-            btn.addEventListener("click", () => {
-              const input = btn.previousElementSibling;
-              input.type = input.type === "password" ? "text" : "password";
-            });
-          });
+          const [uInput, pInput] = card.querySelectorAll("input");
+          const [vBtns, cBtns] = [
+            card.querySelectorAll(".view-btn"),
+            card.querySelectorAll(".copy-btn"),
+          ];
 
-          // Copy
-          card.querySelectorAll(".copy-btn").forEach((btn, idx) => {
-            const input = card.querySelectorAll("input")[idx];
-            bindCopy(btn, input);
-          });
+          vBtns.forEach((btn, idx) => bindViewToggle(btn, idx ? pInput : uInput));
+          cBtns.forEach((btn, idx) => bindCopy(btn, idx ? pInput : uInput));
 
-          // Mark issued
           const issueBtn = card.querySelector(".issue-btn");
           if (!cred.issued) {
             issueBtn.addEventListener("click", () =>
@@ -126,33 +150,31 @@
             );
           }
         });
+
+        // CSV download
+        csvBtn.onclick = () => downloadCSV(data.credentials);
+
       } catch (err) {
-        console.error("[user_credentials] Error:", err);
         results.innerHTML = `<div class="text-red-600">${err.message}</div>`;
       }
     }
 
-    // Event listeners
+    // --- Event Listeners ---
     openBtns.forEach((btn) => btn.addEventListener("click", openModal));
-    if (closeBtn) closeBtn.addEventListener("click", closeModal);
-    if (overlay) overlay.addEventListener("click", closeModal);
-
-    // Main generate (custom count, min 4)
-    if (generateBtn) {
-      generateBtn.addEventListener("click", () => {
-        const count = Math.max(4, parseInt(countInput.value || "4"));
-        generateCreds(count);
-      });
-    }
-
-    // Quick generate (1, 2, 3)
-    quickBtns.forEach((btn) => {
-      btn.addEventListener("click", () => {
-        const count = parseInt(btn.dataset.count, 10);
-        generateCreds(count);
-      });
+    closeBtn.addEventListener("click", closeModal);
+    modal.addEventListener("click", (e) => {
+      if (e.target.id === "cred-modal") closeModal();
     });
 
-    console.log("[user_credentials] Credential modal initialized");
+    generateBtn.addEventListener("click", () => {
+      const count = Math.max(4, parseInt(countInput.value || "4"));
+      generateCreds(count);
+    });
+
+    quickBtns.forEach((btn, idx) =>
+      btn.addEventListener("click", () => generateCreds(idx + 1))
+    );
+
+    console.log("[user_credentials] Enhanced modal initialized");
   });
 })();
