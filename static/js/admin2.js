@@ -61,65 +61,13 @@
 })();
 
 
+/* admin2.js — Admin Extra Features */
 
+(() => {
+  if (window.__ADMIN2_INIT__) return;
+  window.__ADMIN2_INIT__ = true;
 
-ready(() => {
-  // ---------- View Credentials ----------
-  const viewCredsBtn = document.getElementById("viewCredsBtn");
-  if (viewCredsBtn) {
-    viewCredsBtn.addEventListener("click", async () => {
-      try {
-        const res = await fetch("/view_credentials"); // new Flask endpoint
-        const data = await res.json();
-
-        if (data.credentials && data.credentials.length > 0) {
-          let html = "<h3>Generated Credentials</h3><table class='modern-table'><tr><th>Username</th><th>Password</th></tr>";
-          data.credentials.forEach(c => {
-            html += `<tr><td>${c.username}</td><td>${c.password}</td></tr>`;
-          });
-          html += "</table>";
-          showPopup(html);
-        } else {
-          showPopup("<p>⚠️ You haven’t generated any credentials yet. Please generate one.</p>");
-        }
-      } catch (err) {
-        console.error("[admin2] View Credentials error:", err);
-        showPopup("<p>❌ Failed to load credentials.</p>");
-      }
-    });
-  }
-
-  // ---------- View Results ----------
-  const viewResultsBtn = document.getElementById("viewResultsBtn");
-  if (viewResultsBtn) {
-    viewResultsBtn.addEventListener("click", async () => {
-      try {
-        const res = await fetch("/view_results"); // new Flask endpoint
-        const data = await res.json();
-
-        if (data.results && data.results.length > 0) {
-          let html = "<h3>Exam Results</h3><table class='modern-table'><tr><th>User</th><th>Name</th><th>Email</th><th>Subject</th><th>Score</th><th>Status</th></tr>";
-          data.results.forEach(r => {
-            html += `<tr>
-              <td>${r.username}</td>
-              <td>${r.fullname}</td>
-              <td>${r.email}</td>
-              <td>${r.subject}</td>
-              <td>${r.score}</td>
-              <td>${r.status}</td>
-            </tr>`;
-          });
-          html += "</table>";
-          showPopup(html);
-        } else {
-          showPopup("<p>📭 No results found in the database.</p>");
-        }
-      } catch (err) {
-        console.error("[admin2] View Results error:", err);
-        showPopup("<p>❌ Failed to load results.</p>");
-      }
-    });
-  }
+  console.log("[admin2] initialized");
 
   // ---------- Reusable Popup ----------
   function showPopup(content) {
@@ -140,4 +88,64 @@ ready(() => {
     }
     document.getElementById("popupContent").innerHTML = content;
   }
-});
+
+  // ---------- DOM Ready ----------
+  document.addEventListener("DOMContentLoaded", () => {
+    // --- View Results ---
+    const viewResultsBtn = document.querySelector("[data-panel='#panel-results']");
+    if (viewResultsBtn) {
+      viewResultsBtn.addEventListener("click", async () => {
+        try {
+          const res = await fetch("/view_results");
+          const data = await res.json();
+
+          if (data.results && data.results.length > 0) {
+            let html = "<h3>📊 Exam Results</h3><table class='modern-table'><tr><th>User</th><th>Name</th><th>Email</th><th>Subject</th><th>Score</th><th>Status</th></tr>";
+            data.results.forEach(r => {
+              html += `<tr>
+                <td>${r.username}</td>
+                <td>${r.fullname}</td>
+                <td>${r.email}</td>
+                <td>${r.subject}</td>
+                <td>${r.score}</td>
+                <td>${r.status}</td>
+              </tr>`;
+            });
+            html += "</table>";
+            showPopup(html);
+          } else {
+            showPopup("<p>📭 No results found in the database.</p>");
+          }
+        } catch (err) {
+          console.error("[admin2] View Results error:", err);
+          showPopup("<p>❌ Failed to load results.</p>");
+        }
+      });
+    }
+
+    // --- View Credentials ---
+    const viewCredsBtn = document.querySelector("[data-action='new-exam']"); // your "View Credentials" button
+    if (viewCredsBtn) {
+      viewCredsBtn.addEventListener("click", async () => {
+        try {
+          const res = await fetch("/view_credentials");
+          const data = await res.json();
+
+          if (data.credentials && data.credentials.length > 0) {
+            let html = "<h3>🔑 Credentials</h3><table class='modern-table'><tr><th>Username</th><th>Password</th></tr>";
+            data.credentials.forEach(c => {
+              html += `<tr><td>${c.username}</td><td>${c.password}</td></tr>`;
+            });
+            html += "</table>";
+            showPopup(html);
+          } else {
+            showPopup("<p>📭 You haven't generated any credentials yet.</p>");
+          }
+        } catch (err) {
+          console.error("[admin2] View Credentials error:", err);
+          showPopup("<p>❌ Failed to load credentials.</p>");
+        }
+      });
+    }
+  });
+})();

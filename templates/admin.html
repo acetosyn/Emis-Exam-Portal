@@ -7,7 +7,8 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='css/admin2.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/doc_upload.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/search_hist.css') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/user_credentials.css') }}">
+<!-- <link rel="stylesheet" href="{{ url_for('static', filename='css/user_credentials.css') }}"> -->
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard_results.css') }}">
 {% endblock %}
 
 {% block header_actions %}
@@ -208,12 +209,13 @@
         <button class="action-card secondary" data-panel="#panel-push">
           <span>📦</span> Push to Exam
         </button>
-        <button class="action-card tertiary" id="viewCredsBtn">
-          <span>➕</span> View Credentials
+        <button class="action-card tertiary" id="viewCredsBtn" data-panel="#panel-dashboard-results">
+        <span>➕</span> View Credentials
         </button>
-        <button class="action-card secondary" id="viewResultsBtn">
-          <span>📊</span> View Results
+        <button class="action-card secondary" id="viewResultsBtn" data-panel="#panel-dashboard-results">
+        <span>📊</span> View Results
         </button>
+
       </div>
     </div>
 
@@ -245,6 +247,72 @@
 
 
 </section>
+
+<!-- RESULTS & CREDENTIALS (Dashboard Extension) -->
+<section id="panel-dashboard-results" class="route" data-route="dashboard-results">
+  <!-- Credentials Card -->
+  <div class="card">
+    <div class="flex justify-between items-center mb-3">
+      <h2 class="panel-title">📑 Credentials</h2>
+      <div class="flex gap-2">
+        <button id="viewCredsBtn" class="btn-secondary">View</button>
+        <button id="refreshCredsBtn" class="btn-secondary">Refresh</button>
+        <button id="exportCredsBtn" class="btn-export">Download CSV</button>
+        <button id="clearCredsBtn" class="btn-clear">Clear Table</button>
+      </div>
+    </div>
+    <div id="credentialsWrapper" class="data-wrapper">
+      <p class="muted">No credentials data yet.</p>
+    </div>
+  </div>
+
+  <!-- Results Card -->
+  <div class="card mt-6">
+    <div class="flex justify-between items-center mb-3">
+      <h2 class="panel-title">📊 Exam Results</h2>
+      <div class="flex gap-2">
+        <button id="viewResultsBtn" class="btn-secondary">View Results</button>
+        <button id="refreshResultsBtn" class="btn-secondary">Refresh</button>
+        <button id="exportResultsBtn" class="btn-export">Download CSV</button>
+        <button id="clearResultsBtn" class="btn-clear">Clear Table</button>
+      </div>
+    </div>
+    <div id="resultsWrapper" class="data-wrapper">
+      <p class="muted">No results yet.</p>
+    </div>
+  </div>
+</section>
+
+<!-- Fullscreen Modal for Credentials -->
+<div id="credentialsModal" class="results-modal hidden">
+  <div class="results-content">
+    <div class="flex justify-between items-center mb-3">
+      <h2>📑 Credentials Overview</h2>
+      <div class="flex gap-2">
+        <button id="refreshCredsModal" class="btn-secondary">Refresh</button>
+        <button id="exportCredsModal" class="btn-export">Download CSV</button>
+        <button id="closeCredsModal" class="btn-danger">Close</button>
+      </div>
+    </div>
+    <div id="credsModalBody" class="overflow-auto max-h-[70vh]"></div>
+  </div>
+</div>
+
+<!-- Fullscreen Modal for Results -->
+<div id="resultsModal" class="results-modal hidden">
+  <div class="results-content">
+    <div class="flex justify-between items-center mb-3">
+      <h2>📊 Exam Results Overview</h2>
+      <div class="flex gap-2">
+        <button id="refreshResultsModal" class="btn-secondary">Refresh</button>
+        <button id="exportResultsModal" class="btn-export">Download CSV</button>
+        <button id="closeResultsModal" class="btn-danger">Close</button>
+      </div>
+    </div>
+    <div id="resultsModalBody" class="overflow-auto max-h-[70vh]"></div>
+  </div>
+</div>
+
 
 
 <!-- UPLOADS -->
@@ -670,4 +738,5 @@
 <script src="{{ url_for('static', filename='js/search_hist.js') }}"></script>
 <script src="{{ url_for('static', filename='js/user_credentials.js') }}"></script>
 <script src="{{ url_for('static', filename='js/doc_upload.js') }}"></script>
+<script src="{{ url_for('static', filename='js/dashboard_results.js') }}"></script>
 {% endblock %}

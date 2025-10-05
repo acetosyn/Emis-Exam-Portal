@@ -12,7 +12,14 @@
 
 
 {% block header_actions %}
-<div class="flex items-center space-x-6">
+<div class="flex items-center w-full justify-center space-x-6">
+
+  <!-- Subject Title -->
+  <div id="examSubjectTitle" 
+       class="font-extrabold text-2xl uppercase tracking-wide text-center hidden">
+    <!-- Filled dynamically from exam-core.js -->
+  </div>
+
   <!-- Countdown Timer -->
   <div id="examTimer" class="exam-timer-ui {% if not exam_started %}hidden{% endif %}">
     <i class="fas fa-clock timer-icon"></i>
@@ -26,7 +33,6 @@
     </svg>
   </button>
 </div>
-
 {% endblock %}
 
 {% block content %}
@@ -177,7 +183,7 @@
     <div class="question-header">
       <div>
         <h2 class="q-h2">Question <span id="currentQuestionNumber">1</span> <small> / <span id="totalQuestions">0</span></small></h2>
-        <p class="muted">Choose the best answer</p>
+        <p class="muted">Choose the correct answer</p>
       </div>
 
       <div class="question-controls">

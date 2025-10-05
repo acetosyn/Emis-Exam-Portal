@@ -10,6 +10,8 @@ from datetime import datetime
 from threading import Thread
 # Load environment variables
 from pathlib import Path
+import csv
+
 
 # Define logs directory
 BASE_DIR = Path(__file__).resolve().parent
@@ -352,32 +354,46 @@ def api_exam_results():
 
 
 
+# -------------------- VIEW CREDENTIALS --------------------
 @app.route("/view_credentials")
 def view_credentials():
-    creds_file = LOGS_DIR / "credentials.csv"
-    if not creds_file.exists():
+    """Load latest credentials_YYYY-MM-DD.csv from logs folder safely."""
+    files = sorted(LOGS_DIR.glob("credentials_*.csv"), reverse=True)
+    if not files:
         return jsonify({"credentials": []})
+    latest = files[0]
     creds = []
-    with open(creds_file) as f:
-        for line in f.readlines()[1:]:  # skip header
-            u, p, *_ = line.strip().split(",")
-            creds.append({"username": u, "password": p})
+    try:
+        with open(latest, "r", encoding="utf-8") as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                creds.append({
+                    "username": row.get("username", "").strip(),
+                    "password": row.get("password", "").strip()
+                })
+    except Exception as e:
+        print(f"⚠️ Error reading credentials file: {e}")
     return jsonify({"credentials": creds})
 
 
+# -------------------- VIEW RESULTS --------------------
+# -------------------- VIEW RESULTS (Optimized & Safe) --------------------
 @app.route("/view_results")
 def view_results():
-    results_file = LOGS_DIR / f"exam_results_{datetime.now().strftime('%Y-%m-%d')}.csv"
-    if not results_file.exists():
-        return jsonify({"results": []})
-    rows = []
-    with open(results_file) as f:
-        headers = f.readline().strip().split(",")
-        for line in f:
-            vals = line.strip().split(",")
-            row = dict(zip(headers, vals))
-            rows.append(row)
-    return jsonify({"results": rows})
+    """Dynamically load all available exam_results_*.csv files (latest first)."""
+    files = sorted(LOGS_DIR.glob("exam_results_*.csv"), reverse=True)
+    all_rows = []
+    for file in files:
+        try:
+            with open(file, "r", encoding="utf-8") as f:
+                reader = csv.DictReader(f)
+                for row in reader:
+                    # sanitize and strip whitespace
+                    cleaned = {k.strip(): (v or "").strip() for k, v in row.items()}
+                    all_rows.append(cleaned)
+        except Exception as e:
+            print(f"⚠️ Error reading {file.name}: {e}")
+    return jsonify({"results": all_rows})
 
 
 

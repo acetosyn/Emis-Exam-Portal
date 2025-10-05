@@ -498,7 +498,7 @@ window.startExam = async function(){
 
   try {
     const subject = (document.querySelector('meta[name="exam-subject"]')?.content || "biology").toLowerCase();
-    const res = await fetch(`/static/data/${subject}.json`, {cache:"no-store"});
+    const res = await fetch(`/static/data/${subject}.json`, { cache: "no-store" });
     if (!res.ok) throw new Error(`Failed ${res.status}`);
 
     window.examData = shuffleQuestions(await res.json());
@@ -520,10 +520,22 @@ window.startExam = async function(){
       startTimer();
     }
 
+    // Hide instructions and show exam UI
     $("#instructionsModal")?.classList.add("hidden");
     $("#examInterface")?.classList.remove("hidden");
     $("#examTimer")?.classList.remove("hidden");
     $("#fullscreenBtn")?.classList.remove("hidden");
+
+    // ✅ Show Subject Header
+    const subjTitle = document.getElementById("examSubjectTitle");
+    if (subjTitle && window.examData) {
+      const subjUpper = subject.toUpperCase();
+      subjTitle.innerHTML = `
+        <span style="color:#E30613">${subjUpper}</span>
+        MCQ: ${window.examData.questions.length} QUESTIONS (ANSWER ALL)
+      `;
+      subjTitle.classList.remove("hidden");
+    }
 
   } catch (err) {
     console.error("[exam-core] startExam error:", err);
@@ -552,6 +564,7 @@ window.endExam = function() {
   if (msgEl) msgEl.innerHTML = msg;
   if (modal) modal.classList.remove("hidden");
 };
+
 
 window.closeEndExam = function() {
   document.getElementById("endExamModal")?.classList.add("hidden");
