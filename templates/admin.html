@@ -7,7 +7,7 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='css/admin2.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/doc_upload.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/search_hist.css') }}">
-<!-- <link rel="stylesheet" href="{{ url_for('static', filename='css/user_credentials.css') }}"> -->
+<link rel="stylesheet" href="{{ url_for('static', filename='css/user_credentials.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard_results.css') }}">
 {% endblock %}
 
@@ -203,9 +203,10 @@
         <button id="generateCredsBtnQuick" class="action-card primary">
           <span>🔑</span> Generate Credentials
         </button>
-        <button class="action-card primary" data-panel="#panel-uploads">
+        <button class="action-card primary" data-action="open-upload" data-panel="#panel-uploads">
           <span>📂</span> Upload Document
         </button>
+
         <button class="action-card secondary" data-panel="#panel-push">
           <span>📦</span> Push to Exam
         </button>
@@ -663,60 +664,63 @@
 
         </div><!-- End of .route-container -->
 
-   <!-- Credential Modal -->
-<div id="cred-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
-  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg p-6 relative animate-fadeIn">
+<!-- Credential Modal -->
+<div id="cred-modal" class="cred-overlay hidden fixed inset-0 z-50 flex items-center justify-center p-4">
+  <div class="cred-container bg-white/90 backdrop-blur-md rounded-2xl shadow-2xl w-full max-w-lg p-6 relative animate-fadeIn">
+
     <!-- Close button -->
     <button id="closeCredModal"
-      class="absolute top-3 right-3 w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 text-gray-500 hover:bg-red-500 hover:text-white transition">
+      class="absolute top-3 right-3 w-9 h-9 flex items-center justify-center rounded-full bg-gray-100 text-gray-500 hover:bg-red-500 hover:text-white transition duration-300 shadow-sm">
       ✕
     </button>
 
     <!-- Header -->
-    <div class="mb-4 text-center">
-      <h3 class="text-xl font-semibold text-navy">Generate Credentials</h3>
-      <p class="text-sm text-gray-600">Generate login details for candidates to use on their portal.</p>
+    <div class="text-center mb-6">
+      <h3 class="text-2xl font-semibold text-navy bg-gradient-to-r from-blue-700 to-indigo-600 text-transparent bg-clip-text">
+        Generate Credentials
+      </h3>
+      <p class="text-sm text-gray-600 mt-1">Quickly create secure candidate login credentials.</p>
     </div>
 
     <!-- Quick buttons -->
     <div class="grid grid-cols-3 gap-3 mb-5">
-      <button class="quick-gen-btn" data-count="1">1 Candidate</button>
-      <button class="quick-gen-btn" data-count="2">2 Candidates</button>
-      <button class="quick-gen-btn" data-count="3">3 Candidates</button>
+      <button class="quick-gen-btn">1</button>
+      <button class="quick-gen-btn">2</button>
+      <button class="quick-gen-btn">3</button>
     </div>
 
     <!-- Divider -->
-    <div class="flex items-center gap-2 mb-4">
-      <div class="flex-1 h-px bg-gray-200"></div>
-      <span class="text-xs text-gray-500">or</span>
-      <div class="flex-1 h-px bg-gray-200"></div>
+    <div class="divider mb-4">
+      <span>or</span>
     </div>
 
     <!-- Custom count -->
     <div class="mb-4">
       <label class="block text-sm font-medium text-gray-700 mb-1">Generate multiple credentials</label>
       <input id="credCount" type="number" min="4" max="50" value="4"
-             class="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" />
+             class="cred-input" />
     </div>
 
-    <!-- Generate Btn -->
-    <div class="flex justify-end gap-2 mb-4">
-      <button id="generateNowBtn"
-        class="px-5 py-2.5 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-medium hover:from-blue-700 hover:to-indigo-700 shadow-md transition">
-        Generate
-      </button>
+    <!-- Buttons -->
+    <div class="flex justify-between items-center mb-4">
+      <button id="downloadCSVBtn" class="btn-csv hidden">⬇ Save CSV</button>
+      <button id="generateNowBtn" class="btn-generate">⚙️ Generate</button>
     </div>
 
-    <!-- Instruction -->
+    <!-- Info -->
     <div id="credInstruction"
          class="text-sm text-red-600 font-medium animate-pulse hidden mb-2 text-center">
-      ⚠️ Share carefully! These are login credentials for candidates.
+      ⚠️ Handle carefully! These are candidate login credentials.
     </div>
 
     <!-- Results -->
-    <div id="credResults" class="space-y-3 mt-4"></div>
+    <div id="credResults" class="space-y-4 mt-4 max-h-[300px] overflow-y-auto pr-1"></div>
+
+    <!-- Footer -->
+    <div id="credSummary" class="text-center text-xs text-gray-500 mt-3 hidden"></div>
   </div>
 </div>
+
 
     </section><!-- End of .content-area -->
 </div><!-- End of .admin-layout -->
