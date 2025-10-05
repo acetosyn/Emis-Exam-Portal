@@ -7,8 +7,8 @@ Environment variables (example in your .env):
   SMTP_PORT=587
   SMTP_USER=epiconsultdiagnostics1@gmail.com
   SMTP_PASS=ubvbncjejczudcol
-  EMAIL_FROM=portal.epitomeschools@gmail.com
-  NOTIFY_EMAIL=portal.epitomeschools@gmail.com
+  EMAIL_FROM=epiconsultdiagnostics1@gmail.com   # MUST match SMTP_USER
+  NOTIFY_EMAIL=adetomi.epitomeschools@gmail.com # your recipient(s)
 
 Notes:
 - EMAIL_FROM controls the 'From' header (Gmail may display your SMTP_USER,
@@ -314,15 +314,15 @@ def _generate_pdf_bytes(result: Dict) -> bytes:
 def _build_base_message(to_email: str, subject: str, text: str, html: str) -> EmailMessage:
     EMAIL_FROM = os.getenv("EMAIL_FROM", os.getenv("SMTP_USER", "no-reply@emis.local"))
     msg = EmailMessage()
-    msg["From"] = EMAIL_FROM
+    msg["From"] = f"EMIS Exam Portal <{EMAIL_FROM}>"   # 👈 add display name
     msg["To"] = to_email
     msg["Date"] = formatdate(localtime=True)
     msg["Subject"] = subject
-    # Optional reply-to could be set to EMAIL_FROM as well:
     msg["Reply-To"] = EMAIL_FROM
     msg.set_content(text)
     msg.add_alternative(html, subtype="html")
     return msg
+
 
 
 def _smtp_send(msg: EmailMessage) -> bool:
@@ -333,13 +333,20 @@ def _smtp_send(msg: EmailMessage) -> bool:
 
     try:
         with smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=20) as server:
+            print(f"[email_server] Connecting to {SMTP_HOST}:{SMTP_PORT} as {SMTP_USER}")
             server.ehlo()
             server.starttls()
+            server.ehlo()
             server.login(SMTP_USER, SMTP_PASS)
-            server.send_message(msg)
+            print("[email_server] ✅ Logged into SMTP successfully")
+
+            response = server.send_message(msg)
+            print(f"[email_server] 📤 Sent message to {msg['To']}")
+            print(f"[email_server] SMTP response: {response}")
+
         return True
     except Exception as e:
-        print(f"[email_server] SMTP send error: {e}")
+        print(f"[email_server] ❌ SMTP send error: {e}")
         return False
 
 
@@ -349,7 +356,7 @@ def send_admin_email(result: Dict) -> bool:
     Supports multiple recipients (comma-separated in NOTIFY_EMAIL).
     """
     # Read recipients directly (comma-separated string is valid)
-    admin_to = os.getenv("NOTIFY_EMAIL", "spectrobana@gmail.com")
+    admin_to = os.getenv("NOTIFY_EMAIL", "portal.epitomeschools@gmail.com")
 
     subject = _compose_subject_admin(result)
     text    = _compose_body_admin_text(result)
