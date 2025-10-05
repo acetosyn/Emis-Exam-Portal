@@ -67,26 +67,27 @@ def _compute_pass_fail(result: Dict) -> str:
 def _compose_subject_admin(result: Dict) -> str:
     """
     Subject example:
-      EMIS Exam Completion — candidate0001 — PASS (21/40, BIOLOGY)
+      [EMIS] Exam Completion — candidate0001 — PASS (21/40, BIOLOGY)
     """
     username = result.get("username") or "unknown"
     status   = _compute_pass_fail(result)
     correct  = int(result.get("correct") or 0)
     total    = int(result.get("total") or 0)
     subject  = (result.get("subject") or "EXAM").upper()
-    return f"EMIS Exam Completion — {username} — {status} ({correct}/{total}, {subject})"
+    return f"[EMIS] Exam Completion — {username} — {status} ({correct}/{total}, {subject})"
 
 
 def _compose_subject_candidate(result: Dict) -> str:
     """
     Subject example to candidate:
-      Your EMIS Exam Result — PASS (21/40, BIOLOGY)
+      [EMIS] Your Exam Result — PASS (21/40, BIOLOGY)
     """
     status   = _compute_pass_fail(result)
     correct  = int(result.get("correct") or 0)
     total    = int(result.get("total") or 0)
     subject  = (result.get("subject") or "EXAM").upper()
-    return f"Your EMIS Exam Result — {status} ({correct}/{total}, {subject})"
+    return f"[EMIS] Your Exam Result — {status} ({correct}/{total}, {subject})"
+
 
 
 def _compose_body_admin_text(result: Dict) -> str:
