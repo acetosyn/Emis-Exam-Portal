@@ -397,7 +397,18 @@ def view_results():
 
 
 
+@app.route("/debug/email_test")
+def debug_email_test():
+    from email_server import send_test_email
+    ok = send_test_email()
+    return {"sent": ok}
+
+
+
 if __name__ == '__main__':
     user_credentials.init_db()
     user_exam.init_db()   # ensure exam_results table exists
     app.run(host='0.0.0.0', port=5000, debug=True)
+
+
+
