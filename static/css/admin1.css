@@ -447,3 +447,148 @@
   color: #E30613;
   transform: none;
 }
+
+
+
+
+/* ==============================
+   ADMIN 1 (CORE LAYOUT / GENERAL)
+   ============================== */
+
+/* ... (your existing admin1.css content remains exactly the same up to the end) ... */
+
+
+
+/* ==============================
+   RESPONSIVE ADJUSTMENTS
+   ============================== */
+
+/* --- Small Devices (Tablets and below) --- */
+@media (max-width: 1024px) {
+  .sidebar {
+    width: 200px;
+  }
+
+  .content-area {
+    margin-left: 200px;
+    padding: 1rem;
+  }
+
+  .topbar {
+    left: 200px;
+  }
+}
+
+/* --- Mobile Devices (under 768px) --- */
+@media (max-width: 768px) {
+  /* Make sidebar slide-in overlay */
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: -240px;
+    width: 240px;
+    height: 100%;
+    transition: left 0.3s ease;
+    z-index: 100;
+  }
+
+  .sidebar.open {
+    left: 0;
+  }
+
+  /* Dim background when sidebar is open */
+  .sidebar-backdrop {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 90;
+    display: none;
+  }
+
+  .sidebar.open ~ .sidebar-backdrop {
+    display: block;
+  }
+
+  /* Hide brand subtitle on mobile */
+  .brand-sub {
+    display: none;
+  }
+
+  /* Topbar full width */
+  .topbar {
+    left: 0;
+    right: 0;
+    height: 56px;
+    padding: 0 1rem;
+  }
+
+  .topbar-left .page-title {
+    font-size: 1.2rem;
+  }
+
+  .search-input {
+    width: 100%;
+    font-size: 0.85rem;
+  }
+
+  /* Sidebar toggle visible in topbar */
+  #sidebarToggle {
+    display: block;
+  }
+
+  /* Push content down below fixed topbar */
+  .content-area {
+    margin-left: 0;
+    padding: 1rem;
+    margin-top: 56px;
+  }
+
+  /* Stack content vertically */
+  .grid-cols.responsive-2,
+  .grid-cols.responsive-3,
+  .grid-cols.responsive-4 {
+    grid-template-columns: 1fr;
+  }
+
+  /* Cards smaller padding */
+  .card {
+    padding: 1rem;
+  }
+
+  /* Quick actions stack vertically */
+  .quick-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .action-card {
+    justify-content: center;
+    font-size: 0.95rem;
+  }
+
+  .sidebar-foot-btn {
+    padding: 0.5rem;
+    font-size: 0.8rem;
+  }
+}
+
+/* --- Tiny Phones (under 480px) --- */
+@media (max-width: 480px) {
+  .topbar-left .page-title {
+    font-size: 1rem;
+  }
+
+  .nav-item,
+  .nav-subitem {
+    padding: 0.6rem 0.75rem;
+    font-size: 0.85rem;
+  }
+
+  .stat-value {
+    font-size: 1.1rem;
+  }
+
+  .search-input {
+    padding: 0.3rem 0.5rem 0.3rem 1.8rem;
+  }
+}
