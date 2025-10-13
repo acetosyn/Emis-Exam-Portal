@@ -365,38 +365,56 @@ def _build_base_message(to_email: str, subject: str, text: str, html: str) -> Em
 
 def _smtp_send(msg: EmailMessage) -> bool:
     """
-    Sends email via the Flask relay server hosted on PythonAnywhere.
-    Posts subject, recipient, and HTML body to the /send endpoint.
+    Sends email either directly via Gmail SMTP or via Flask relay (PythonAnywhere),
+    depending on which environment variables are present.
     """
-    RELAY_URL = os.getenv("RELAY_URL", "https://acetosyn097007.pythonanywhere.com/send")
-
     try:
-        # Extract fields
-        subject = msg["Subject"]
-        to = msg["To"]
-        html_part = msg.get_body(preferencelist=('html'))
-        html = html_part.get_content() if html_part else msg.get_content()
+        # --- Check if direct Gmail SMTP is configured ---
+        smtp_host = os.getenv("MAIL_SERVER")
+        smtp_user = os.getenv("MAIL_USERNAME")
+        smtp_pass = os.getenv("MAIL_PASSWORD")
 
-        # Prepare payload
-        payload = {
-            "subject": subject,
-            "to": to,
-            "html": html
-        }
+        if smtp_host and smtp_user and smtp_pass:
+            smtp_port = int(os.getenv("MAIL_PORT", 587))
+            use_tls = os.getenv("MAIL_USE_TLS", "True").lower() == "true"
 
-        # Send to relay
-        response = requests.post(RELAY_URL, json=payload, timeout=20)
+            print(f"[email_server] 📧 Sending directly via SMTP ({smtp_host}:{smtp_port})")
 
-        if response.status_code == 200:
-            print(f"[email_server] ✅ Email relayed successfully to {to}")
+            with smtplib.SMTP(smtp_host, smtp_port, timeout=20) as server:
+                if use_tls:
+                    server.starttls()
+                server.login(smtp_user, smtp_pass)
+                server.send_message(msg)
+
+            print(f"[email_server] ✅ Email sent directly to {msg['To']}")
             return True
-        else:
-            print(f"[email_server] ⚠️ Relay error {response.status_code}: {response.text}")
-            return False
+
+        # --- Otherwise fallback to HTTP relay ---
+        relay_url = os.getenv("RELAY_URL")
+        if relay_url:
+            subject = msg["Subject"]
+            to = msg["To"]
+            html_part = msg.get_body(preferencelist=('html'))
+            html = html_part.get_content() if html_part else msg.get_content()
+
+            payload = {"subject": subject, "to": to, "html": html}
+            print(f"[email_server] 🌐 Relaying email to {relay_url}")
+            response = requests.post(relay_url, json=payload, timeout=20)
+
+            if response.status_code == 200:
+                print(f"[email_server] ✅ Email relayed successfully to {to}")
+                return True
+            else:
+                print(f"[email_server] ⚠️ Relay error {response.status_code}: {response.text}")
+                return False
+
+        print("[email_server] ⚠️ No SMTP or RELAY configuration found.")
+        return False
 
     except Exception as e:
-        print(f"[email_server] ❌ Relay send error: {e}")
+        print(f"[email_server] ❌ Send error: {e}")
         return False
+
 
 
 def send_admin_email(result: Dict) -> bool:
