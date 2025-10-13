@@ -1,3 +1,39 @@
+import requests
+import os
+from email.message import EmailMessage
+
+
+def _smtp_send(msg: EmailMessage) -> bool:
+    """
+    Sends email via the Flask relay server hosted on PythonAnywhere.
+    Converts EmailMessage to HTML and posts to the /send endpoint.
+    """
+    SMTP_HOST = os.getenv("SMTP_HOST", "acetosyn097007.pythonanywhere.com")
+    SMTP_PORT = int(os.getenv("SMTP_PORT", "443"))
+
+    try:
+        # Extract fields
+        subject = msg["Subject"]
+        to = msg["To"]
+        html = msg.get_body(preferencelist=('html')).get_content()
+
+        # Send via HTTPS to relay
+        url = f"https://{SMTP_HOST}/send"
+        payload = {"subject": subject, "to": to, "html": html}
+        response = requests.post(url, json=payload, timeout=20)
+
+        if response.status_code == 200:
+            print(f"[email_server] ✅ Email sent to {to}")
+            return True
+        else:
+            print(f"[email_server] ⚠️ Relay error {response.status_code}: {response.text}")
+            return False
+
+    except Exception as e:
+        print(f"[email_server] ❌ Relay send error: {e}")
+        return False
+
+
 """
 email_server.py
 Real-time email notifications (admin + candidate) with PDF attachment for EMIS.
@@ -325,21 +361,36 @@ def _build_base_message(to_email: str, subject: str, text: str, html: str) -> Em
     return msg
 
 
+
+
 def _smtp_send(msg: EmailMessage) -> bool:
-    SMTP_HOST = os.getenv("SMTP_HOST", "smtp.gmail.com")
-    SMTP_PORT = int(os.getenv("SMTP_PORT", "587"))
-    SMTP_USER = os.getenv("SMTP_USER", "")
-    SMTP_PASS = os.getenv("SMTP_PASS", "")
+    """
+    Sends email via the Flask relay server hosted on PythonAnywhere.
+    Converts EmailMessage to HTML and posts to the /send endpoint.
+    """
+    SMTP_HOST = os.getenv("SMTP_HOST", "acetosyn097007.pythonanywhere.com")
+    SMTP_PORT = int(os.getenv("SMTP_PORT", "443"))
 
     try:
-        with smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=20) as server:
-            server.ehlo()
-            server.starttls()
-            server.login(SMTP_USER, SMTP_PASS)
-            server.send_message(msg)
-        return True
+        # Extract fields
+        subject = msg["Subject"]
+        to = msg["To"]
+        html = msg.get_body(preferencelist=('html')).get_content()
+
+        # Send via HTTPS to relay
+        url = f"https://{SMTP_HOST}/send"
+        payload = {"subject": subject, "to": to, "html": html}
+        response = requests.post(url, json=payload, timeout=20)
+
+        if response.status_code == 200:
+            print(f"[email_server] ✅ Email sent to {to}")
+            return True
+        else:
+            print(f"[email_server] ⚠️ Relay error {response.status_code}: {response.text}")
+            return False
+
     except Exception as e:
-        print(f"[email_server] SMTP send error: {e}")
+        print(f"[email_server] ❌ Relay send error: {e}")
         return False
 
 

@@ -1,16 +1,15 @@
-from email_server import send_admin_email
+from email_server import send_result_emails
 
-dummy_result = {
-    "username": "testuser",
-    "fullname": "Test User",
+result = {
+    "username": "candidate0001",
+    "fullname": "John Doe",
     "subject": "Biology",
     "correct": 30,
     "total": 40,
     "score": 75,
-    "time_taken": 600,
-    "submitted_at": "2025-10-05T12:00:00"
+    "time_taken": 1250,
+    "submitted_at": "2025-10-13 22:45",
+    "email": "your_test_email@gmail.com"
 }
 
-print("Sending admin test email...")
-ok = send_admin_email(dummy_result)
-print("Admin email send result:", ok)
+print(send_result_emails(result))
