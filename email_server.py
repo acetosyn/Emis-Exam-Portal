@@ -366,24 +366,29 @@ def _build_base_message(to_email: str, subject: str, text: str, html: str) -> Em
 def _smtp_send(msg: EmailMessage) -> bool:
     """
     Sends email via the Flask relay server hosted on PythonAnywhere.
-    Converts EmailMessage to HTML and posts to the /send endpoint.
+    Posts subject, recipient, and HTML body to the /send endpoint.
     """
-    SMTP_HOST = os.getenv("SMTP_HOST", "acetosyn097007.pythonanywhere.com")
-    SMTP_PORT = int(os.getenv("SMTP_PORT", "443"))
+    RELAY_URL = os.getenv("RELAY_URL", "https://acetosyn097007.pythonanywhere.com/send")
 
     try:
         # Extract fields
         subject = msg["Subject"]
         to = msg["To"]
-        html = msg.get_body(preferencelist=('html')).get_content()
+        html_part = msg.get_body(preferencelist=('html'))
+        html = html_part.get_content() if html_part else msg.get_content()
 
-        # Send via HTTPS to relay
-        url = f"https://{SMTP_HOST}/send"
-        payload = {"subject": subject, "to": to, "html": html}
-        response = requests.post(url, json=payload, timeout=20)
+        # Prepare payload
+        payload = {
+            "subject": subject,
+            "to": to,
+            "html": html
+        }
+
+        # Send to relay
+        response = requests.post(RELAY_URL, json=payload, timeout=20)
 
         if response.status_code == 200:
-            print(f"[email_server] ✅ Email sent to {to}")
+            print(f"[email_server] ✅ Email relayed successfully to {to}")
             return True
         else:
             print(f"[email_server] ⚠️ Relay error {response.status_code}: {response.text}")
