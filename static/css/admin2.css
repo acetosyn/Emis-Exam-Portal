@@ -196,3 +196,104 @@
 }
 
 
+/* ==============================
+   ADMIN 2 (FEATURE-SPECIFIC)
+   ============================== */
+
+/* ... (keep all your existing code above unchanged) ... */
+
+
+/* ==============================
+   RESPONSIVE ENHANCEMENTS
+   ============================== */
+
+/* Tablets */
+@media (max-width: 1024px) {
+  .stat-card {
+    font-size: 0.85rem;
+  }
+
+  .status-grid {
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  }
+
+  .card.notifications-card,
+  .card.activity-card,
+  .card.status-card {
+    padding: 1rem;
+  }
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .route {
+    max-width: 100%;
+    padding: 0.5rem;
+  }
+
+  .stat-card {
+    padding: 0.75rem;
+    font-size: 0.85rem;
+  }
+
+  .stat-value {
+    font-size: 1.1rem;
+  }
+
+  .status-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .timeline {
+    border-left: 2px solid #d1d5db;
+    padding-left: 0.75rem;
+  }
+
+  .pref {
+    padding: 0.75rem;
+  }
+
+  .profile-dropdown {
+    right: 0;
+    left: auto;
+    top: 110%;
+  }
+
+  .actions-col {
+    gap: 0.4rem;
+  }
+
+  .actions-row {
+    flex-direction: column;
+  }
+
+  .card.notifications-card,
+  .card.activity-card,
+  .card.status-card {
+    margin-bottom: 1rem;
+  }
+}
+
+/* Tiny Phones */
+@media (max-width: 480px) {
+  .stat-value {
+    font-size: 1rem;
+  }
+
+  .card-title {
+    font-size: 1rem;
+  }
+
+  .muted {
+    font-size: 0.8rem;
+  }
+
+  .status-grid li {
+    font-size: 0.8rem;
+    padding: 0.4rem 0.6rem;
+  }
+
+  .pref label.form-label {
+    font-size: 0.9rem;
+  }
+}
