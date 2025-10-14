@@ -1,6 +1,6 @@
-// timer.js — Countdown timer only (no hourglass)
+// hour-glass.js — Countdown timer only (no hourglass)
 
-let totalExamSeconds = 20 * 60;  // default 20 minutes
+let totalExamSeconds = 60 * 60;  // default 60 minutes
 let remainingSeconds = totalExamSeconds;
 let timerInterval = null;
 
@@ -38,8 +38,9 @@ function updateTimerDisplay(displayEl, seconds) {
 window.addEventListener('DOMContentLoaded', () => {
   const startBtn = document.getElementById('startExamBtn');
   if (startBtn) {
+    // start with 60 minutes instead of 20
     startBtn.addEventListener('click', () => {
-      startTimer(20 * 60);
+      startTimer(60 * 60);
     });
   }
 });

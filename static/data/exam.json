@@ -1,7 +1,7 @@
 {
   "title": "Mathematics Assessment - Grade 10",
   "description": "Comprehensive mathematics exam covering algebra, geometry, and basic calculus concepts",
-  "duration": 1800,
+  "duration": 3600,
   "totalQuestions": 15,
   "passingScore": 70,
   "randomizeQuestions": true,

@@ -215,7 +215,8 @@ window.loadExamData = async function(subject){
 
     window.examData = shuffleQuestions(await res.json());
 
-    window.timeRemaining = (Number(window.examData.time_allowed_minutes)||20)*60;
+    window.timeRemaining = (window.examData.time_allowed_minutes || 60) * 60;
+
     $("#timerDisplay") && ($("#timerDisplay").textContent = formatTime(window.timeRemaining));
     $("#totalQuestions") && ($("#totalQuestions").textContent = window.examData.questions.length);
 
@@ -515,7 +516,7 @@ window.startExam = async function(){
     } else {
       // Fresh start
       window.examStartTime = Date.now();
-      window.timeRemaining = (window.examData.time_allowed_minutes || 20) * 60;
+      window.timeRemaining = (window.examData.time_allowed_minutes || 60) * 60;
       loadQuestion(0);
       startTimer();
     }
