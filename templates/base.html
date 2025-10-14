@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}EMIS Exam Portal{% endblock %}</title>
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/logo.jpg') }}">
+
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'primary': '#38bdf8', /* sky blue */
+            'primary-dark': '#0284c7',
+            'navy': '#0f2b46',
+            'light': '#f9fafb',
+            'orange': '#f97316'
+          },
+          fontFamily: {
+            'inter': ['Inter', 'sans-serif'],
+            'poppins': ['Poppins', 'sans-serif']
+          },
+          borderRadius: {
+            'xl': '18px'
+          },
+          boxShadow: {
+            'modern': '0 12px 40px rgba(0, 0, 0, 0.12)',
+            'hover': '0 12px 28px rgba(0,0,0,0.25)'
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Global CSS -->
+  <!-- <link rel="stylesheet" href="{{ url_for('static', filename='css/base_general.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/base_component.css') }}"> -->
+
+  <!-- Page-specific CSS -->
+  {% block styles %}{% endblock %}
+</head>
+<body class="font-inter bg-light min-h-screen">
+  <!-- Header -->
+  <header class="bg-white shadow-modern border-b border-gray-100">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between items-center h-20">
+        <div class="flex items-center space-x-4">
+          <img src="{{ url_for('static', filename='images/logo.jpg') }}" 
+               alt="EMIS Logo" 
+               class="w-12 h-12 object-contain rounded-lg shadow" />
+          <div>
+            <h1 class="text-2xl font-bold text-navy font-poppins">EMIS</h1>
+            <p class="text-sm text-gray-600 font-medium">Epitome Model Islamic Schools</p>
+          </div>
+        </div>
+
+        {% block header_actions %}{% endblock %}
+      </div>
+    </div>
+  </header>
+
+  <!-- Main -->
+  <main class="flex-1 min-h-screen">
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-white border-t border-gray-100 mt-auto">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 text-center">
+      <p class="text-gray-600 font-medium">&copy; 2025 EMIS - Epitome Model Islamic Schools. All rights reserved.</p>
+      <p class="text-sm text-gray-500 mt-2">Empowering minds through Islamic education</p>
+    </div>
+  </footer>
+
+  <!-- Page-specific JS -->
+  {% block scripts %}{% endblock %}
+</body>
+</html>
