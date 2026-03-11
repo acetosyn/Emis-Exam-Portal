@@ -1,90 +1,112 @@
 // ===== Result Page JS =====
 document.addEventListener("DOMContentLoaded", () => {
+  bindResultActions();
   loadResultData();
 });
 
-function loadResultData() {
-  const result = window.resultData || null; // injected via Jinja
+function bindResultActions() {
+  document.getElementById("endExamBtn")?.addEventListener("click", endExam);
+  document.getElementById("viewResultBtn")?.addEventListener("click", viewResult);
+  document.getElementById("closeGoodbyeBtn")?.addEventListener("click", closeGoodbye);
+}
 
-  // Handle empty / no results
-  if (!result || !result.score) {
-    const card = document.querySelector(".result-card");
-    if (card) {
-      card.innerHTML = `
-        <div class="text-center p-6">
-          <p class="text-red-600 font-semibold">⚠️ No exam results found for this user.</p>
-          <button onclick="endExam()" class="mt-4 btn-primary">End</button>
-        </div>
-      `;
-    }
+function loadResultData() {
+  const result = window.resultData || null;
+
+  if (!result || result.score === undefined || result.score === null) {
+    renderEmptyState();
     return;
   }
 
-  // Score & progress circle animation
-  animateScore(result.score);
+  const score = Number(result.score ?? 0);
+  const correct = Number(result.correct ?? 0);
+  const total = Number(result.total ?? 0);
+  const answered = Number(result.answered ?? 0);
+  const flagged = Number(result.flagged ?? 0);
+  const tabSwitches = Number(result.tabSwitches ?? 0);
+  const timeTaken = Number(result.time_taken ?? 0);
 
-  // Fraction score (correct / total)
-  setText("correctAnswers", result.correct ?? 0);
-  setText("totalQuestions", result.total ?? 0);
+  animateScore(score);
 
-  // PASS / FAIL label (for quick view only)
-  const passFail = document.getElementById("passFail");
-  if (passFail) {
-    if ((result.correct ?? 0) >= 20) {
-      passFail.textContent = "PASS ✅";
-      passFail.style.color = "green";
-    } else {
-      passFail.textContent = "FAIL ❌";
-      passFail.style.color = "red";
-    }
-  }
+  setText("correctAnswers", correct);
+  setText("totalQuestions", total);
 
-  // Other Stats
-  setText("timeTaken", formatTime(result.time_taken ?? 0));
-  setText("answeredQuestions", result.answered ?? 0);
-  setText("skippedQuestions", (result.total ?? 0) - (result.answered ?? 0));
-  setText("flaggedQuestions", result.flagged ?? 0);
-  setText("tabSwitches", result.tabSwitches ?? 0);
+  updatePassFail(correct);
 
-  // Accuracy %
-  const accuracy = (result.answered && result.answered > 0)
-    ? Math.round((result.correct / result.answered) * 100)
-    : 0;
-  setText("accuracyRate", accuracy + "%");
+  setText("timeTaken", formatTime(timeTaken));
 
-  // Avg. time per question
-  const avg = (result.answered && result.answered > 0)
-    ? Math.round(result.time_taken / result.answered)
-    : 0;
-  setText("avgTimePerQuestion", avg + "s");
+  setText("answeredQuestions", answered);
+  setText("answeredQuestionsMirror", answered);
 
-  // Completion date
+  setText("skippedQuestions", Math.max(0, total - answered));
+  setText("flaggedQuestions", flagged);
+  setText("tabSwitches", tabSwitches);
+
+  const accuracy = answered > 0 ? Math.round((correct / answered) * 100) : 0;
+  setText("accuracyRate", `${accuracy}%`);
+  setText("accuracyRateMirror", `${accuracy}%`);
+
+  const avgTime = answered > 0 ? Math.round(timeTaken / answered) : 0;
+  setText("avgTimePerQuestion", `${avgTime}s`);
+
   const completionDate = result.submitted_at
     ? new Date(result.submitted_at).toLocaleString()
     : "N/A";
   setText("completionDate", completionDate);
 
-  // Header message (just neutral)
+  updateHeaderMessage(score, correct);
+  showPerformance(correct);
+
+  if (correct >= 31) {
+    createConfetti();
+  }
+}
+
+function renderEmptyState() {
+  const card = document.querySelector(".result-card");
+  if (!card) return;
+
+  card.innerHTML = `
+    <div class="result-empty-state">
+      <div class="result-empty-icon">⚠️</div>
+      <p class="result-empty-text">No exam results found for this user.</p>
+      <button type="button" id="emptyEndExamBtn" class="btn-primary">End</button>
+    </div>
+  `;
+
+  document.getElementById("emptyEndExamBtn")?.addEventListener("click", endExam);
+}
+
+function updateHeaderMessage(score, correct) {
   const headerMsg = document.getElementById("resultHeaderMessage");
-  if (headerMsg) {
+  if (!headerMsg) return;
+
+  if (correct >= 31) {
+    headerMsg.textContent = "🌟 Outstanding performance. You completed the exam excellently. Review your result below.";
+  } else if (correct >= 26) {
+    headerMsg.textContent = "✅ You completed the exam successfully. Review your performance below.";
+  } else if (correct >= 20) {
+    headerMsg.textContent = "📊 You have completed your exam. Your result meets the minimum requirement.";
+  } else {
     headerMsg.textContent = "📊 You have completed your exam. Review your performance below.";
   }
-
-  // Performance feedback box (staff recruitment rules)
-  showPerformance(result.correct ?? 0);
-
-  // Confetti celebration for excellent scores
-  if ((result.correct ?? 0) >= 31) createConfetti();
 }
 
 // ===== Goodbye Modal =====
 function endExam() {
   const modal = document.getElementById("goodbyeModal");
-  if (modal) modal.style.display = "flex";
+  if (!modal) return;
+
+  modal.style.display = "flex";
+  modal.setAttribute("aria-hidden", "false");
 }
+
 function closeGoodbye() {
   const modal = document.getElementById("goodbyeModal");
-  if (modal) modal.style.display = "none";
+  if (!modal) return;
+
+  modal.style.display = "none";
+  modal.setAttribute("aria-hidden", "true");
 }
 
 // ===== Circle Animation =====
@@ -95,26 +117,39 @@ function animateScore(score) {
   const offset = circumference - (score / 100) * circumference;
 
   if (circle) {
-    circle.style.strokeDashoffset = offset;
-    if (score >= 80) circle.style.stroke = "#16a34a";   // green
-    else if (score >= 70) circle.style.stroke = "#f59e0b"; // amber
-    else circle.style.stroke = "#dc2626"; // red
+    circle.style.strokeDasharray = `${circumference}`;
+    circle.style.strokeDashoffset = `${offset}`;
+
+    if (score >= 80) {
+      circle.style.stroke = "#16a34a";
+    } else if (score >= 70) {
+      circle.style.stroke = "#f59e0b";
+    } else {
+      circle.style.stroke = "#dc2626";
+    }
   }
 
-  if (display) animateCounter(display, score, "%");
+  if (display) {
+    animateCounter(display, score, "%");
+  }
 }
 
 function animateCounter(el, target, suffix = "") {
   if (!el) return;
+
   let current = 0;
-  const step = Math.max(1, Math.ceil(target / 50));
+  const safeTarget = Number(target) || 0;
+  const step = Math.max(1, Math.ceil(safeTarget / 50));
+
   const interval = setInterval(() => {
     current += step;
-    if (current >= target) {
-      current = target;
+
+    if (current >= safeTarget) {
+      current = safeTarget;
       clearInterval(interval);
     }
-    el.textContent = current + suffix;
+
+    el.textContent = `${current}${suffix}`;
   }, 30);
 }
 
@@ -131,28 +166,42 @@ function setText(id, val) {
   if (el) el.textContent = val;
 }
 
-// ===== Performance Box (Staff Recruitment Rules) =====
+function updatePassFail(correct) {
+  const passFail = document.getElementById("passFail");
+  if (!passFail) return;
+
+  const passed = correct >= 20;
+  passFail.textContent = passed ? "PASS ✅" : "FAIL ❌";
+  passFail.classList.remove("is-pass", "is-fail");
+  passFail.classList.add(passed ? "is-pass" : "is-fail");
+}
+
+// ===== Performance Box =====
 function showPerformance(rawScore) {
   const box = document.getElementById("performanceMessage");
   if (!box) return;
 
-  let msg = "", color = "";
+  let msg = "";
+  let klass = "";
 
   if (rawScore <= 19) {
     msg = "❌ You failed! Unfortunately, your score did not meet the minimum requirement for consideration. Thank you for your interest.";
-    color = "background:#fee2e2;color:#991b1b";
+    klass = "performance-fail";
   } else if (rawScore >= 20 && rawScore <= 25) {
     msg = "✅ You achieved the minimum requirement.\nYour result will be reviewed by the administration.";
-    color = "background:#fef9c3;color:#92400e";
+    klass = "performance-minimum";
   } else if (rawScore >= 26 && rawScore <= 30) {
     msg = "✅ You successfully passed with a solid score.\nYour performance meets the requirement. Await communication from the administration on the next stage.";
-    color = "background:#eff6ff;color:#1e3a8a";
+    klass = "performance-good";
   } else if (rawScore >= 31 && rawScore <= 40) {
     msg = "🌟 Excellent result!\nYour performance has placed you in the top tier. Await further instructions for the next stage of the recruitment process.";
-    color = "background:#dcfce7;color:#166534";
+    klass = "performance-excellent";
+  } else {
+    msg = "Your result has been recorded successfully.";
+    klass = "performance-good";
   }
 
-  box.setAttribute("style", color + ";padding:1rem;border-radius:12px;line-height:1.4;white-space:pre-line");
+  box.className = `performance-box ${klass}`;
   box.textContent = msg;
 }
 
@@ -160,19 +209,26 @@ function showPerformance(rawScore) {
 function createConfetti() {
   const container = document.getElementById("confetti-container");
   if (!container) return;
-  const colors = ["#38bdf8", "#16a34a", "#f59e0b", "#ef4444", "#8b5cf6"];
+
+  const classes = [
+    "confetti-blue",
+    "confetti-green",
+    "confetti-amber",
+    "confetti-red",
+    "confetti-purple"
+  ];
+
   for (let i = 0; i < 50; i++) {
     const conf = document.createElement("div");
-    conf.style.position = "absolute";
-    conf.style.width = "10px";
-    conf.style.height = "10px";
-    conf.style.background = colors[Math.floor(Math.random() * colors.length)];
-    conf.style.left = Math.random() * 100 + "%";
-    conf.style.top = "-10px";
-    conf.style.borderRadius = "50%";
-    conf.style.animation = `confetti-fall ${2 + Math.random() * 3}s linear forwards`;
+    const colorClass = classes[Math.floor(Math.random() * classes.length)];
+
+    conf.className = `confetti-piece ${colorClass}`;
+    conf.style.left = `${Math.random() * 100}%`;
+    conf.style.animationDuration = `${2 + Math.random() * 3}s`;
+    conf.style.animationDelay = `${Math.random() * 0.8}s`;
+
     container.appendChild(conf);
-    setTimeout(() => conf.remove(), 5000);
+    setTimeout(() => conf.remove(), 5500);
   }
 }
 
@@ -180,6 +236,3 @@ function createConfetti() {
 function viewResult() {
   window.location.reload();
 }
-
-
-

@@ -64,7 +64,7 @@
       <div class="up-actions-row">
         {% if not exam_started and not exam_submitted %}
           <!-- Changed: no POST, just link to /exam -->
-          <a href="{{ url_for('exam') }}" class="btn-primary">📖 View Exam Instructions</a>
+          <a href="{{ url_for('dashboard') }}" class="btn-primary">📖 View Exam Instructions</a>
         {% elif exam_submitted %}
           <a href="{{ url_for('result') }}" class="btn-success">📊 View Results</a>
         {% elif exam_started %}

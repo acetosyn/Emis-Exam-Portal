@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, session, jsonify, send_from_directory
+from flask import Flask, render_template, request, redirect, url_for, session, jsonify, send_from_directory, Response
 from dotenv import load_dotenv
 import os
 import user_credentials  # credential generator / DB handler
@@ -11,6 +11,7 @@ from threading import Thread
 # Load environment variables
 from pathlib import Path
 import csv
+import tts_service
 
 
 # Define logs directory
@@ -35,6 +36,83 @@ def _send_emails_async(result_payload: dict):
         app.logger.info(f"[email] send_result_emails -> {status}")
     except Exception as e:
         app.logger.exception(f"[email] send_result_emails failed: {e}")
+
+
+
+
+def _safe_int(value, default=0):
+    try:
+        return int(value)
+    except Exception:
+        return default
+
+
+def _build_exam_instruction_text():
+    """
+    Canonical instruction text for exam modal narration.
+    Keep this aligned with exam.html instruction modal.
+    """
+    subject = (session.get("subject") or "your selected subject").strip()
+
+    lines = [
+        "This exam contains 40 multiple-choice questions.",
+        "Opening a new browser tab or leaving this page will result in disqualification.",
+        "You can only answer a question once. Check carefully before answering.",
+        "Each question has options A to D. Select the most appropriate answer.",
+        "You have 60 minutes to complete all questions.",
+        "Navigate using Previous and Next buttons or the question grid.",
+        "You may flag questions to review them before submission.",
+        "Once started, you must finish in one sitting.",
+        "After completing all questions, ensure you submit your exam."
+    ]
+
+    intro = (
+        f"Assalamu alaikum. Welcome to the EMIS examination portal. "
+        f"You are about to begin your {subject} examination. "
+        f"Please listen carefully to these instructions before you start. "
+    )
+
+    body = " ".join(lines)
+
+    closing = (
+        "Take your time, stay calm, and answer carefully. "
+        "When you are fully ready, click Start Exam to begin. "
+        "We wish you success."
+    )
+
+    return tts_service.sanitize_tts_text(f"{intro} {body} {closing}")
+
+
+def _build_result_summary_text(latest_result: dict | None):
+    """
+    Build a spoken result summary for the candidate result page.
+    """
+    latest_result = latest_result or {}
+
+    full_name = session.get("full_name") or latest_result.get("fullname") or "candidate"
+    subject = latest_result.get("subject") or session.get("subject") or "your subject"
+    score = latest_result.get("score")
+    correct = latest_result.get("correct")
+    total = latest_result.get("total")
+    status = latest_result.get("status") or "completed"
+
+    parts = [
+        "Assalamu alaikum.",
+        f"Hello {tts_service.sanitize_tts_text(full_name)}.",
+        "Your exam result is now available.",
+        f"Subject: {tts_service.sanitize_tts_text(str(subject))}.",
+    ]
+
+    if score is not None:
+        parts.append(f"Your score is {score} percent.")
+
+    if correct is not None and total is not None:
+        parts.append(f"You answered {correct} questions correctly out of {total}.")
+
+    parts.append(f"Your exam status is {tts_service.sanitize_tts_text(str(status))}.")
+    parts.append("Thank you for taking the examination.")
+
+    return tts_service.sanitize_tts_text(" ".join(parts))
 
 
 @app.route('/')
@@ -99,6 +177,14 @@ def admin_dashboard():
     return render_template('admin.html')
 
 
+@app.route('/dashboard')
+def dashboard():
+    if session.get('user_type') != 'user':
+        return redirect(url_for('user_login'))
+
+    return render_template('dashboard.html')
+
+
 # -------------------- USER PORTAL (Dashboard-first) --------------------
 @app.route('/user_portal')
 def user_portal():
@@ -157,6 +243,107 @@ def submit_exam():
     session['exam_submitted'] = True
     session['exam_started'] = False
     return redirect(url_for('result'))
+
+
+
+
+
+
+
+# -------------------- API: TTS (Generic) --------------------
+@app.route("/api/tts", methods=["POST"])
+def api_tts():
+    """
+    Generic ElevenLabs TTS endpoint.
+    Frontend sends text.
+    If ElevenLabs works -> returns audio/mpeg
+    If ElevenLabs fails -> returns JSON with fallback=True
+    """
+    data = request.get_json(silent=True) or {}
+    text = (data.get("text") or "").strip()
+
+    if not text:
+        return jsonify({
+            "success": False,
+            "fallback": True,
+            "error": "No text supplied"
+        }), 400
+
+    ok, audio_bytes, meta = tts_service.generate_tts_audio(text)
+
+    if ok:
+        return Response(audio_bytes, mimetype="audio/mpeg")
+
+    app.logger.warning(f"[tts] generic failed: {meta}")
+    return jsonify({
+        "success": False,
+        "fallback": True,
+        "provider": "elevenlabs",
+        "error": meta.get("error", "TTS failed")
+    }), 503
+
+
+# -------------------- API: TTS Exam Instructions --------------------
+@app.route("/api/tts/instructions", methods=["GET"])
+def api_tts_instructions():
+    """
+    Returns spoken audio for the exam instructions modal.
+    Candidate only.
+    """
+    if session.get("user_type") != "user":
+        return jsonify({
+            "success": False,
+            "fallback": True,
+            "error": "Unauthorized"
+        }), 403
+
+    text = _build_exam_instruction_text()
+    ok, audio_bytes, meta = tts_service.generate_tts_audio(text)
+
+    if ok:
+        return Response(audio_bytes, mimetype="audio/mpeg")
+
+    app.logger.warning(f"[tts] instructions failed: {meta}")
+    return jsonify({
+        "success": False,
+        "fallback": True,
+        "provider": "elevenlabs",
+        "error": meta.get("error", "Instruction TTS failed"),
+        "text": text
+    }), 503
+
+
+# -------------------- API: TTS Result Summary --------------------
+@app.route("/api/tts/result-summary", methods=["GET"])
+def api_tts_result_summary():
+    """
+    Returns spoken audio for the candidate's latest result page summary.
+    Candidate only.
+    """
+    if session.get("user_type") != "user":
+        return jsonify({
+            "success": False,
+            "fallback": True,
+            "error": "Unauthorized"
+        }), 403
+
+    username = session.get("username")
+    latest = user_exam.get_user_latest_result(username)
+    text = _build_result_summary_text(latest)
+
+    ok, audio_bytes, meta = tts_service.generate_tts_audio(text)
+
+    if ok:
+        return Response(audio_bytes, mimetype="audio/mpeg")
+
+    app.logger.warning(f"[tts] result summary failed: {meta}")
+    return jsonify({
+        "success": False,
+        "fallback": True,
+        "provider": "elevenlabs",
+        "error": meta.get("error", "Result summary TTS failed"),
+        "text": text
+    }), 503
 
 
 # -------------------- RESULT PAGE --------------------

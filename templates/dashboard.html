@@ -1,157 +1,243 @@
 {% extends "base.html" %}
 
-{% block title %}Student Dashboard - EMIS Exam Portal{% endblock %}
+{% block title %}Candidate Dashboard - EMIS Exam Portal{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+{% endblock %}
 
 {% block header_actions %}
-<div class="flex items-center space-x-4">
-    <span class="text-sm text-gray-600 font-medium">Welcome, {{ session.username or 'Student' }}</span>
-    <a href="{{ url_for('logout') }}" class="text-primary hover:text-primary-dark font-medium text-sm transition-colors">
-        Logout
-    </a>
+<div class="dash-header-actions">
+    <span class="dash-header-welcome">
+        Welcome, {{ session.username or 'Candidate' }}
+    </span>
+    <a href="{{ url_for('logout') }}" class="dash-header-logout">Logout</a>
 </div>
 {% endblock %}
 
 {% block content %}
-<div class="min-h-screen bg-light py-8">
-    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <!-- Modern welcome section -->
-        <div class="mb-8">
-            <h1 class="text-4xl font-bold text-navy mb-2 font-poppins">Student Dashboard</h1>
-            <p class="text-gray-600 text-lg">Welcome back! Ready to take your examination?</p>
-        </div>
-
-        <!-- Dashboard grid with modern cards -->
-        <div class="dashboard-grid">
-            <!-- Exam Status Card -->
-            <div class="modern-card zoom-effect">
-                <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-xl font-semibold text-navy">Exam Status</h3>
-                    <div class="status-indicator status-active"></div>
-                </div>
-                <div class="space-y-3">
-                    <div class="flex justify-between">
-                        <span class="text-gray-600">Subject:</span>
-                        <span class="font-semibold text-navy">Mathematics</span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span class="text-gray-600">Duration:</span>
-                        <span class="font-semibold text-navy">30 minutes</span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span class="text-gray-600">Questions:</span>
-                        <span class="font-semibold text-navy">15 questions</span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span class="text-gray-600">Status:</span>
-                        <span class="font-semibold text-green-600">Ready to Start</span>
-                    </div>
-                </div>
+<div class="dash-page">
+    <div class="dash-shell">
+        <!-- Hero -->
+        <section class="dash-hero">
+            <div class="dash-hero-copy">
+                <span class="dash-kicker">EMIS Examination Centre</span>
+                <h1 class="dash-title">Candidate Dashboard</h1>
+                <p class="dash-subtitle">
+                    Please review your exam details carefully. Your instructions will be read aloud before you begin.
+                </p>
             </div>
 
-            <!-- Quick Actions Card -->
-            <div class="modern-card zoom-effect">
-                <h3 class="text-xl font-semibold text-navy mb-4">Quick Actions</h3>
-                <div class="space-y-3">
-                    <a href="{{ url_for('exam') }}" class="block w-full modern-btn modern-btn-primary text-center">
+            <div class="dash-hero-badge">
+                <span class="dash-badge-label">Status</span>
+                <strong>Ready to Start</strong>
+            </div>
+        </section>
+
+        <!-- Top cards -->
+        <section class="dash-grid dash-grid-top">
+            <!-- Exam status -->
+            <article class="dash-card dash-card-accent">
+                <div class="dash-card-head">
+                    <div>
+                        <h2>Exam Status</h2>
+                        <p>Current examination information</p>
+                    </div>
+                    <span class="dash-status-pill is-ready">Ready</span>
+                </div>
+
+                <div class="dash-info-list">
+                    <div class="dash-info-row">
+                        <span>Subject</span>
+                        <strong>{{ session.subject or 'Not Assigned' }}</strong>
+                    </div>
+                    <div class="dash-info-row">
+                        <span>Duration</span>
+                        <strong>60 minutes</strong>
+                    </div>
+                    <div class="dash-info-row">
+                        <span>Questions</span>
+                        <strong>40 Questions</strong>
+                    </div>
+                    <div class="dash-info-row">
+                        <span>Mode</span>
+                        <strong>Multiple Choice</strong>
+                    </div>
+                </div>
+            </article>
+
+            <!-- Quick actions -->
+            <article class="dash-card">
+                <div class="dash-card-head">
+                    <div>
+                        <h2>Quick Actions</h2>
+                        <p>Review first, then proceed</p>
+                    </div>
+                </div>
+        
+                    <a href="{{ url_for('exam') }}" class="dash-btn dash-btn-primary">
                         Start Examination
                     </a>
-                    <button class="w-full modern-btn modern-btn-secondary" onclick="showInstructions()">
-                        View Instructions
-                    </button>
-                    <button class="w-full modern-btn modern-btn-secondary" onclick="checkSystem()">
-                        System Check
-                    </button>
                 </div>
-            </div>
 
-            <!-- Student Info Card -->
-            <div class="modern-card zoom-effect">
-                <h3 class="text-xl font-semibold text-navy mb-4">Student Information</h3>
-                <div class="space-y-3">
-                    <div class="flex justify-between">
-                        <span class="text-gray-600">Student ID:</span>
-                        <span class="font-semibold text-navy">{{ session.username or 'STU001' }}</span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span class="text-gray-600">Class:</span>
-                        <span class="font-semibold text-navy">Grade 10</span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span class="text-gray-600">Session:</span>
-                        <span class="font-semibold text-navy">2024-2025</span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span class="text-gray-600">Login Time:</span>
-                        <span class="font-semibold text-navy" id="loginTime"></span>
+                <p class="dash-muted-note">
+                    The instruction modal is the final page before the main exam screen.
+                </p>
+            </article>
+        </section>
+
+        <!-- Main content grid -->
+        <section class="dash-grid dash-grid-main">
+            <!-- Candidate info -->
+            <article class="dash-card">
+                <div class="dash-card-head">
+                    <div>
+                        <h2>Candidate Information</h2>
+                        <p>Your registered details</p>
                     </div>
                 </div>
-            </div>
 
-            <!-- Recent Activity Card -->
-            <div class="modern-card zoom-effect">
-                <h3 class="text-xl font-semibold text-navy mb-4">Recent Activity</h3>
-                <div class="space-y-3">
-                    <div class="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-                        <div class="w-2 h-2 bg-green-500 rounded-full"></div>
-                        <div class="flex-1">
-                            <p class="text-sm font-medium text-gray-900">System Login</p>
-                            <p class="text-xs text-gray-500">Just now</p>
+                <div class="dash-info-list">
+                    <div class="dash-info-row">
+                        <span>Candidate ID</span>
+                        <strong>{{ session.username or 'STU001' }}</strong>
+                    </div>
+                    <div class="dash-info-row">
+                        <span>Full Name</span>
+                        <strong>{{ session.full_name or 'Candidate' }}</strong>
+                    </div>
+                    <div class="dash-info-row">
+                        <span>Gender</span>
+                        <strong>{{ session.gender or 'Not Specified' }}</strong>
+                    </div>
+                    <div class="dash-info-row">
+                        <span>Session</span>
+                        <strong>2025-2026</strong>
+                    </div>
+                    <div class="dash-info-row">
+                        <span>Login Time</span>
+                        <strong id="loginTime">--:--:--</strong>
+                    </div>
+                </div>
+            </article>
+
+            <!-- Activity -->
+            <article class="dash-card">
+                <div class="dash-card-head">
+                    <div>
+                        <h2>Recent Activity</h2>
+                        <p>Latest dashboard events</p>
+                    </div>
+                </div>
+
+                <div class="dash-activity-list">
+                    <div class="dash-activity-item">
+                        <span class="dash-dot is-green"></span>
+                        <div>
+                            <div class="dash-activity-title">Portal Login Successful</div>
+                            <div class="dash-activity-meta">Just now</div>
                         </div>
                     </div>
-                    <div class="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-                        <div class="w-2 h-2 bg-blue-500 rounded-full"></div>
-                        <div class="flex-1">
-                            <p class="text-sm font-medium text-gray-900">Last Exam: Physics</p>
-                            <p class="text-xs text-gray-500">2 days ago - Score: 85%</p>
-                        </div>
-                    </div>
-                    <div class="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-                        <div class="w-2 h-2 bg-yellow-500 rounded-full"></div>
-                        <div class="flex-1">
-                            <p class="text-sm font-medium text-gray-900">Profile Updated</p>
-                            <p class="text-xs text-gray-500">1 week ago</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
 
-        <!-- Important notices section -->
-        <div class="mt-8">
-            <div class="modern-card">
-                <h3 class="text-xl font-semibold text-navy mb-4">Important Notices</h3>
-                <div class="space-y-4">
-                    <div class="notification notification-info">
-                        <strong>Exam Guidelines:</strong> Please ensure you have a stable internet connection before starting the exam.
+                    <div class="dash-activity-item">
+                        <span class="dash-dot is-blue"></span>
+                        <div>
+                            <div class="dash-activity-title">Exam Instructions Ready</div>
+                            <div class="dash-activity-meta">Voice assistant available</div>
+                        </div>
                     </div>
-                    <div class="notification notification-success">
-                        <strong>System Status:</strong> All systems are operational and ready for examinations.
+
+                    <div class="dash-activity-item">
+                        <span class="dash-dot is-amber"></span>
+                        <div>
+                            <div class="dash-activity-title">System Standing By</div>
+                            <div class="dash-activity-meta">Awaiting candidate action</div>
+                        </div>
                     </div>
                 </div>
-            </div>
-        </div>
+            </article>
+
+            <!-- Notices -->
+            <article class="dash-card dash-card-wide">
+                <div class="dash-card-head">
+                    <div>
+                        <h2>Important Notices</h2>
+                        <p>Please read carefully before starting</p>
+                    </div>
+                </div>
+
+                <div class="dash-notice-list">
+                    <div class="dash-notice is-info">
+                        <strong>Exam Guidelines:</strong>
+                        Please ensure you have a stable internet connection before starting the exam.
+                    </div>
+
+                    <div class="dash-notice is-success">
+                        <strong>System Status:</strong>
+                        All systems are operational and ready for examination.
+                    </div>
+
+                    <div class="dash-notice is-voice">
+                        <strong>Voice Assistance:</strong>
+                        Instructions will be read aloud automatically once this dashboard is opened. If your browser blocks autoplay, the first click or tap on the page will start the voice immediately.
+                    </div>
+                </div>
+            </article>
+        </section>
     </div>
 </div>
 
 <!-- Instructions Modal -->
-<div id="instructionsModal" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 hidden">
-    <div class="bg-white rounded-2xl p-8 max-w-2xl w-full mx-4 scale-in">
-        <h3 class="text-2xl font-bold text-navy mb-6">Exam Instructions</h3>
-        <div class="space-y-4 text-gray-700">
-            <ul class="list-disc list-inside space-y-2">
-                <li>Read each question carefully before answering</li>
-                <li>You can flag questions to review later</li>
-                <li>Keep an eye on the timer displayed at the top</li>
-                <li>Once submitted, answers cannot be changed</li>
-                <li>Ensure stable internet connection throughout</li>
-                <li>Do not refresh the page during the exam</li>
+<div id="instructionsModal" class="dash-modal hidden" aria-hidden="true">
+    <div class="dash-modal-backdrop" data-close-instructions="true"></div>
+
+    <div class="dash-modal-card dash-modal-card-lg" role="dialog" aria-modal="true" aria-labelledby="instructionsModalTitle">
+        <div class="dash-modal-head">
+            <div>
+                <h3 id="instructionsModalTitle">Exam Instructions</h3>
+                <p>Please listen carefully before starting your examination.</p>
+            </div>
+            <button type="button" class="dash-icon-close" id="closeInstructionsBtn" aria-label="Close instructions">
+                ✕
+            </button>
+        </div>
+
+        <div class="dash-voice-panel" id="emisVoiceAssistantBox">
+            <div class="dash-voice-copy">
+                <div class="dash-voice-title">Voice Assistant</div>
+                <div class="dash-voice-status" id="emisVoiceStatus">
+                    Preparing audio instructions...
+                </div>
+            </div>
+
+            <div class="dash-voice-actions">
+                <button type="button" class="dash-btn dash-btn-secondary dash-btn-sm" id="replayInstructionsBtn">
+                    Replay
+                </button>
+                <button type="button" class="dash-btn dash-btn-ghost dash-btn-sm" id="stopInstructionsBtn">
+                    Stop Voice
+                </button>
+            </div>
+        </div>
+
+        <div class="dash-modal-body">
+            <ul class="dash-instruction-list" id="instructionList">
+                <li>Read each question carefully before answering.</li>
+                <li>You can flag questions to review later before final submission.</li>
+                <li>Keep an eye on the timer displayed during the examination.</li>
+                <li>Once submitted, your answers cannot be changed.</li>
+                <li>Ensure your internet connection remains stable throughout the examination.</li>
+                <li>Do not refresh the page during the exam.</li>
+                <li>Use a calm environment and avoid unnecessary distractions.</li>
+                <li>Only proceed when you are fully ready to begin.</li>
             </ul>
         </div>
-        <div class="flex justify-end space-x-4 mt-8">
-            <button onclick="closeInstructions()" class="modern-btn modern-btn-secondary">
+
+        <div class="dash-modal-foot">
+            <button type="button" class="dash-btn dash-btn-ghost" id="closeInstructionsFootBtn">
                 Close
             </button>
-            <a href="{{ url_for('exam') }}" class="modern-btn modern-btn-primary">
+            <a href="{{ url_for('exam') }}" class="dash-btn dash-btn-primary">
                 Start Exam Now
             </a>
         </div>
@@ -159,58 +245,47 @@
 </div>
 
 <!-- System Check Modal -->
-<div id="systemCheckModal" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 hidden">
-    <div class="bg-white rounded-2xl p-8 max-w-md w-full mx-4 scale-in">
-        <h3 class="text-2xl font-bold text-navy mb-6">System Check</h3>
-        <div class="space-y-4">
-            <div class="flex items-center justify-between">
+<div id="systemCheckModal" class="dash-modal hidden" aria-hidden="true">
+    <div class="dash-modal-backdrop" data-close-system="true"></div>
+
+    <div class="dash-modal-card" role="dialog" aria-modal="true" aria-labelledby="systemCheckModalTitle">
+        <div class="dash-modal-head">
+            <div>
+                <h3 id="systemCheckModalTitle">System Check</h3>
+                <p>Your browser and screen readiness</p>
+            </div>
+            <button type="button" class="dash-icon-close" id="closeSystemCheckBtn" aria-label="Close system check">
+                ✕
+            </button>
+        </div>
+
+        <div class="dash-check-list">
+            <div class="dash-check-row">
                 <span>Internet Connection</span>
-                <span class="text-green-600 font-semibold">✓ Good</span>
+                <strong class="is-good">Good</strong>
             </div>
-            <div class="flex items-center justify-between">
+            <div class="dash-check-row">
                 <span>Browser Compatibility</span>
-                <span class="text-green-600 font-semibold">✓ Compatible</span>
+                <strong class="is-good">Compatible</strong>
             </div>
-            <div class="flex items-center justify-between">
+            <div class="dash-check-row">
                 <span>JavaScript Enabled</span>
-                <span class="text-green-600 font-semibold">✓ Enabled</span>
+                <strong class="is-good">Enabled</strong>
             </div>
-            <div class="flex items-center justify-between">
+            <div class="dash-check-row">
                 <span>Screen Resolution</span>
-                <span class="text-green-600 font-semibold" id="screenRes">✓ Optimal</span>
+                <strong class="is-good" id="screenRes">Checking...</strong>
             </div>
         </div>
-        <button onclick="closeSystemCheck()" class="w-full modern-btn modern-btn-primary mt-6">
-            All Systems Ready
-        </button>
+
+        <div class="dash-modal-foot">
+            <button type="button" class="dash-btn dash-btn-primary" id="closeSystemCheckFootBtn">
+                All Systems Ready
+            </button>
+        </div>
     </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Display current time
-    document.getElementById('loginTime').textContent = new Date().toLocaleTimeString();
-    
-    // Update screen resolution
-    document.getElementById('screenRes').textContent = `✓ ${screen.width}x${screen.height}`;
-});
-
-function showInstructions() {
-    document.getElementById('instructionsModal').classList.remove('hidden');
-}
-
-function closeInstructions() {
-    document.getElementById('instructionsModal').classList.add('hidden');
-}
-
-function checkSystem() {
-    document.getElementById('systemCheckModal').classList.remove('hidden');
-}
-
-function closeSystemCheck() {
-    document.getElementById('systemCheckModal').classList.add('hidden');
-}
-</script>
 {% endblock %}

@@ -7,87 +7,135 @@
 {% endblock %}
 
 {% block content %}
-<div class="login-page">
-  <div class="login-card">
-    <div class="logo-container">
-      <img src="{{ url_for('static', filename='images/logo.jpg') }}" alt="EMIS Logo" class="logo">
-      <h2 class="school-name">EMIS – Candidate Login</h2>
-      <p class="login-subtitle">Access your exam portal</p>
-    </div>
+<div class="candidate-login-page">
+  <div class="candidate-login-shell">
 
-    <!-- Error Flash -->
-    {% if error %}
-    <div class="error-banner">
-      ❌ {{ error }}
-    </div>
-    {% endif %}
+    <div class="candidate-login-card candidate-login-card--compact">
+      <div class="candidate-login-head compact-head">
+        <div class="brand-row">
+          <div class="logo-badge">
+            <img src="{{ url_for('static', filename='images/logo.jpg') }}" alt="EMIS Logo" class="logo">
+          </div>
 
-    <form id="userLoginForm" method="POST" class="login-form">
-      <div class="form-field">
-        <label for="full-name">Full Name</label>
-        <input type="text" id="full-name" name="full_name" required placeholder="Enter your full name">
-      </div>
+          <div class="brand-copy">
+            <h2 class="school-name">EMIS Candidate Login</h2>
+            <p class="login-subtitle">Enter your details below to access your exam portal</p>
+          </div>
+        </div>
 
-      <div class="form-field">
-        <label for="email">Email</label>
-        <input type="email" id="email" name="email" required placeholder="Enter your email address">
-      </div>
-
-      <div class="form-field">
-        <label for="gender">Gender</label>
-        <select id="gender" name="gender" required>
-          <option value="" disabled selected>Select your gender</option>
-          <option value="male">Male</option>
-          <option value="female">Female</option>
-        </select>
-      </div>
-
-      <!-- NEW: Subject Dropdown -->
-      <div class="form-field">
-        <label for="subject">Subject</label>
-        <select id="subject" name="subject" required>
-          <option value="" disabled selected>Select your subject</option>
-          <option value="BIOLOGY">BIOLOGY</option>
-          <option value="CHEMISTRY">CHEMISTRY</option>
-          <option value="COMPUTER STUDIES">COMPUTER STUDIES</option>
-          <option value="ECONOMICS">ECONOMICS</option>
-          <option value="ENGLISH LANGUAGE">ENGLISH LANGUAGE</option>
-          <option value="GEOGRAPHY">GEOGRAPHY</option>
-          <option value="GOVERNMENT">GOVERNMENT</option>
-          <option value="MATHEMATICS">MATHEMATICS</option>
-          <option value="PHYSICS">PHYSICS</option>
-          <option value="TECHNICAL DRAWING">TECHNICAL DRAWING</option>
-        </select>
-      </div>
-
-      <div class="form-field">
-        <label for="username">Username</label>
-        <input type="text" id="username" name="username" required placeholder="Enter provided username">
-      </div>
-
-      <div class="form-field">
-        <label for="password">Password</label>
-        <div class="password-wrapper">
-          <input type="password" id="password" name="password" required placeholder="Enter provided password">
-          <button type="button" class="toggle-password" data-target="password" aria-label="Show/Hide password">👁️</button>
+        <div class="head-note head-note--compact">
+          <i class="fas fa-circle-info"></i>
+          <span>Please use the exact username and password provided to you.</span>
         </div>
       </div>
 
-      <button type="submit" class="login-btn">
-        <span class="btn-text">Login</span>
-        <div class="loading-spinner hidden"></div>
-      </button>
-    </form>
+      {% if error %}
+      <div class="error-banner" role="alert">
+        <i class="fas fa-circle-exclamation"></i>
+        <span>{{ error }}</span>
+      </div>
+      {% endif %}
 
-    <p class="footer-text">Powered by EMIS – Epitome Model Islamic Schools</p>
+      <form id="userLoginForm" method="POST" class="login-form compact-login-form" novalidate>
+        <div class="form-grid form-grid-2">
+
+          <div class="form-field">
+            <label for="full-name">Full Name</label>
+            <div class="input-wrap">
+              <span class="input-icon"><i class="fas fa-user"></i></span>
+              <input type="text" id="full-name" name="full_name" required placeholder="Enter your full name">
+            </div>
+          </div>
+
+          <div class="form-field">
+            <label for="email">Email Address</label>
+            <div class="input-wrap">
+              <span class="input-icon"><i class="fas fa-envelope"></i></span>
+              <input type="email" id="email" name="email" required placeholder="Enter your email address">
+            </div>
+          </div>
+
+          <div class="form-field">
+            <label for="gender">Gender</label>
+            <div class="input-wrap">
+              <span class="input-icon"><i class="fas fa-venus-mars"></i></span>
+              <select id="gender" name="gender" required>
+                <option value="" disabled selected>Select your gender</option>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-field">
+            <label for="subject">Subject</label>
+            <div class="input-wrap">
+              <span class="input-icon"><i class="fas fa-book-open"></i></span>
+              <select id="subject" name="subject" required>
+                <option value="" disabled selected>Select your subject</option>
+                <option value="BIOLOGY">BIOLOGY</option>
+                <option value="CHEMISTRY">CHEMISTRY</option>
+                <option value="COMPUTER STUDIES">COMPUTER STUDIES</option>
+                <option value="ECONOMICS">ECONOMICS</option>
+                <option value="ENGLISH LANGUAGE">ENGLISH LANGUAGE</option>
+                <option value="GEOGRAPHY">GEOGRAPHY</option>
+                <option value="GOVERNMENT">GOVERNMENT</option>
+                <option value="MATHEMATICS">MATHEMATICS</option>
+                <option value="PHYSICS">PHYSICS</option>
+                <option value="TECHNICAL DRAWING">TECHNICAL DRAWING</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-field">
+            <label for="username">Username</label>
+            <div class="input-wrap">
+              <span class="input-icon"><i class="fas fa-id-badge"></i></span>
+              <input type="text" id="username" name="username" required placeholder="Enter provided username">
+            </div>
+          </div>
+
+          <div class="form-field">
+            <label for="password">Password</label>
+            <div class="input-wrap password-wrapper">
+              <span class="input-icon"><i class="fas fa-lock"></i></span>
+              <input type="password" id="password" name="password" required placeholder="Enter provided password">
+              <button type="button" class="toggle-password" data-target="password" aria-label="Show or hide password">
+                <i class="fas fa-eye"></i>
+              </button>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="form-actions-row">
+          <div class="login-helper-row compact-helper-row">
+            <div class="helper-pill">
+              <i class="fas fa-shield-halved"></i>
+              <span>Secure candidate access</span>
+            </div>
+          </div>
+
+          <button type="submit" class="login-btn">
+            <span class="btn-text">Login</span>
+            <div class="loading-spinner hidden"></div>
+          </button>
+        </div>
+      </form>
+
+      <div class="footer-block compact-footer-block">
+        <p class="footer-text">Powered by <strong>EMIS</strong> – Epitome Model Islamic Schools</p>
+      </div>
+    </div>
+
   </div>
 </div>
 
-<!-- Loading Overlay -->
 <div id="loadingOverlay" class="loading-overlay hidden">
   <div class="loading-box">
     <div class="loading-spinner big"></div>
-    <p>Signing you in...</p>
+    <h4>Signing you in...</h4>
+    <p>Please wait while your portal is being prepared.</p>
   </div>
 </div>
 {% endblock %}
