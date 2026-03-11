@@ -136,6 +136,45 @@ def get_exam_results(limit=100):
     ]
 
 
+def delete_result(username):
+    """Delete all exam results for a given username from the database and CSV logs."""
+    init_db()
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+
+    cursor.execute("DELETE FROM exam_results WHERE username = ?", (username,))
+    deleted_count = cursor.rowcount
+    conn.commit()
+    conn.close()
+
+    for file in LOGS_DIR.glob("exam_results_*.csv"):
+        try:
+            kept_rows = []
+            fieldnames = [
+                "username", "fullname", "email", "subject",
+                "score", "correct", "total", "answered",
+                "time_taken", "submitted_at", "status"
+            ]
+
+            with open(file, "r", encoding="utf-8") as f:
+                reader = csv.DictReader(f)
+                if reader.fieldnames:
+                    fieldnames = reader.fieldnames
+                for row in reader:
+                    if row.get("username") != username:
+                        kept_rows.append(row)
+
+            with open(file, "w", newline="", encoding="utf-8") as f:
+                writer = csv.DictWriter(f, fieldnames=fieldnames)
+                writer.writeheader()
+                writer.writerows(kept_rows)
+
+        except Exception as e:
+            print(f"⚠️ Error cleaning CSV {file}: {e}")
+
+    return deleted_count > 0
+
+
 def get_user_latest_result(username):
     """Fetch the most recent exam result for a given username."""
     init_db()
@@ -172,3 +211,74 @@ def get_user_latest_result(username):
         "flagged": 0,
         "tabSwitches": 0
     }
+
+
+
+def clear_results(subject=None, from_date=None, to_date=None):
+    """Delete all results or filtered results from DB and CSV logs."""
+    init_db()
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+
+    conditions = []
+    params = []
+
+    if subject:
+        conditions.append("LOWER(subject) = ?")
+        params.append(str(subject).lower())
+
+    if from_date:
+        conditions.append("submitted_at >= ?")
+        params.append(from_date)
+
+    if to_date:
+        conditions.append("submitted_at <= ?")
+        params.append(to_date)
+
+    where_clause = f"WHERE {' AND '.join(conditions)}" if conditions else ""
+
+    # Count first
+    cursor.execute(f"SELECT COUNT(*) FROM exam_results {where_clause}", params)
+    count = cursor.fetchone()[0]
+
+    # Delete from DB
+    cursor.execute(f"DELETE FROM exam_results {where_clause}", params)
+    conn.commit()
+    conn.close()
+
+    # Clean CSV logs too
+    for file in LOGS_DIR.glob("exam_results_*.csv"):
+        try:
+            kept_rows = []
+            with open(file, "r", encoding="utf-8") as f:
+                reader = csv.DictReader(f)
+                fieldnames = reader.fieldnames or [
+                    "username", "fullname", "email", "subject",
+                    "score", "correct", "total", "answered",
+                    "time_taken", "submitted_at", "status"
+                ]
+
+                for row in reader:
+                    row_subject = (row.get("subject") or "").lower()
+                    row_submitted = row.get("submitted_at") or ""
+
+                    matches = True
+                    if subject and row_subject != str(subject).lower():
+                        matches = False
+                    if from_date and row_submitted < from_date:
+                        matches = False
+                    if to_date and row_submitted > to_date:
+                        matches = False
+
+                    if not matches:
+                        kept_rows.append(row)
+
+            with open(file, "w", newline="", encoding="utf-8") as f:
+                writer = csv.DictWriter(f, fieldnames=fieldnames)
+                writer.writeheader()
+                writer.writerows(kept_rows)
+
+        except Exception as e:
+            print(f"⚠️ Error cleaning CSV {file}: {e}")
+
+    return count

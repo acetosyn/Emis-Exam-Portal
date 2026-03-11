@@ -7,79 +7,125 @@
   <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/logo.jpg') }}">
 
   <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
-  <!-- Tailwind CSS -->
+  <!-- Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+  <!-- Tailwind -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
+      darkMode: 'class',
       theme: {
         extend: {
           colors: {
-            'primary': '#38bdf8', /* sky blue */
+            primary: '#38bdf8',
             'primary-dark': '#0284c7',
-            'navy': '#0f2b46',
-            'light': '#f9fafb',
-            'orange': '#f97316'
+            navy: '#0f2b46',
+            light: '#f9fafb',
+            orange: '#f97316',
+            soft: '#f4f7fb',
+            bordersoft: '#e5e7eb'
           },
           fontFamily: {
-            'inter': ['Inter', 'sans-serif'],
-            'poppins': ['Poppins', 'sans-serif']
+            inter: ['Inter', 'sans-serif'],
+            poppins: ['Poppins', 'sans-serif']
           },
           borderRadius: {
-            'xl': '18px'
+            xl: '18px',
+            '2xl': '24px'
           },
           boxShadow: {
-            'modern': '0 12px 40px rgba(0, 0, 0, 0.12)',
-            'hover': '0 12px 28px rgba(0,0,0,0.25)'
+            modern: '0 12px 40px rgba(15, 43, 70, 0.10)',
+            hover: '0 12px 28px rgba(15, 43, 70, 0.16)',
+            soft: '0 8px 24px rgba(0,0,0,0.06)'
+          },
+          backgroundImage: {
+            'emis-gradient': 'linear-gradient(135deg, #ffffff 0%, #f4f8ff 45%, #eef6ff 100%)',
+            'brand-gradient': 'linear-gradient(135deg, #0f2b46 0%, #193a64 45%, #2563eb 100%)'
           }
         }
       }
     }
   </script>
 
-  <!-- Global CSS -->
-  <!-- <link rel="stylesheet" href="{{ url_for('static', filename='css/base_general.css') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/base_component.css') }}"> -->
-
-  <!-- Page-specific CSS -->
   {% block styles %}{% endblock %}
 </head>
-<body class="font-inter bg-light min-h-screen">
-  <!-- Header -->
-  <header class="bg-white shadow-modern border-b border-gray-100">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="flex justify-between items-center h-20">
-        <div class="flex items-center space-x-4">
-          <img src="{{ url_for('static', filename='images/logo.jpg') }}" 
-               alt="EMIS Logo" 
-               class="w-12 h-12 object-contain rounded-lg shadow" />
-          <div>
-            <h1 class="text-2xl font-bold text-navy font-poppins">EMIS</h1>
-            <p class="text-sm text-gray-600 font-medium">Epitome Model Islamic Schools</p>
+
+<body class="font-inter bg-soft text-slate-800 min-h-screen antialiased">
+  <div class="min-h-screen flex flex-col">
+
+    <!-- Header -->
+    <header class="sticky top-0 z-40 border-b border-slate-200/70 bg-white/85 backdrop-blur-xl shadow-sm">
+      <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center min-h-[78px] gap-4">
+
+          <div class="flex items-center gap-3 sm:gap-4 min-w-0">
+            <div class="relative shrink-0">
+              <div class="absolute inset-0 rounded-2xl bg-blue-100 blur-md opacity-50"></div>
+              <img
+                src="{{ url_for('static', filename='images/logo.jpg') }}"
+                alt="EMIS Logo"
+                class="relative w-12 h-12 sm:w-14 sm:h-14 object-cover rounded-2xl shadow-soft border border-white"
+              />
+            </div>
+
+            <div class="min-w-0">
+              <div class="flex items-center gap-2 flex-wrap">
+                <h1 class="text-xl sm:text-2xl font-bold text-navy font-poppins leading-tight">EMIS Staff Exam Portal</h1>
+                <span class="hidden sm:inline-flex items-center rounded-full bg-sky-50 text-sky-700 text-[11px] font-semibold px-2.5 py-1 border border-sky-100">
+                  Admin Workspace
+                </span>
+              </div>
+              <p class="text-xs sm:text-sm text-slate-500 font-medium truncate">
+                Epitome Model Islamic Schools
+              </p>
+            </div>
+          </div>
+
+          <div class="shrink-0">
+            {% block header_actions %}{% endblock %}
           </div>
         </div>
-
-        {% block header_actions %}{% endblock %}
       </div>
-    </div>
-  </header>
+    </header>
 
-  <!-- Main -->
-  <main class="flex-1 min-h-screen">
-    {% block content %}{% endblock %}
-  </main>
+    <!-- Main -->
+    <main class="flex-1 w-full">
+      {% block content %}{% endblock %}
+    </main>
 
-  <!-- Footer -->
-  <footer class="bg-white border-t border-gray-100 mt-auto">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 text-center">
-      <p class="text-gray-600 font-medium">&copy; 2025 EMIS - Epitome Model Islamic Schools. All rights reserved.</p>
-      <p class="text-sm text-gray-500 mt-2">Empowering minds through Islamic education</p>
-    </div>
-  </footer>
+    <!-- Footer -->
+    <footer class="border-t border-slate-200 bg-white/90 backdrop-blur-sm mt-auto">
+      <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <p class="text-slate-700 font-semibold">
+              &copy; 2025 EMIS - Epitome Model Islamic Schools
+            </p>
+            <p class="text-sm text-slate-500 mt-1">
+              Empowering minds through Islamic education
+            </p>
+          </div>
 
-  <!-- Page-specific JS -->
+          <div class="flex items-center gap-3 text-sm text-slate-500 flex-wrap">
+            <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-50 border border-slate-200">
+              <i class="fas fa-shield-halved text-sky-600"></i>
+              Secure Portal
+            </span>
+            <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-50 border border-slate-200">
+              <i class="fas fa-graduation-cap text-navy"></i>
+              Exam Management
+            </span>
+          </div>
+        </div>
+      </div>
+    </footer>
+  </div>
+
   {% block scripts %}{% endblock %}
 </body>
 </html>

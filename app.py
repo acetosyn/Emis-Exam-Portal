@@ -343,26 +343,216 @@ def api_exam_submit():
 
 
 
+# ============================================================
+# ✅ Unified Results & Credentials APIs (Dynamic + Delete + Filters)
+# ============================================================
+
+
 # -------------------- API: Get All Exam Results (for Admin Dashboard) --------------------
-@app.route('/api/exam/results')
+@app.route("/api/exam/results")
 def api_exam_results():
-    if session.get('user_type') != 'admin':
+    """Return exam results from DB with optional subject/date filters."""
+    if session.get("user_type") != "admin":
         return jsonify({"error": "Unauthorized"}), 403
 
-    results = user_exam.get_exam_results()
-    return jsonify(results)
+    subject = (request.args.get("subject") or "").strip()
+    from_date = (request.args.get("from") or "").strip()
+    to_date = (request.args.get("to") or "").strip()
 
+    def parse_date(value):
+        if not value:
+            return None
+        try:
+            return datetime.fromisoformat(str(value).replace("Z", ""))
+        except Exception:
+            return None
+
+    try:
+        results = user_exam.get_exam_results() or []
+
+        # Subject filter
+        if subject and subject.lower() != "all":
+            results = [
+                r for r in results
+                if (r.get("subject") or "").strip().lower() == subject.lower()
+            ]
+
+        # Date filters
+        if from_date:
+            from_dt = parse_date(from_date)
+            if from_dt:
+                results = [
+                    r for r in results
+                    if parse_date(r.get("submitted_at")) and parse_date(r.get("submitted_at")) >= from_dt
+                ]
+
+        if to_date:
+            to_dt = parse_date(to_date)
+            if to_dt:
+                results = [
+                    r for r in results
+                    if parse_date(r.get("submitted_at")) and parse_date(r.get("submitted_at")) <= to_dt
+                ]
+
+        # Latest first
+        results.sort(
+            key=lambda r: str(r.get("submitted_at", "")),
+            reverse=True
+        )
+
+        return jsonify({
+            "success": True,
+            "results": results,
+            "count": len(results)
+        })
+
+    except Exception as e:
+        app.logger.exception(f"/api/exam/results failed: {e}")
+        return jsonify({
+            "success": False,
+            "error": "Failed to fetch exam results",
+            "results": [],
+            "count": 0
+        }), 500
+
+
+# -------------------- DELETE SINGLE RESULT --------------------
+@app.route("/delete_result", methods=["POST"])
+def delete_result():
+    """Delete a specific result permanently (from DB and CSV)."""
+    if session.get("user_type") != "admin":
+        return jsonify({"error": "Unauthorized"}), 403
+
+    data = request.json or {}
+    username = data.get("username")
+    if not username:
+        return jsonify({"error": "Username required"}), 400
+
+    try:
+        ok = user_exam.delete_result(username)
+        if ok:
+            print(f"✅ Deleted result for {username}")
+            return jsonify({"success": True, "message": f"Deleted result for {username}"})
+        else:
+            return jsonify({"success": False, "message": "Result not found"})
+    except Exception as e:
+        print(f"⚠️ Delete result error: {e}")
+        return jsonify({"success": False, "message": str(e)})
+
+
+# -------------------- CLEAR RESULTS (ALL / SUBJECT / DATE RANGE) --------------------
+@app.route("/clear_results", methods=["POST"])
+def clear_results():
+    """Delete all results or filter by subject/date."""
+    if session.get("user_type") != "admin":
+        return jsonify({"error": "Unauthorized"}), 403
+
+    data = request.json or {}
+    subject = data.get("subject")
+    from_date = data.get("from")
+    to_date = data.get("to")
+
+    try:
+        count = user_exam.clear_results(subject=subject, from_date=from_date, to_date=to_date)
+        return jsonify({"success": True, "deleted": count})
+    except Exception as e:
+        print(f"⚠️ Clear results error: {e}")
+        return jsonify({"success": False, "message": str(e)})
+
+# -------------------- VIEW RESULTS (Dynamic DB First, CSV Fallback) --------------------
+@app.route("/view_results")
+def view_results():
+    """Load live results from DB first, then fall back to CSV logs if DB is empty."""
+    if session.get("user_type") != "admin":
+        return jsonify({"error": "Unauthorized"}), 403
+
+    results = []
+
+    # 1. Try database first
+    try:
+        results = user_exam.get_exam_results() or []
+    except Exception as e:
+        app.logger.warning(f"DB fetch failed in /view_results: {e}")
+
+    # 2. Fallback to CSV logs if DB returned nothing
+    if not results:
+        files = sorted(LOGS_DIR.glob("exam_results_*.csv"), reverse=True)
+
+        for file in files:
+            try:
+                with open(file, "r", encoding="utf-8") as f:
+                    reader = csv.DictReader(f)
+                    for row in reader:
+                        cleaned = {str(k).strip(): (v or "").strip() for k, v in row.items()}
+                        results.append(cleaned)
+            except Exception as e:
+                app.logger.warning(f"Error reading {file.name}: {e}")
+
+    # 3. Sort latest first
+    results.sort(key=lambda r: str(r.get("submitted_at", "")), reverse=True)
+
+    return jsonify({"results": results})
+
+
+
+# -------------------- API: Send Selected Results to EDA --------------------
+@app.route("/api/results/send-to-eda", methods=["POST"])
+def send_results_to_eda():
+    if session.get("user_type") != "admin":
+        return jsonify({"error": "Unauthorized"}), 403
+
+    data = request.get_json(silent=True) or {}
+    results = data.get("results", [])
+
+    if not isinstance(results, list) or not results:
+        return jsonify({"success": False, "error": "No results provided"}), 400
+
+    try:
+        status = email_server.send_eda_emails(results)
+
+        sent = int(status.get("sent", 0))
+        failed = int(status.get("failed", 0))
+
+        return jsonify({
+            "success": sent > 0 and failed == 0,
+            "message": f"{sent} result(s) sent to EDA successfully" if sent else "No results were sent",
+            "sent": sent,
+            "failed": failed
+        })
+    except Exception as e:
+        app.logger.exception(f"[EDA] send_results_to_eda failed: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+# -------------------- DEBUG: EMAIL TEST --------------------
+@app.route("/debug/email_test")
+def debug_email_test():
+    """
+    Optional debug route.
+    Only keep this if send_test_email exists in email_server.py.
+    """
+    if session.get("user_type") != "admin":
+        return jsonify({"error": "Unauthorized"}), 403
+
+    from email_server import send_test_email
+    ok = send_test_email()
+    return jsonify({"sent": ok})
 
 
 # -------------------- VIEW CREDENTIALS --------------------
 @app.route("/view_credentials")
 def view_credentials():
     """Load latest credentials_YYYY-MM-DD.csv from logs folder safely."""
+    if session.get("user_type") != "admin":
+        return jsonify({"error": "Unauthorized"}), 403
+
     files = sorted(LOGS_DIR.glob("credentials_*.csv"), reverse=True)
     if not files:
         return jsonify({"credentials": []})
+
     latest = files[0]
     creds = []
+
     try:
         with open(latest, "r", encoding="utf-8") as f:
             reader = csv.DictReader(f)
@@ -372,37 +562,9 @@ def view_credentials():
                     "password": row.get("password", "").strip()
                 })
     except Exception as e:
-        print(f"⚠️ Error reading credentials file: {e}")
+        app.logger.warning(f"Error reading credentials file {latest.name}: {e}")
+
     return jsonify({"credentials": creds})
-
-
-# -------------------- VIEW RESULTS --------------------
-# -------------------- VIEW RESULTS (Optimized & Safe) --------------------
-@app.route("/view_results")
-def view_results():
-    """Dynamically load all available exam_results_*.csv files (latest first)."""
-    files = sorted(LOGS_DIR.glob("exam_results_*.csv"), reverse=True)
-    all_rows = []
-    for file in files:
-        try:
-            with open(file, "r", encoding="utf-8") as f:
-                reader = csv.DictReader(f)
-                for row in reader:
-                    # sanitize and strip whitespace
-                    cleaned = {k.strip(): (v or "").strip() for k, v in row.items()}
-                    all_rows.append(cleaned)
-        except Exception as e:
-            print(f"⚠️ Error reading {file.name}: {e}")
-    return jsonify({"results": all_rows})
-
-
-
-@app.route("/debug/email_test")
-def debug_email_test():
-    from email_server import send_test_email
-    ok = send_test_email()
-    return {"sent": ok}
-
 
 
 if __name__ == '__main__':

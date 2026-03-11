@@ -1,180 +1,373 @@
 /* ==========================================================
-   user_credentials.js — Enhanced Dynamic Credential Generator
-   Architect Build v8
-   ========================================================== */
+   user_credentials.js — EMIS Admin v3
+   Fixes:
+   - modal opens correctly
+   - quick buttons use 1..5
+   - custom count works
+   - generate button works reliably
+   - no default 10 from JS
+========================================================== */
 
 (() => {
   if (window.__CRED_INIT__) return;
   window.__CRED_INIT__ = true;
 
-  document.addEventListener("DOMContentLoaded", () => {
+  const ready = (cb) =>
+    document.readyState !== "loading"
+      ? cb()
+      : document.addEventListener("DOMContentLoaded", cb);
+
+  const qs = (sel, root = document) => root.querySelector(sel);
+  const qsa = (sel, root = document) => Array.from(root.querySelectorAll(sel));
+
+  ready(() => {
     const modal = document.getElementById("cred-modal");
-    const openBtns = [
-      document.getElementById("generateCredsBtnSidebar"),
-      document.getElementById("generateCredsBtnQuick"),
-    ].filter(Boolean);
     const closeBtn = document.getElementById("closeCredModal");
     const countInput = document.getElementById("credCount");
     const generateBtn = document.getElementById("generateNowBtn");
-    const quickBtns = document.querySelectorAll(".quick-gen-btn");
+    const quickBtns = qsa(".quick-gen-btn", modal || document);
     const results = document.getElementById("credResults");
     const instruction = document.getElementById("credInstruction");
     const summary = document.getElementById("credSummary");
     const csvBtn = document.getElementById("downloadCSVBtn");
 
-    // --- Helpers ---
-    const show = (el) => el?.classList.remove("hidden");
-    const hide = (el) => el?.classList.add("hidden");
-    const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+    const openBtns = [
+      document.getElementById("generateCredsBtnSidebar"),
+      document.getElementById("generateCredsBtnQuick"),
+    ].filter(Boolean);
 
-    function openModal() { show(modal); }
+    if (!modal || !results || !generateBtn || !countInput) {
+      console.warn("[user_credentials] modal elements missing");
+      return;
+    }
+
+    let latestCredentials = [];
+    let isGenerating = false;
+
+    function toast(message, type = "info") {
+      if (typeof window.showToast === "function") {
+        window.showToast(message, type);
+        return;
+      }
+
+      const el = document.createElement("div");
+      el.className = `toast toast-${type}`;
+      el.textContent = message;
+      document.body.appendChild(el);
+      requestAnimationFrame(() => el.classList.add("visible"));
+      setTimeout(() => {
+        el.classList.remove("visible");
+        setTimeout(() => el.remove(), 300);
+      }, 2400);
+    }
+
+    function show(el) {
+      el?.classList.remove("hidden");
+    }
+
+    function hide(el) {
+      el?.classList.add("hidden");
+    }
+
+    function escapeHtml(str = "") {
+      return String(str)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function openModal() {
+      show(modal);
+      modal.style.display = "flex";
+      modal.setAttribute("aria-hidden", "false");
+      document.body.style.overflow = "hidden";
+    }
+
     function closeModal() {
       hide(modal);
-      results.innerHTML = "";
-      hide(instruction);
-      hide(summary);
-      hide(csvBtn);
+      modal.style.display = "";
+      modal.setAttribute("aria-hidden", "true");
+      document.body.style.overflow = "";
     }
 
-    // --- Copy Utility ---
-    async function bindCopy(btn, input) {
-      btn.addEventListener("click", async () => {
-        try {
-          await navigator.clipboard.writeText(input.value);
-          btn.textContent = "✅";
-          btn.style.animation = "copyFlash 0.8s";
-          await sleep(800);
-          btn.textContent = "📋";
-          btn.style.animation = "";
-        } catch {
-          btn.textContent = "❌";
-        }
+    function setLoadingState(state) {
+      isGenerating = state;
+      generateBtn.disabled = state;
+      generateBtn.textContent = state ? "Generating..." : "⚙️ Generate";
+
+      quickBtns.forEach((btn) => {
+        btn.disabled = state;
       });
     }
 
-    // --- Toggle View ---
+    function renderLoading(count) {
+      results.innerHTML = `
+        <div class="empty-state compact-empty">
+          <div class="empty-state-icon">⏳</div>
+          <p class="muted">Generating ${count} credential${count > 1 ? "s" : ""}...</p>
+        </div>
+      `;
+    }
+
+    function renderError(message) {
+      results.innerHTML = `
+        <div class="empty-state compact-empty">
+          <div class="empty-state-icon">⚠️</div>
+          <p class="muted">${escapeHtml(message)}</p>
+        </div>
+      `;
+    }
+
+    function downloadCSV(creds) {
+      if (!Array.isArray(creds) || !creds.length) {
+        toast("No credentials to download", "error");
+        return;
+      }
+
+      const rows = [
+        ["username", "password", "subject", "issued"],
+        ...creds.map((c) => [
+          c.username || "",
+          c.password || "",
+          c.subject || "",
+          c.issued ? "yes" : "no",
+        ]),
+      ];
+
+      const csv = rows
+        .map((row) =>
+          row.map((cell) => `"${String(cell).replaceAll('"', '""')}"`).join(",")
+        )
+        .join("\n");
+
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "generated_credentials.csv";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+
+      toast("CSV downloaded", "success");
+    }
+
+    async function copyText(btn, value) {
+      const original = btn.textContent;
+      try {
+        await navigator.clipboard.writeText(value);
+        btn.textContent = "✅";
+        toast("Copied", "success");
+      } catch (err) {
+        console.error("[user_credentials] copy failed:", err);
+        btn.textContent = "❌";
+        toast("Copy failed", "error");
+      } finally {
+        setTimeout(() => {
+          btn.textContent = original;
+        }, 700);
+      }
+    }
+
     function bindViewToggle(btn, input) {
       btn.addEventListener("click", () => {
-        const isHidden = input.type === "password";
-        input.type = isHidden ? "text" : "password";
-        btn.textContent = isHidden ? "🙈" : "👁";
+        const hidden = input.type === "password";
+        input.type = hidden ? "text" : "password";
+        btn.textContent = hidden ? "🙈" : "👁";
       });
     }
 
-    // --- Mark Issued ---
     async function markIssued(username, btn) {
+      const original = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = "Saving...";
+
       try {
         const res = await fetch("/mark_issued", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ usernames: [username] }),
         });
+
         const data = await res.json();
-        if (data.success) {
-          btn.textContent = "✅ Issued";
-          btn.classList.add("disabled");
-          btn.disabled = true;
+        if (!res.ok || !data.success) {
+          throw new Error(data.error || "Failed to mark as issued");
         }
+
+        btn.textContent = "✅ Issued";
+        btn.classList.add("disabled");
+
+        latestCredentials = latestCredentials.map((cred) =>
+          cred.username === username ? { ...cred, issued: true } : cred
+        );
+
+        toast(`${username} marked issued`, "success");
       } catch (err) {
-        console.error("[user_credentials] Mark issued failed:", err);
+        console.error("[user_credentials] markIssued failed:", err);
+        btn.disabled = false;
+        btn.textContent = original;
+        toast(err.message || "Failed to mark issued", "error");
       }
     }
 
-    // --- CSV Download ---
-    function downloadCSV(creds) {
-      const csvContent =
-        "data:text/csv;charset=utf-8," +
-        ["username,password"]
-          .concat(creds.map((c) => `${c.username},${c.password}`))
-          .join("\n");
-      const link = document.createElement("a");
-      link.href = encodeURI(csvContent);
-      link.download = "generated_credentials.csv";
-      link.click();
+    function renderCredentialCard(cred, index) {
+      const card = document.createElement("div");
+      card.className = "cred-card animate-fadeIn";
+
+      const username = cred.username || "";
+      const password = cred.password || "";
+      const issued = Boolean(cred.issued);
+
+      card.innerHTML = `
+        <div class="cred-card-header">
+          <div class="cred-card-title">Credential ${index + 1}</div>
+          <span class="cred-badge">${issued ? "Issued" : "New"}</span>
+        </div>
+
+        <div class="cred-field">
+          <input type="password" value="${escapeHtml(username)}" readonly />
+          <button type="button" class="view-btn">👁</button>
+          <button type="button" class="copy-btn">📋</button>
+        </div>
+
+        <div class="cred-field" style="margin-top:.5rem;">
+          <input type="password" value="${escapeHtml(password)}" readonly />
+          <button type="button" class="view-btn">👁</button>
+          <button type="button" class="copy-btn">📋</button>
+        </div>
+
+        <div style="margin-top:.65rem; display:flex; justify-content:flex-end;">
+          <button type="button" class="issue-btn ${issued ? "disabled" : ""}" ${issued ? "disabled" : ""}>
+            ${issued ? "✅ Issued" : "Mark Issued"}
+          </button>
+        </div>
+      `;
+
+      const [uInput, pInput] = qsa("input", card);
+      const [uView, pView] = qsa(".view-btn", card);
+      const [uCopy, pCopy] = qsa(".copy-btn", card);
+      const issueBtn = qs(".issue-btn", card);
+
+      if (uView) bindViewToggle(uView, uInput);
+      if (pView) bindViewToggle(pView, pInput);
+
+      if (uCopy) uCopy.addEventListener("click", () => copyText(uCopy, uInput.value));
+      if (pCopy) pCopy.addEventListener("click", () => copyText(pCopy, pInput.value));
+
+      if (issueBtn && !issued) {
+        issueBtn.addEventListener("click", () => markIssued(username, issueBtn));
+      }
+
+      return card;
     }
 
-    // --- Generate Credentials ---
+    function renderCredentials(creds) {
+      results.innerHTML = "";
+
+      if (!Array.isArray(creds) || creds.length === 0) {
+        renderError("No credentials were returned.");
+        hide(instruction);
+        hide(summary);
+        hide(csvBtn);
+        return;
+      }
+
+      creds.forEach((cred, index) => {
+        results.appendChild(renderCredentialCard(cred, index));
+      });
+
+      summary.textContent = `✅ Generated ${creds.length} credential${creds.length > 1 ? "s" : ""} successfully.`;
+      show(summary);
+      show(instruction);
+      show(csvBtn);
+    }
+
     async function generateCreds(count) {
+      if (isGenerating) return;
+
+      const safeCount = Math.max(1, parseInt(count || "1", 10) || 1);
+      countInput.value = safeCount;
+
+      setLoadingState(true);
+      renderLoading(safeCount);
+      hide(instruction);
+      hide(summary);
+      hide(csvBtn);
+
       try {
-        results.innerHTML = `<div class="text-center text-navy">⏳ Generating ${count} credentials...</div>`;
         const res = await fetch("/generate_credentials", {
           method: "POST",
-          body: new URLSearchParams({ count }),
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+          },
+          body: new URLSearchParams({
+            count: safeCount,
+            prefix: "candidate",
+            pwd_length: 8,
+          }),
         });
+
         const data = await res.json();
-        if (!res.ok) throw new Error(data.error || "Failed");
+        if (!res.ok) throw new Error(data.error || "Failed to generate credentials");
 
-        results.innerHTML = "";
-        show(instruction);
-        show(csvBtn);
-        summary.innerHTML = `✅ Generated ${data.credentials.length} credentials successfully.`;
-        show(summary);
-
-        // Render cards
-        data.credentials.forEach((cred, i) => {
-          const card = document.createElement("div");
-          card.className = "cred-card animate-fadeIn";
-          card.innerHTML = `
-            <div class="font-medium text-navy mb-2">Credential ${i + 1}</div>
-            <div class="cred-field">
-              <input type="password" value="${cred.username}" readonly />
-              <button class="view-btn">👁</button>
-              <button class="copy-btn">📋</button>
-            </div>
-            <div class="cred-field mt-1">
-              <input type="password" value="${cred.password}" readonly />
-              <button class="view-btn">👁</button>
-              <button class="copy-btn">📋</button>
-            </div>
-            <div class="mt-2 text-right">
-              <button class="issue-btn ${cred.issued ? "disabled" : ""}">
-                ${cred.issued ? "✅ Issued" : "Mark Issued"}
-              </button>
-            </div>
-          `;
-          results.appendChild(card);
-
-          const [uInput, pInput] = card.querySelectorAll("input");
-          const [vBtns, cBtns] = [
-            card.querySelectorAll(".view-btn"),
-            card.querySelectorAll(".copy-btn"),
-          ];
-
-          vBtns.forEach((btn, idx) => bindViewToggle(btn, idx ? pInput : uInput));
-          cBtns.forEach((btn, idx) => bindCopy(btn, idx ? pInput : uInput));
-
-          const issueBtn = card.querySelector(".issue-btn");
-          if (!cred.issued) {
-            issueBtn.addEventListener("click", () =>
-              markIssued(cred.username, issueBtn)
-            );
-          }
-        });
-
-        // CSV download
-        csvBtn.onclick = () => downloadCSV(data.credentials);
-
+        const credentials = Array.isArray(data.credentials) ? data.credentials : [];
+        latestCredentials = credentials;
+        renderCredentials(credentials);
+        toast("Credentials generated", "success");
       } catch (err) {
-        results.innerHTML = `<div class="text-red-600">${err.message}</div>`;
+        console.error("[user_credentials] generate failed:", err);
+        renderError(err.message || "Generation failed");
+        toast(err.message || "Generation failed", "error");
+      } finally {
+        setLoadingState(false);
       }
     }
 
-    // --- Event Listeners ---
-    openBtns.forEach((btn) => btn.addEventListener("click", openModal));
-    closeBtn.addEventListener("click", closeModal);
+    openBtns.forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        openModal();
+      });
+    });
+
+    closeBtn?.addEventListener("click", closeModal);
+
     modal.addEventListener("click", (e) => {
-      if (e.target.id === "cred-modal") closeModal();
+      if (e.target === modal) closeModal();
     });
 
-    generateBtn.addEventListener("click", () => {
-      const count = Math.max(4, parseInt(countInput.value || "4"));
-      generateCreds(count);
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && !modal.classList.contains("hidden")) {
+        closeModal();
+      }
     });
 
-    quickBtns.forEach((btn, idx) =>
-      btn.addEventListener("click", () => generateCreds(idx + 1))
-    );
+    generateBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      generateCreds(countInput.value);
+    });
 
-    console.log("[user_credentials] Enhanced modal initialized");
+    quickBtns.forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        e.preventDefault();
+        const count = parseInt(btn.dataset.count || btn.textContent.trim(), 10) || 1;
+        generateCreds(count);
+      });
+    });
+
+    csvBtn?.addEventListener("click", (e) => {
+      e.preventDefault();
+      downloadCSV(latestCredentials);
+    });
+
+    window.openCredentialModal = openModal;
+    window.closeCredentialModal = closeModal;
+    window.generateCredentialsFromAdmin = generateCreds;
+
+    console.log("[user_credentials] v3 initialized");
   });
 })();

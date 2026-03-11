@@ -1,9 +1,8 @@
-/* search_hist.js — Dynamic History + Search for /uploads
-   - Loads all documents on entering Uploads panel (or on page load)
-   - Debounced search by partial name
-   - Renders responsive cards with lazy PDF preview + open/copy
-*/
-
+// ==========================================================
+// search_hist.js — EMIS Admin v2
+// Dynamic document history + upload panel search
+// Matches new admin.html / admin.css
+// ==========================================================
 (() => {
   if (window.__SEARCH_HIST_INIT__) return;
   window.__SEARCH_HIST_INIT__ = true;
@@ -13,32 +12,55 @@
       ? cb()
       : document.addEventListener("DOMContentLoaded", cb);
 
-  // Tiny toast
-  function toast(msg, type = "info") {
+  const qs = (sel, root = document) => root.querySelector(sel);
+  const qsa = (sel, root = document) => Array.from(root.querySelectorAll(sel));
+
+  // ----------------------------------------------------------
+  // Toast
+  // ----------------------------------------------------------
+  function toast(message, type = "info") {
+    if (typeof window.showToast === "function") {
+      window.showToast(message, type);
+      return;
+    }
+
     const el = document.createElement("div");
-    el.className =
-      "fixed bottom-4 right-4 px-4 py-2 rounded-lg shadow-lg text-sm text-white z-50 " +
-      (type === "error"
-        ? "bg-red-600"
-        : type === "success"
-        ? "bg-green-600"
-        : "bg-gray-800");
-    el.textContent = msg;
+    el.className = `toast toast-${type}`;
+    el.textContent = message;
     document.body.appendChild(el);
-    setTimeout(() => el.remove(), 2600);
+
+    requestAnimationFrame(() => el.classList.add("visible"));
+    setTimeout(() => {
+      el.classList.remove("visible");
+      setTimeout(() => el.remove(), 300);
+    }, 2400);
   }
 
+  // ----------------------------------------------------------
+  // Helpers
+  // ----------------------------------------------------------
   function formatBytes(bytes) {
-    if (!bytes && bytes !== 0) return "";
-    const sizes = ["B", "KB", "MB", "GB"];
-    const i = Math.min(
-      Math.floor(Math.log(bytes) / Math.log(1024)),
-      sizes.length - 1
-    );
-    return `${(bytes / Math.pow(1024, i)).toFixed(1)} ${sizes[i]}`;
+    if (bytes === null || bytes === undefined || bytes === "") return "";
+    const num = Number(bytes);
+    if (Number.isNaN(num) || num < 0) return "";
+
+    if (num === 0) return "0 B";
+
+    const sizes = ["B", "KB", "MB", "GB", "TB"];
+    const i = Math.min(Math.floor(Math.log(num) / Math.log(1024)), sizes.length - 1);
+    const value = num / Math.pow(1024, i);
+    return `${value.toFixed(value >= 10 || i === 0 ? 0 : 1)} ${sizes[i]}`;
   }
 
-  // Debounce
+  function escapeHtml(str = "") {
+    return String(str)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
   function debounce(fn, ms = 300) {
     let t;
     return (...args) => {
@@ -47,78 +69,182 @@
     };
   }
 
-  // Render
+  function getFileIcon(ext = "") {
+    const e = ext.toLowerCase();
+    if (e === "pdf") return "📕";
+    if (e === "doc" || e === "docx") return "📄";
+    if (e === "xls" || e === "xlsx" || e === "csv") return "📊";
+    if (e === "ppt" || e === "pptx") return "📽️";
+    if (e === "jpg" || e === "jpeg" || e === "png" || e === "webp") return "🖼️";
+    return "📁";
+  }
+
+  function getBadgeClass(ext = "") {
+    const e = ext.toLowerCase();
+    if (e === "pdf") return "pdf";
+    if (e === "doc" || e === "docx") return "doc";
+    if (e === "xls" || e === "xlsx" || e === "csv") return "sheet";
+    return "file";
+  }
+
+  // ----------------------------------------------------------
+  // State
+  // ----------------------------------------------------------
+  let cachedDocs = [];
+  let hasLoadedOnce = false;
+  let isLoading = false;
+
+  // ----------------------------------------------------------
+  // UI render helpers
+  // ----------------------------------------------------------
+  function renderLoading(container) {
+    if (!container) return;
+    container.innerHTML = `
+      <div class="doc-card">
+        <div class="skeleton" style="height:18px; width:60%; margin-bottom:12px;"></div>
+        <div class="skeleton" style="height:12px; width:75%; margin-bottom:16px;"></div>
+        <div class="skeleton" style="height:86px; width:100%; margin-bottom:14px;"></div>
+        <div class="skeleton" style="height:36px; width:100%;"></div>
+      </div>
+      <div class="doc-card">
+        <div class="skeleton" style="height:18px; width:55%; margin-bottom:12px;"></div>
+        <div class="skeleton" style="height:12px; width:70%; margin-bottom:16px;"></div>
+        <div class="skeleton" style="height:86px; width:100%; margin-bottom:14px;"></div>
+        <div class="skeleton" style="height:36px; width:100%;"></div>
+      </div>
+      <div class="doc-card">
+        <div class="skeleton" style="height:18px; width:58%; margin-bottom:12px;"></div>
+        <div class="skeleton" style="height:12px; width:65%; margin-bottom:16px;"></div>
+        <div class="skeleton" style="height:86px; width:100%; margin-bottom:14px;"></div>
+        <div class="skeleton" style="height:36px; width:100%;"></div>
+      </div>
+    `;
+  }
+
+  function renderEmpty(container, message = "No documents found.") {
+    if (!container) return;
+    container.innerHTML = `
+      <div class="empty-state compact-empty" style="grid-column: 1 / -1;">
+        <div class="empty-state-icon">📂</div>
+        <p class="muted">${escapeHtml(message)}</p>
+      </div>
+    `;
+  }
+
   function renderList(container, list) {
     if (!container) return;
-    if (!list || list.length === 0) {
-      container.innerHTML = `<div class="doc-empty">No documents found.</div>`;
+
+    if (!Array.isArray(list) || list.length === 0) {
+      renderEmpty(container, "No documents found.");
       return;
     }
+
     const html = list
       .map((doc) => {
+        const name = doc.name || "Untitled document";
+        const safeName = escapeHtml(name);
         const ext = (doc.ext || "").toLowerCase();
-        const icon =
-          ext === "pdf"
-            ? "📕"
-            : ext === "doc" || ext === "docx"
-            ? "📄"
-            : ext === "xls" || ext === "xlsx"
-            ? "📊"
-            : "📁";
+        const safeExt = escapeHtml(ext || "file");
+        const icon = getFileIcon(ext);
+        const badgeClass = getBadgeClass(ext);
         const size = formatBytes(doc.size);
-        const dt = doc.mtime_str || "";
-        const href = doc.url; // served by /uploads/<filename>
-
-        // Lazy preview (button → iframe only when clicked)
-        const preview =
-          ext === "pdf"
-            ? `<div class="doc-preview">
-                 <button class="preview-btn" data-url="${href}">Preview</button>
-                 <div class="preview-frame hidden"></div>
-               </div>`
-            : `<div class="doc-preview skel"></div>`;
+        const dt = doc.mtime_str || doc.updated_at || "";
+        const url = doc.url || "#";
+        const previewable = ext === "pdf";
 
         return `
-        <div class="doc-card" data-name="${doc.name.toLowerCase()}">
-          <div class="doc-hdr">
-            <span class="doc-ico">${icon}</span>
-            <div class="doc-name" title="${doc.name}">${doc.name}</div>
+          <div class="doc-card" data-name="${escapeHtml(name.toLowerCase())}">
+            <div class="doc-card-header">
+              <span class="doc-badge ${badgeClass}">${safeExt.toUpperCase()}</span>
+              <button class="doc-menu" type="button" aria-label="Document options">⋮</button>
+            </div>
+
+            <h4 class="doc-title" title="${safeName}">${safeName}</h4>
+
+            <p class="doc-meta">
+              ${size ? `<span>${escapeHtml(size)}</span>` : ""}
+              ${size && dt ? `<span>•</span>` : ""}
+              ${dt ? `<span>${escapeHtml(dt)}</span>` : ""}
+            </p>
+
+            <div class="doc-preview ${previewable ? "" : "doc-preview--static"}">
+              ${
+                previewable
+                  ? `
+                  <button class="modern-btn modern-btn-secondary preview-btn" type="button" data-url="${escapeHtml(url)}">
+                    Preview
+                  </button>
+                  <div class="preview-frame hidden"></div>
+                `
+                  : `
+                  <div class="doc-preview-placeholder">
+                    <span style="font-size: 1.4rem;">${icon}</span>
+                    <span>Preview not available</span>
+                  </div>
+                `
+              }
+            </div>
+
+            <div class="doc-actions">
+              <a class="modern-btn modern-btn-primary open-btn" href="${escapeHtml(url)}" target="_blank" rel="noopener">
+                Open
+              </a>
+              <button class="modern-btn modern-btn-secondary copy-btn" type="button" data-url="${escapeHtml(url)}">
+                Copy Link
+              </button>
+            </div>
           </div>
-          <div class="doc-meta">
-            <span>${ext.toUpperCase()}</span>
-            <span>•</span>
-            <span>${size}</span>
-            ${dt ? `<span>•</span><span>${dt}</span>` : ""}
-          </div>
-          ${preview}
-          <div class="doc-actions">
-            <a class="open-btn" href="${href}" target="_blank" rel="noopener">Open</a>
-            <button class="copy-btn" data-url="${href}">Copy Link</button>
-          </div>
-        </div>`;
+        `;
       })
       .join("");
+
     container.innerHTML = html;
 
-    // Copy buttons
-    container.querySelectorAll(".copy-btn").forEach((btn) => {
+    bindCardActions(container);
+  }
+
+  function bindCardActions(container) {
+    // copy
+    qsa(".copy-btn", container).forEach((btn) => {
       btn.addEventListener("click", async () => {
+        const url = btn.dataset.url;
+        if (!url) return;
+
         try {
-          await navigator.clipboard.writeText(btn.dataset.url);
+          await navigator.clipboard.writeText(url);
+          const original = btn.textContent;
+          btn.textContent = "Copied";
           toast("Link copied", "success");
-        } catch (e) {
-          toast("Failed to copy", "error");
+          setTimeout(() => {
+            btn.textContent = original;
+          }, 1200);
+        } catch (err) {
+          console.error("[search_hist] copy failed:", err);
+          toast("Failed to copy link", "error");
         }
       });
     });
 
-    // Lazy preview buttons
-    container.querySelectorAll(".preview-btn").forEach((btn) => {
+    // preview toggle
+    qsa(".preview-btn", container).forEach((btn) => {
       btn.addEventListener("click", () => {
         const wrap = btn.closest(".doc-preview");
-        const frameWrap = wrap.querySelector(".preview-frame");
-        if (frameWrap.classList.contains("hidden")) {
-          frameWrap.innerHTML = `<iframe src="${btn.dataset.url}#toolbar=0&navpanes=0&scrollbar=0" class="w-full h-40 border rounded"></iframe>`;
+        const frameWrap = qs(".preview-frame", wrap);
+        const url = btn.dataset.url;
+        if (!frameWrap || !url) return;
+
+        const isHidden = frameWrap.classList.contains("hidden");
+
+        if (isHidden) {
+          frameWrap.innerHTML = `
+            <iframe
+              src="${url}#toolbar=0&navpanes=0&scrollbar=0"
+              class="w-full"
+              style="width:100%; height:180px; border:1px solid #d7e2ee; border-radius:14px; background:#fff;"
+              title="PDF preview"
+              loading="lazy">
+            </iframe>
+          `;
           frameWrap.classList.remove("hidden");
           btn.textContent = "Hide Preview";
         } else {
@@ -130,82 +256,165 @@
     });
   }
 
-  // Fetch
-  async function fetchDocs(q = "") {
-    const url = q ? `/documents?q=${encodeURIComponent(q)}` : `/documents`;
-    const res = await fetch(url, { headers: { "X-Requested-With": "fetch" } });
-    if (!res.ok) throw new Error("Load failed");
-    const data = await res.json();
-    return data.documents || [];
+  function filterLocalDocs(term) {
+    const normalized = (term || "").trim().toLowerCase();
+
+    if (!normalized) return cachedDocs;
+
+    return cachedDocs.filter((doc) => {
+      const name = (doc.name || "").toLowerCase();
+      const ext = (doc.ext || "").toLowerCase();
+      const mtime = (doc.mtime_str || "").toLowerCase();
+      return (
+        name.includes(normalized) ||
+        ext.includes(normalized) ||
+        mtime.includes(normalized)
+      );
+    });
   }
 
-  // Load + bind
+  // ----------------------------------------------------------
+  // API
+  // ----------------------------------------------------------
+  async function fetchDocs(q = "") {
+    const url = q ? `/documents?q=${encodeURIComponent(q)}` : "/documents";
+    const res = await fetch(url, {
+      headers: { "X-Requested-With": "fetch" },
+    });
+
+    if (!res.ok) {
+      throw new Error(`Load failed (${res.status})`);
+    }
+
+    const data = await res.json();
+    return Array.isArray(data.documents) ? data.documents : [];
+  }
+
+  // ----------------------------------------------------------
+  // Loader
+  // ----------------------------------------------------------
+  async function loadAll(container, { force = false, silent = false } = {}) {
+    if (!container) return;
+    if (isLoading) return;
+    if (hasLoadedOnce && !force) {
+      renderList(container, cachedDocs);
+      return;
+    }
+
+    isLoading = true;
+    renderLoading(container);
+
+    try {
+      const docs = await fetchDocs("");
+      cachedDocs = docs;
+      hasLoadedOnce = true;
+      renderList(container, cachedDocs);
+      if (!silent) toast("Documents loaded", "success");
+    } catch (err) {
+      console.error("[search_hist] loadAll failed:", err);
+      cachedDocs = [];
+      renderEmpty(container, "Could not load documents.");
+      toast("Could not load documents", "error");
+    } finally {
+      isLoading = false;
+    }
+  }
+
+  async function remoteSearch(container, term) {
+    if (!container) return;
+
+    const clean = (term || "").trim();
+
+    if (!clean) {
+      renderList(container, cachedDocs);
+      return;
+    }
+
+    try {
+      const docs = await fetchDocs(clean);
+      renderList(container, docs);
+    } catch (err) {
+      console.error("[search_hist] remote search failed:", err);
+      renderEmpty(container, "Search failed.");
+      toast("Search failed", "error");
+    }
+  }
+
+  // ----------------------------------------------------------
+  // Init
+  // ----------------------------------------------------------
   ready(() => {
     const docList = document.getElementById("docList");
     const input = document.getElementById("docSearch");
-    const searchBtn = document.getElementById("searchDocBtn");
     const clearBtn = document.getElementById("clearHistoryBtn");
     const uploadsPanel = document.getElementById("panel-uploads");
 
-    if (!docList) return;
+    if (!docList || !uploadsPanel) return;
 
-    // Load when Uploads panel becomes active (and on first load)
-    async function loadAll() {
-      try {
-        const docs = await fetchDocs("");
-        renderList(docList, docs);
-      } catch (e) {
-        console.error(e);
-        renderList(docList, []);
-        toast("Could not load documents", "error");
-      }
+    // initial if uploads already active
+    if (uploadsPanel.classList.contains("is-active")) {
+      loadAll(docList, { silent: true });
     }
 
-    // Observe route activation
-    const observer = new MutationObserver((muts) => {
-      muts.forEach((m) => {
-        if (m.type === "attributes" && m.attributeName === "class") {
-          if (uploadsPanel.classList.contains("is-active")) {
-            loadAll();
-          }
-        }
-      });
+    // route observer
+    const observer = new MutationObserver(() => {
+      if (uploadsPanel.classList.contains("is-active")) {
+        loadAll(docList, { silent: true });
+      }
     });
-    if (uploadsPanel) observer.observe(uploadsPanel, { attributes: true });
 
-    // Also load once on boot (in case Uploads is default)
-    if (uploadsPanel && uploadsPanel.classList.contains("is-active")) {
-      loadAll();
-    }
+    observer.observe(uploadsPanel, { attributes: true, attributeFilter: ["class"] });
 
-    // Debounced type search
-    const doSearch = debounce(async () => {
-      const q = (input?.value || "").trim();
-      try {
-        const docs = await fetchDocs(q);
-        renderList(docList, docs);
-      } catch (e) {
-        renderList(docList, []);
+    // local filter first, remote fallback after debounce
+    const debouncedSearch = debounce(async () => {
+      const term = input?.value || "";
+
+      if (!term.trim()) {
+        renderList(docList, cachedDocs);
+        return;
       }
-    }, 350);
 
-    if (input) input.addEventListener("input", doSearch);
-    if (searchBtn) searchBtn.addEventListener("click", () => doSearch());
+      const local = filterLocalDocs(term);
+      if (local.length > 0) {
+        renderList(docList, local);
+      } else {
+        await remoteSearch(docList, term);
+      }
+    }, 260);
 
-    // ✅ Clear button only clears front-end, not reload
-    if (clearBtn)
-      clearBtn.addEventListener("click", () => {
-        if (input) input.value = "";
-        docList.innerHTML = `
-        <div class="doc-empty">
-          History cleared. <button id="reloadHistoryBtn" class="modern-btn modern-btn-secondary ml-2">Reload</button>
-        </div>`;
-        // bind reload button
-        const reloadBtn = document.getElementById("reloadHistoryBtn");
-        if (reloadBtn) reloadBtn.addEventListener("click", loadAll);
+    input?.addEventListener("input", debouncedSearch);
+
+    clearBtn?.addEventListener("click", () => {
+      if (input) input.value = "";
+      renderEmpty(docList, "History cleared.");
+      const reloadWrap = document.createElement("div");
+      reloadWrap.style.gridColumn = "1 / -1";
+      reloadWrap.style.display = "flex";
+      reloadWrap.style.justifyContent = "center";
+      reloadWrap.style.marginTop = ".25rem";
+      reloadWrap.innerHTML = `
+        <button id="reloadHistoryBtn" class="modern-btn modern-btn-secondary" type="button">
+          Reload Documents
+        </button>
+      `;
+      docList.appendChild(reloadWrap);
+
+      const reloadBtn = document.getElementById("reloadHistoryBtn");
+      reloadBtn?.addEventListener("click", () => {
+        loadAll(docList, { force: true });
       });
 
-    // Listen for uploads and refresh automatically
-    window.addEventListener("documents:refresh", loadAll);
+      toast("History view cleared", "info");
+    });
+
+    // external refresh hook after upload
+    window.addEventListener("documents:refresh", () => {
+      loadAll(docList, { force: true, silent: false });
+    });
+
+    // optional global helper
+    window.refreshDocumentHistory = () => loadAll(docList, { force: true });
+
+    console.log("[search_hist] initialized");
   });
 })();

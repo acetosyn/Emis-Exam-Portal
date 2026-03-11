@@ -3,8 +3,7 @@
 {% block title %}Admin Dashboard - EMIS Exam Portal{% endblock %}
 
 {% block styles %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/admin1.css') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/admin2.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/doc_upload.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/search_hist.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/user_credentials.css') }}">
@@ -12,421 +11,649 @@
 {% endblock %}
 
 {% block header_actions %}
-<!-- ______________________ HEADER ACTIONS ______________________ -->
-<div class="flex items-center gap-3 md:gap-6">
-    <button id="cmdBtn" class="relative text-gray-600 hover:text-navy" aria-label="Command Palette (Ctrl/⌘+K)" title="Command Palette (Ctrl/⌘+K)">⌘K</button>
-    <button id="themeToggleHeader" class="relative text-gray-600 hover:text-navy" aria-label="Toggle Dark Mode" title="Toggle Dark Mode">🌗</button>
-    <button id="notifBtnHeader" class="relative text-gray-600 hover:text-navy" aria-label="Notifications">
-        🔔
-        <span id="notifCountHeader" class="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full hidden">0</span>
+<div class="header-actions flex items-center gap-2 sm:gap-3">
+    <button id="mobileSidebarOpen" class="header-icon-btn lg:hidden" aria-label="Open sidebar" type="button">
+        <i class="fas fa-bars"></i>
     </button>
-    <a href="{{ url_for('logout') }}" class="btn-logout" title="Logout">Logout</a>
+
+    <button id="cmdBtn" class="header-icon-btn" aria-label="Command Palette (Ctrl/⌘+K)" title="Command Palette (Ctrl/⌘+K)" type="button">
+        <i class="fas fa-terminal"></i>
+    </button>
+
+    <button id="themeToggleHeader" class="header-icon-btn" aria-label="Toggle Dark Mode" title="Toggle Dark Mode" type="button">
+        <i class="fas fa-moon"></i>
+    </button>
+
+    <button id="notifBtnHeader" class="header-icon-btn relative" aria-label="Notifications" title="Notifications" type="button">
+        <i class="fas fa-bell"></i>
+        <span id="notifCountHeader" class="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] font-bold min-w-[18px] h-[18px] px-1 rounded-full hidden flex items-center justify-center">0</span>
+    </button>
+
+    <a href="{{ url_for('logout') }}" class="btn-logout inline-flex items-center gap-2">
+        <i class="fas fa-right-from-bracket"></i>
+        <span class="hidden sm:inline">Logout</span>
+    </a>
 </div>
 {% endblock %}
 
 {% block content %}
-<!-- ______________________ ADMIN SHELL ______________________ -->
-<div class="admin-shell min-h-screen bg-admin bg-frost" data-theme="light">
+<div class="admin-shell min-h-screen" data-theme="light">
 
-    <!-- ______________________ SIDEBAR ______________________ -->
-    ...  <!-- (your sidebar remains exactly as-is) -->
-<!-- Sidebar (collapsible) -->
-<aside id="adminSidebar" class="sidebar">
-  <div class="sidebar-head">
-    <div class="brand nav-item" data-panel="#panel-dashboard" style="cursor: pointer;">
-      <img src="{{ url_for('static', filename='images/logo.jpg') }}" alt="EMIS" class="brand-logo" />
-      <div class="brand-text">
-        <div class="brand-title">EMIS Admin</div>
-        <div class="brand-sub">Epitome Model Islamic Schools</div>
-      </div>
-    </div>
-    <button id="sidebarToggle" class="sidebar-toggle" aria-label="Toggle sidebar">
-      <span class="bar"></span>
-      <span class="bar"></span>
-      <span class="bar"></span>
-    </button>
-  </div>
+    <!-- Mobile Sidebar Overlay -->
+    <div id="sidebarOverlay" class="sidebar-overlay hidden lg:hidden" aria-hidden="true"></div>
 
-  <nav class="sidebar-nav" role="navigation" aria-label="Admin Navigation">
-    <!-- Dashboard -->
-    <button class="nav-item is-active" data-panel="#panel-dashboard">
-      <span class="nav-ico">🏠</span>
-      <span class="nav-label">Dashboard</span>
-    </button>
+    <!-- ===================== SIDEBAR ===================== -->
+    <aside id="adminSidebar" class="sidebar modern-sidebar">
+        <div class="sidebar-head">
+            <button class="brand nav-item" data-panel="#panel-dashboard" type="button" style="cursor:pointer;">
+                <div class="brand-logo-wrap">
+                    <img src="{{ url_for('static', filename='images/logo.jpg') }}" alt="EMIS" class="brand-logo" />
+                </div>
+                <div class="brand-text">
+                    <div class="brand-title">EMIS Admin</div>
+                    <div class="brand-sub">Epitome Model Islamic Schools</div>
+                </div>
+            </button>
 
-    <!-- Uploads -->
-    <button class="nav-item" data-panel="#panel-uploads">
-      <span class="nav-ico">📂</span>
-      <span class="nav-label">Uploads</span>
-    </button>
+            <div class="sidebar-head-actions">
+                <span class="sidebar-badge">Exam Portal</span>
+                <button id="sidebarToggle" class="sidebar-toggle" aria-label="Toggle sidebar" type="button">
+                    <span class="bar"></span>
+                    <span class="bar"></span>
+                    <span class="bar"></span>
+                </button>
+            </div>
+        </div>
 
-    <!-- Exams (collapsible group) -->
-    <div class="nav-group" data-group="exams">
-      <button class="nav-item nav-parent" data-submenu="#menu-exams">
-        <span class="nav-ico">🧪</span>
-        <span class="nav-label">Exams</span>
-        <span class="nav-caret">▸</span>
-      </button>
-      <div id="menu-exams" class="nav-sub">
-        <button class="nav-subitem" data-panel="#panel-push"><span>Push to Exam</span></button>
-        <button class="nav-subitem" data-panel="#panel-link"><span>Generate Link</span></button>
-        <button id="generateCredsBtnSidebar" class="btn-secondary">🔑 Generate Credentials</button>
-        <button class="nav-subitem" data-panel="#panel-manage"><span>Manage Credentials</span></button>
-        <button class="nav-subitem" data-panel="#panel-results"><span>Results</span></button>
-      </div>
-    </div>
+        <div class="sidebar-search">
+            <div class="sidebar-search-box">
+                <i class="fas fa-magnifying-glass"></i>
+                <input type="search" placeholder="Quick search..." aria-label="Quick search">
+            </div>
+        </div>
 
-    <!-- Candidates -->
-    <button class="nav-item" data-panel="#panel-candidates">
-      <span class="nav-ico">👥</span>
-      <span class="nav-label">Candidates</span>
-    </button>
+        <nav class="sidebar-nav" role="navigation" aria-label="Admin Navigation">
+            <div class="nav-section-label">Overview</div>
 
-    <!-- Notifications -->
-    <button class="nav-item" data-panel="#panel-notifications">
-      <span class="nav-ico">🔔</span>
-      <span class="nav-label">Notifications</span>
-    </button>
+            <button class="nav-item is-active" data-panel="#panel-dashboard" type="button">
+                <span class="nav-ico"><i class="fas fa-house"></i></span>
+                <span class="nav-label">Dashboard</span>
+            </button>
 
-    <!-- Activity -->
-    <button class="nav-item" data-panel="#panel-activity">
-      <span class="nav-ico">🕒</span>
-      <span class="nav-label">Activity</span>
-    </button>
+            <button class="nav-item" data-panel="#panel-uploads" type="button">
+                <span class="nav-ico"><i class="fas fa-folder-open"></i></span>
+                <span class="nav-label">Uploads</span>
+            </button>
 
-    <!-- System Status -->
-    <button class="nav-item" data-panel="#panel-status">
-      <span class="nav-ico">⚙️</span>
-      <span class="nav-label">System Status</span>
-    </button>
+            <button class="nav-item" data-panel="#panel-candidates" type="button">
+                <span class="nav-ico"><i class="fas fa-users"></i></span>
+                <span class="nav-label">Candidates</span>
+            </button>
 
-    <!-- Quick Tools -->
-    <button class="nav-item" data-panel="#panel-tools">
-      <span class="nav-ico">⚡</span>
-      <span class="nav-label">Quick Tools</span>
-    </button>
+            <div class="nav-section-label">Exam Operations</div>
 
-    <!-- Settings -->
-    <button class="nav-item" data-panel="#panel-settings">
-      <span class="nav-ico">🛠️</span>
-      <span class="nav-label">Settings</span>
-    </button>
+            <div class="nav-group" data-group="exams">
+                <button class="nav-item nav-parent" data-submenu="#menu-exams" type="button">
+                    <span class="nav-ico"><i class="fas fa-file-circle-check"></i></span>
+                    <span class="nav-label">Exams</span>
+                    <span class="nav-caret"><i class="fas fa-chevron-right"></i></span>
+                </button>
 
-    <!-- Help -->
-    <button class="nav-item" data-panel="#panel-help">
-      <span class="nav-ico">❓</span>
-      <span class="nav-label">Help</span>
-    </button>
+                <div id="menu-exams" class="nav-sub">
+                    <button class="nav-subitem" data-panel="#panel-push" type="button">
+                        <span><i class="fas fa-paper-plane"></i> Push to Exam</span>
+                    </button>
 
-    <!-- Candidate Login (opens new tab via JS) -->
-    <button class="nav-item" data-action="open-candidate-login">
-      <span class="nav-ico">🔗</span>
-      <span class="nav-label">Candidate Login</span>
-    </button>
-  </nav>
+                    <button class="nav-subitem" data-panel="#panel-link" type="button">
+                        <span><i class="fas fa-link"></i> Generate Link</span>
+                    </button>
 
-  <div class="sidebar-foot">
-    <button id="themeToggle" class="sidebar-foot-btn" title="Toggle theme">🌗 Theme</button>
-    <a href="{{ url_for('logout') }}" class="sidebar-foot-btn" title="Logout">🚪 Logout</a>
-  </div>
-</aside>
+                    <button id="generateCredsBtnSidebar" class="btn-secondary nav-sub-cta" type="button">
+                        <i class="fas fa-key"></i> Generate Credentials
+                    </button>
 
-    <!-- ______________________ MAIN CONTENT ______________________ -->
+                    <button class="nav-subitem" data-panel="#panel-credentials" type="button">
+                        <span><i class="fas fa-user-lock"></i> Credentials Panel</span>
+                    </button>
+
+                    <button class="nav-subitem" data-panel="#panel-manage" type="button">
+                        <span><i class="fas fa-table-list"></i> Manage Credentials</span>
+                    </button>
+
+                    <button class="nav-subitem" data-panel="#panel-results" type="button">
+                        <span><i class="fas fa-square-poll-vertical"></i> Results</span>
+                    </button>
+
+                    <button class="nav-subitem" data-panel="#panel-dashboard-results" type="button">
+                        <span><i class="fas fa-table-columns"></i> Dashboard Results</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="nav-section-label">Monitoring</div>
+
+            <button class="nav-item" data-panel="#panel-notifications" type="button">
+                <span class="nav-ico"><i class="fas fa-bell"></i></span>
+                <span class="nav-label">Notifications</span>
+            </button>
+
+            <button class="nav-item" data-panel="#panel-activity" type="button">
+                <span class="nav-ico"><i class="fas fa-clock-rotate-left"></i></span>
+                <span class="nav-label">Activity</span>
+            </button>
+
+            <button class="nav-item" data-panel="#panel-status" type="button">
+                <span class="nav-ico"><i class="fas fa-server"></i></span>
+                <span class="nav-label">System Status</span>
+            </button>
+
+            <button class="nav-item" data-panel="#panel-tools" type="button">
+                <span class="nav-ico"><i class="fas fa-bolt"></i></span>
+                <span class="nav-label">Quick Tools</span>
+            </button>
+
+            <button class="nav-item" data-panel="#panel-settings" type="button">
+                <span class="nav-ico"><i class="fas fa-sliders"></i></span>
+                <span class="nav-label">Settings</span>
+            </button>
+
+            <button class="nav-item" data-panel="#panel-help" type="button">
+                <span class="nav-ico"><i class="fas fa-circle-question"></i></span>
+                <span class="nav-label">Help</span>
+            </button>
+
+            <button class="nav-item" data-action="open-candidate-login" type="button">
+                <span class="nav-ico"><i class="fas fa-arrow-up-right-from-square"></i></span>
+                <span class="nav-label">Candidate Login</span>
+            </button>
+        </nav>
+
+        <div class="sidebar-foot">
+            <div class="sidebar-foot-card">
+                <div class="sidebar-foot-meta">
+                    <div class="sidebar-foot-title">Signed in as</div>
+                    <div class="sidebar-foot-user">{{ session.username }}</div>
+                </div>
+                <div class="sidebar-foot-actions">
+                    <button id="themeToggle" class="sidebar-foot-btn" title="Toggle theme" type="button">
+                        <i class="fas fa-moon"></i>
+                        <span>Theme</span>
+                    </button>
+                    <a href="{{ url_for('logout') }}" class="sidebar-foot-btn" title="Logout">
+                        <i class="fas fa-right-from-bracket"></i>
+                        <span>Logout</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- ===================== MAIN CONTENT ===================== -->
     <section class="content-area">
 
-        <!-- ______________________ TOPBAR ______________________ -->
-        ...  <!-- (your topbar remains exactly as-is) -->
-
-          <!-- Top Bar (inside content for richer controls) -->
+        <!-- ===================== TOPBAR ===================== -->
         <div class="topbar">
             <div class="topbar-left">
-                <h1 class="page-title">Admin Dashboard</h1>
-                <div class="breadcrumbs" id="breadcrumbs">Home / Dashboard</div>
+                <div class="page-heading">
+                    <span class="eyebrow">Exam Administration</span>
+                    <h1 class="page-title">Admin Dashboard</h1>
+                    <div class="breadcrumbs" id="breadcrumbs">Home / Dashboard</div>
+                </div>
             </div>
+
             <div class="topbar-right">
                 <div class="search-wrap">
-                    <span class="search-ico">🔎</span>
+                    <span class="search-ico"><i class="fas fa-magnifying-glass"></i></span>
                     <input id="globalSearch" type="search" class="search-input" placeholder="Search candidates, documents, exams…" />
                 </div>
-                <button id="cmdBtnTop" class="topbar-btn" title="Command Palette (⌘/Ctrl+K)">⌘K</button>
-                <button id="notifBtn" class="topbar-btn" title="Notifications">🔔 <span id="notifCount" class="badge hidden">0</span></button>
+
+                <button id="cmdBtnTop" class="topbar-btn" title="Command Palette (⌘/Ctrl+K)" type="button">
+                    <i class="fas fa-terminal"></i>
+                </button>
+
+                <button id="notifBtn" class="topbar-btn relative" title="Notifications" type="button">
+                    <i class="fas fa-bell"></i>
+                    <span id="notifCount" class="badge hidden">0</span>
+                </button>
+
                 <div class="profile-menu">
-                    <button id="profileBtn" class="profile-btn" aria-haspopup="true" aria-expanded="false">👤 {{ session.username }}</button>
+                    <button id="profileBtn" class="profile-btn" aria-haspopup="true" aria-expanded="false" type="button">
+                        <span class="profile-avatar">
+                            <i class="fas fa-user-shield"></i>
+                        </span>
+                        <span class="profile-name">{{ session.username }}</span>
+                        <i class="fas fa-chevron-down text-xs"></i>
+                    </button>
+
                     <div id="profileMenu" class="profile-dropdown hidden">
-                        <button class="profile-item" data-panel="#panel-settings">Settings</button>
-                        <a class="profile-item" href="{{ url_for('logout') }}">Logout</a>
+                        <button class="profile-item" data-panel="#panel-settings" type="button">
+                            <i class="fas fa-gear"></i>
+                            <span>Settings</span>
+                        </button>
+                        <a class="profile-item" href="{{ url_for('logout') }}">
+                            <i class="fas fa-right-from-bracket"></i>
+                            <span>Logout</span>
+                        </a>
                     </div>
                 </div>
             </div>
         </div>
 
-
-        <!--_____________________ ROUTE CONTAINER______________________ -->
+        <!-- ===================== ROUTES ===================== -->
         <div id="routeContainer" class="route-container">
 
+            <!-- ===================== DASHBOARD ===================== -->
+            <section id="panel-dashboard" class="route is-active" data-route="dashboard">
 
-            <!-- DASHBOARD -->
+                <div class="dashboard-hero">
+                    <div class="dashboard-hero-main">
+                        <div class="hero-copy">
+                            <span class="hero-chip">
+                                <i class="fas fa-sparkles"></i>
+                                Smart Control Panel
+                            </span>
+                            <h2 class="hero-title">Manage exams, credentials, uploads and results from one sleek workspace.</h2>
+                            <p class="hero-subtitle">
+                                Faster operations, clearer monitoring, better mobile access, and room for live updates.
+                            </p>
+                        </div>
 
-<section id="panel-dashboard" class="route is-active" data-route="dashboard">
-  <!-- Stats -->
-  <div class="grid-cols responsive-4">
-    <div class="stat-card gradient-blue">
-      <div class="stat-ico">👥</div>
-      <p class="stat-label">Total Candidates</p>
-      <h2 id="statTotalStudents" class="stat-value">0</h2>
-    </div>
-    <div class="stat-card gradient-green">
-      <div class="stat-ico">📝</div>
-      <p class="stat-label">Active Exams</p>
-      <h2 id="statActiveExams" class="stat-value">0</h2>
-    </div>
-    <div class="stat-card gradient-amber">
-      <div class="stat-ico">⏳</div>
-      <p class="stat-label">Pending Results</p>
-      <h2 id="statPending" class="stat-value">0</h2>
-    </div>
-    <div class="stat-card gradient-red">
-      <div class="stat-ico">📊</div>
-      <p class="stat-label">Average Score</p>
-      <h2 id="statAvg" class="stat-value">--</h2>
-    </div>
-  </div>
+                        <div class="hero-actions">
+                            <button id="generateCredsBtnQuick" type="button" class="action-pill primary">
+                                <i class="fas fa-key"></i>
+                                <span>Generate Credentials</span>
+                            </button>
 
-  <!-- Quick Actions -->
-  <div class="grid-cols responsive-3 mt-6">
-    <div class="card tall">
-      <h3 class="card-title">🚀 Quick Actions</h3>
-      <div class="quick-actions">
-        <button class="action-card primary" data-action="open-candidate-login">
-          <span>🔗</span> Open Candidate Login
-        </button>
-        <button id="generateCredsBtnQuick" class="action-card primary">
-          <span>🔑</span> Generate Credentials
-        </button>
-        <button class="action-card primary" data-action="open-upload" data-panel="#panel-uploads">
-          <span>📂</span> Upload Document
-        </button>
+                            <button class="action-pill secondary" data-panel="#panel-uploads" type="button">
+                                <i class="fas fa-upload"></i>
+                                <span>Upload Document</span>
+                            </button>
 
-        <button class="action-card secondary" data-panel="#panel-push">
-          <span>📦</span> Push to Exam
-        </button>
-        <button class="action-card tertiary" id="viewCredsBtn" data-panel="#panel-dashboard-results">
-        <span>➕</span> View Credentials
-        </button>
-        <button class="action-card secondary" id="viewResultsBtn" data-panel="#panel-dashboard-results">
-        <span>📊</span> View Results
-        </button>
+                            <button class="action-pill tertiary" data-action="open-candidate-login" type="button">
+                                <i class="fas fa-arrow-up-right-from-square"></i>
+                                <span>Open Candidate Login</span>
+                            </button>
+                        </div>
+                    </div>
 
-      </div>
-    </div>
+                    <div class="dashboard-hero-side">
+                        <div class="mini-status-card">
+                            <div class="mini-status-top">
+                                <span class="mini-status-label">Today</span>
+                                <span class="mini-status-dot online"></span>
+                            </div>
+                            <div class="mini-status-title">System Healthy</div>
+                            <p class="mini-status-text">Uploads, credentials, and exam workflows are ready.</p>
+                        </div>
+                    </div>
+                </div>
 
-<!-- Notifications -->
-<div class="card notifications-card">
-  <h3 class="card-title">🔔 Live Notifications</h3>
-  <div id="notificationsPanel" class="list-auto">
-    <p class="muted">No notifications yet</p>
-  </div>
-</div>
+                <div class="grid-cols responsive-4 dashboard-stats">
+                    <div class="stat-card gradient-blue compact-stat">
+                        <div class="stat-top">
+                            <div class="stat-ico"><i class="fas fa-users"></i></div>
+                            <span class="stat-trend">+12%</span>
+                        </div>
+                        <p class="stat-label">Total Candidates</p>
+                        <h2 id="statTotalStudents" class="stat-value">0</h2>
+                        <p class="stat-meta">Registered candidates in the system</p>
+                    </div>
 
-<!-- Activity -->
-<div class="card activity-card">
-  <h3 class="card-title">🕒 Recent Activity</h3>
-  <div id="recentActivity" class="timeline">
-    <p class="muted">No activity logged</p>
-  </div>
-</div>
+                    <div class="stat-card gradient-green compact-stat">
+                        <div class="stat-top">
+                            <div class="stat-ico"><i class="fas fa-pen-to-square"></i></div>
+                            <span class="stat-trend">Live</span>
+                        </div>
+                        <p class="stat-label">Active Exams</p>
+                        <h2 id="statActiveExams" class="stat-value">0</h2>
+                        <p class="stat-meta">Currently available exam sessions</p>
+                    </div>
 
-<!-- System Status -->
-<div class="card status-card mt-6">
-  <h3 class="card-title">⚙️ System Status</h3>
-  <ul class="status-grid">
-    <li><span>Database</span><span class="badge-success">Online</span></li>
-    <li><span>Exam Server</span><span class="badge-success">Running</span></li>
-    <li><span>Storage</span><span class="badge-warning">80% Used</span></li>
-  </ul>
-</div>
+                    <div class="stat-card gradient-amber compact-stat">
+                        <div class="stat-top">
+                            <div class="stat-ico"><i class="fas fa-hourglass-half"></i></div>
+                            <span class="stat-trend">Queue</span>
+                        </div>
+                        <p class="stat-label">Pending Results</p>
+                        <h2 id="statPending" class="stat-value">0</h2>
+                        <p class="stat-meta">Awaiting review or export</p>
+                    </div>
 
+                    <div class="stat-card gradient-red compact-stat">
+                        <div class="stat-top">
+                            <div class="stat-ico"><i class="fas fa-chart-line"></i></div>
+                            <span class="stat-trend">Avg</span>
+                        </div>
+                        <p class="stat-label">Average Score</p>
+                        <h2 id="statAvg" class="stat-value">--</h2>
+                        <p class="stat-meta">Overall exam performance</p>
+                    </div>
+                </div>
 
-</section>
+                <div class="dashboard-grid-main mt-6">
 
-<!-- RESULTS & CREDENTIALS (Dashboard Extension) -->
-<section id="panel-dashboard-results" class="route" data-route="dashboard-results">
-  <!-- Credentials Card -->
-  <div class="card">
-    <div class="flex justify-between items-center mb-3">
-      <h2 class="panel-title">📑 Credentials</h2>
-      <div class="flex gap-2">
-        <button id="viewCredsBtn" class="btn-secondary">View</button>
-        <button id="refreshCredsBtn" class="btn-secondary">Refresh</button>
-        <button id="exportCredsBtn" class="btn-export">Download CSV</button>
-        <button id="clearCredsBtn" class="btn-clear">Clear Table</button>
-      </div>
-    </div>
-    <div id="credentialsWrapper" class="data-wrapper">
-      <p class="muted">No credentials data yet.</p>
-    </div>
-  </div>
+                    <div class="card dashboard-card quick-actions-card">
+                        <div class="card-head">
+                            <div>
+                                <h3 class="card-title"><i class="fas fa-bolt"></i> Quick Actions</h3>
+                                <p class="card-subtitle">Frequent actions in one neat compact area</p>
+                            </div>
+                        </div>
 
-  <!-- Results Card -->
-  <div class="card mt-6">
-    <div class="flex justify-between items-center mb-3">
-      <h2 class="panel-title">📊 Exam Results</h2>
-      <div class="flex gap-2">
-        <button id="viewResultsBtn" class="btn-secondary">View Results</button>
-        <button id="refreshResultsBtn" class="btn-secondary">Refresh</button>
-        <button id="exportResultsBtn" class="btn-export">Download CSV</button>
-        <button id="clearResultsBtn" class="btn-clear">Clear Table</button>
-      </div>
-    </div>
-    <div id="resultsWrapper" class="data-wrapper">
-      <p class="muted">No results yet.</p>
-    </div>
-  </div>
-</section>
+                        <div class="quick-actions compact-actions-grid">
+                            <button class="action-card primary" data-action="open-candidate-login" type="button">
+                                <span class="action-ico"><i class="fas fa-arrow-up-right-from-square"></i></span>
+                                <span class="action-copy">
+                                    <strong>Candidate Login</strong>
+                                    <small>Open portal</small>
+                                </span>
+                            </button>
 
-<!-- Fullscreen Modal for Credentials -->
-<div id="credentialsModal" class="results-modal hidden">
-  <div class="results-content">
-    <div class="flex justify-between items-center mb-3">
-      <h2>📑 Credentials Overview</h2>
-      <div class="flex gap-2">
-        <button id="refreshCredsModal" class="btn-secondary">Refresh</button>
-        <button id="exportCredsModal" class="btn-export">Download CSV</button>
-        <button id="closeCredsModal" class="btn-danger">Close</button>
-      </div>
-    </div>
-    <div id="credsModalBody" class="overflow-auto max-h-[70vh]"></div>
-  </div>
-</div>
+                            <button class="action-card primary" data-panel="#panel-uploads" type="button">
+                                <span class="action-ico"><i class="fas fa-file-arrow-up"></i></span>
+                                <span class="action-copy">
+                                    <strong>Upload Document</strong>
+                                    <small>Add exam files</small>
+                                </span>
+                            </button>
 
-<!-- Fullscreen Modal for Results -->
-<div id="resultsModal" class="results-modal hidden">
-  <div class="results-content">
-    <div class="flex justify-between items-center mb-3">
-      <h2>📊 Exam Results Overview</h2>
-      <div class="flex gap-2">
-        <button id="refreshResultsModal" class="btn-secondary">Refresh</button>
-        <button id="exportResultsModal" class="btn-export">Download CSV</button>
-        <button id="closeResultsModal" class="btn-danger">Close</button>
-      </div>
-    </div>
-    <div id="resultsModalBody" class="overflow-auto max-h-[70vh]"></div>
-  </div>
-</div>
+                            <button class="action-card primary" data-panel="#panel-push" type="button">
+                                <span class="action-ico"><i class="fas fa-paper-plane"></i></span>
+                                <span class="action-copy">
+                                    <strong>Push to Exam</strong>
+                                    <small>Convert and send</small>
+                                </span>
+                            </button>
 
+                            <button class="action-card secondary" data-panel="#panel-link" type="button">
+                                <span class="action-ico"><i class="fas fa-link"></i></span>
+                                <span class="action-copy">
+                                    <strong>Generate Link</strong>
+                                    <small>Candidate access</small>
+                                </span>
+                            </button>
 
+                            <button class="action-card secondary" data-panel="#panel-credentials" type="button">
+                                <span class="action-ico"><i class="fas fa-key"></i></span>
+                                <span class="action-copy">
+                                    <strong>Credentials</strong>
+                                    <small>Create secure logins</small>
+                                </span>
+                            </button>
 
-<!-- UPLOADS -->
-<section id="panel-uploads" class="route" data-route="uploads">
-  <div class="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6">
+                            <button class="action-card tertiary" data-panel="#panel-results" type="button">
+                                <span class="action-ico"><i class="fas fa-square-poll-vertical"></i></span>
+                                <span class="action-copy">
+                                    <strong>Results</strong>
+                                    <small>Review outputs</small>
+                                </span>
+                            </button>
+                        </div>
+                    </div>
 
-    <!-- Upload Card -->
-    <div class="card upload-card">
-      <h2 class="panel-title">Upload Document</h2>
-      <p class="panel-subtitle">Accepted: .pdf, .doc, .docx, .xls, .xlsx</p>
+                    <div class="card dashboard-card notifications-card">
+                        <div class="card-head">
+                            <div>
+                                <h3 class="card-title"><i class="fas fa-bell"></i> Live Notifications</h3>
+                                <p class="card-subtitle">Recent alerts, reminders and system messages</p>
+                            </div>
+                            <button class="chip-action" data-panel="#panel-notifications" type="button">View all</button>
+                        </div>
 
-      <!-- Drop Upload Box -->
-      <div class="drop_box" role="group" aria-label="Document upload">
-        <header>
-          <h4>Drag & Drop or Select File</h4>
-        </header>
-        <p class="text-sm">Files Supported: PDF, DOC, DOCX, XLS, XLSX</p>
+                        <div class="notification-toolbar">
+                            <button class="mini-chip active" type="button">All</button>
+                            <button class="mini-chip" type="button">System</button>
+                            <button class="mini-chip" type="button">Exams</button>
+                            <button class="mini-chip" type="button">Uploads</button>
+                        </div>
 
-        <input type="file" hidden accept=".doc,.docx,.pdf,.xls,.xlsx" id="fileID" />
+                        <div id="notificationsPanel" class="list-auto modern-list">
+                            <div class="empty-state compact-empty">
+                                <div class="empty-state-icon"><i class="fas fa-bell-slash"></i></div>
+                                <p class="muted">No notifications yet</p>
+                            </div>
+                        </div>
+                    </div>
 
-        <div class="flex gap-2 mt-2">
-          <button class="btn" type="button" id="chooseFileBtn">Choose File</button>
-          <button class="btn-secondary hidden" type="button" id="clearFileBtn">Clear</button>
-        </div>
+                    <div class="card dashboard-card activity-card">
+                        <div class="card-head">
+                            <div>
+                                <h3 class="card-title"><i class="fas fa-clock-rotate-left"></i> Recent Activity</h3>
+                                <p class="card-subtitle">Latest admin actions and exam events</p>
+                            </div>
+                            <button class="chip-action" data-panel="#panel-activity" type="button">History</button>
+                        </div>
 
-        <div id="fileChosen" class="mt-3 text-sm text-navy font-semibold hidden"></div>
+                        <div id="recentActivity" class="timeline compact-timeline">
+                            <div class="empty-state compact-empty">
+                                <div class="empty-state-icon"><i class="fas fa-wave-square"></i></div>
+                                <p class="muted">No activity logged</p>
+                            </div>
+                        </div>
+                    </div>
 
-        <!-- Progress Bar -->
-        <div id="uploadProgress" class="progress hidden mt-3">
-          <div class="progress-bar"></div>
-        </div>
-      </div>
-    </div>
+                    <div class="card dashboard-card status-card">
+                        <div class="card-head">
+                            <div>
+                                <h3 class="card-title"><i class="fas fa-server"></i> System Status</h3>
+                                <p class="card-subtitle">Core services at a glance</p>
+                            </div>
+                        </div>
 
-    <!-- Preview Card -->
-    <div class="card upload-preview">
-      <h2 class="panel-title">Upload Preview</h2>
-      <div id="uploadSummary" class="mt-3">
-        <div class="card border rounded-lg p-4 bg-white shadow-sm hidden" id="filePreviewCard">
-          <div class="flex items-center gap-3">
-            <span id="fileIcon" class="text-2xl">📄</span>
-            <div>
-              <p id="previewFileName" class="font-medium text-navy"></p>
-              <p id="previewFileType" class="text-xs text-gray-500"></p>
+                        <ul class="status-grid compact-status-grid">
+                            <li>
+                                <span class="status-name">Database</span>
+                                <span class="badge-success">Online</span>
+                            </li>
+                            <li>
+                                <span class="status-name">Exam Server</span>
+                                <span class="badge-success">Running</span>
+                            </li>
+                            <li>
+                                <span class="status-name">Storage</span>
+                                <span class="badge-warning">80% Used</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ===================== DASHBOARD RESULTS ===================== -->
+            <section id="panel-dashboard-results" class="route" data-route="dashboard-results">
+                <div class="stacked-panel-grid">
+                    <div class="card">
+                        <div class="card-head flex justify-between items-center gap-3">
+                            <div>
+                                <h2 class="panel-title">📑 Credentials</h2>
+                                <p class="panel-subtitle">View and export generated candidate credentials</p>
+                            </div>
+                            <div class="flex gap-2 flex-wrap">
+                                <button id="dashboardViewCredsBtn" class="btn-secondary" type="button">View</button>
+                                <button id="dashboardRefreshCredsBtn" class="btn-secondary" type="button">Refresh</button>
+                                <button id="dashboardExportCredsBtn" class="btn-export" type="button">Download CSV</button>
+                                <button id="dashboardClearCredsBtn" class="btn-clear" type="button">Clear Table</button>
+                            </div>
+                        </div>
+                        <div id="credentialsWrapper" class="data-wrapper">
+                            <p class="muted">No credentials data yet.</p>
+                        </div>
+                    </div>
+
+                    <div class="card mt-6">
+                        <div class="card-head flex justify-between items-center gap-3">
+                            <div>
+                                <h2 class="panel-title">📊 Exam Results</h2>
+                                <p class="panel-subtitle">Review submitted scores and export when needed</p>
+                            </div>
+                            <div class="flex gap-2 flex-wrap">
+                                <button id="dashboardViewResultsBtn" class="btn-secondary" type="button">View Results</button>
+                                <button id="dashboardRefreshResultsBtn" class="btn-secondary" type="button">Refresh</button>
+                                <button id="dashboardExportResultsBtn" class="btn-export" type="button">Download CSV</button>
+                                <button id="dashboardClearResultsBtn" class="btn-clear" type="button">Clear Table</button>
+                            </div>
+                        </div>
+                        <div id="resultsWrapper" class="data-wrapper">
+                            <p class="muted">No results yet.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Fullscreen Modal for Credentials -->
+            <div id="credentialsModal" class="results-modal hidden">
+                <div class="results-content">
+                    <div class="flex justify-between items-center mb-3 gap-3 flex-wrap">
+                        <h2>📑 Credentials Overview</h2>
+                        <div class="flex gap-2 flex-wrap">
+                            <button id="refreshCredsModal" class="btn-secondary" type="button">Refresh</button>
+                            <button id="exportCredsModal" class="btn-export" type="button">Download CSV</button>
+                            <button id="closeCredsModal" class="btn-danger" type="button">Close</button>
+                        </div>
+                    </div>
+                    <div id="credsModalBody" class="overflow-auto max-h-[70vh]"></div>
+                </div>
             </div>
-          </div>
-          <div class="mt-3">
-            <iframe id="previewFrame" class="w-full h-48 border rounded hidden" title="File preview"></iframe>
-          </div>
-        </div>
-      </div>
 
-      <!-- Upload Action -->
-      <div class="mt-4 flex justify-center">
-        <button class="btn-primary" type="button" id="uploadBtn">⬆ Upload File</button>
-      </div>
-      <div id="uploadStatus" class="mt-2 text-sm text-gray-600"></div>
-    </div>
-  </div>
+            <!-- Fullscreen Modal for Results -->
+            <div id="resultsModal" class="results-modal hidden">
+                <div class="results-content">
+                    <div class="flex justify-between items-center mb-3 gap-3 flex-wrap">
+                        <h2>📊 Exam Results Overview</h2>
+                        <div class="flex gap-2 flex-wrap">
+                            <button id="refreshResultsModal" class="btn-secondary" type="button">Refresh</button>
+                            <button id="exportResultsModal" class="btn-export" type="button">Download CSV</button>
+                            <button id="closeResultsModal" class="btn-danger" type="button">Close</button>
+                        </div>
+                    </div>
+                    <div id="resultsModalBody" class="overflow-auto max-h-[70vh]"></div>
+                </div>
+            </div>
 
-  <!-- Document History -->
-  <div class="doc-history mt-8">
-    <div class="modern-card">
-      <div class="flex justify-between items-center mb-4">
-        <h3 class="text-lg font-semibold text-navy">Document History</h3>
-        <div class="doc-history-controls flex gap-2">
-          <input id="docSearch" type="text" class="form-input search-box" placeholder="🔍 Search documents..." />
-          <button id="clearHistoryBtn" class="modern-btn modern-btn-secondary">Clear</button>
-        </div>
-      </div>
+            <!-- ===================== UPLOADS ===================== -->
+            <section id="panel-uploads" class="route" data-route="uploads">
+                <div class="section-intro">
+                    <h2 class="section-title-xl">Document Uploads</h2>
+                    <p class="section-subtext">Upload, preview and manage exam-related documents in a cleaner workflow.</p>
+                </div>
 
-      <div id="docList" class="doc-grid grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <!-- Example Document Card -->
-        <div class="doc-card">
-          <div class="doc-card-header">
-            <span class="doc-badge pdf">PDF</span>
-            <button class="doc-menu">⋮</button>
-          </div>
-          <h4 class="doc-title">Sample_File.pdf</h4>
-          <p class="doc-meta">275 KB • Sep 30, 2025</p>
-          <div class="doc-preview">Preview</div>
-          <div class="doc-actions">
-            <button class="modern-btn modern-btn-primary">Open</button>
-            <button class="modern-btn modern-btn-secondary">Copy Link</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
+                <div class="grid grid-cols-1 xl:grid-cols-2 gap-4 lg:gap-6">
+                    <div class="card upload-card">
+                        <div class="card-head">
+                            <div>
+                                <h2 class="panel-title">Upload Document</h2>
+                                <p class="panel-subtitle">Accepted: .pdf, .doc, .docx, .xls, .xlsx</p>
+                            </div>
+                        </div>
 
+                        <div class="drop_box" role="group" aria-label="Document upload">
+                            <header>
+                                <h4>Drag & Drop or Select File</h4>
+                            </header>
+                            <p class="text-sm">Files Supported: PDF, DOC, DOCX, XLS, XLSX</p>
 
-            <!-- PUSH TO EXAM -->
+                            <input type="file" hidden accept=".doc,.docx,.pdf,.xls,.xlsx" id="fileID" />
+
+                            <div class="flex gap-2 mt-2 flex-wrap">
+                                <button class="btn" type="button" id="chooseFileBtn">Choose File</button>
+                                <button class="btn-secondary hidden" type="button" id="clearFileBtn">Clear</button>
+                            </div>
+
+                            <div id="fileChosen" class="mt-3 text-sm text-navy font-semibold hidden"></div>
+
+                            <div id="uploadProgress" class="progress hidden mt-3">
+                                <div class="progress-bar"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card upload-preview">
+                        <div class="card-head">
+                            <div>
+                                <h2 class="panel-title">Upload Preview</h2>
+                                <p class="panel-subtitle">Preview file information before upload</p>
+                            </div>
+                        </div>
+
+                        <div id="uploadSummary" class="mt-3">
+                            <div class="card border rounded-lg p-4 bg-white shadow-sm hidden" id="filePreviewCard">
+                                <div class="flex items-center gap-3">
+                                    <span id="fileIcon" class="text-2xl">📄</span>
+                                    <div>
+                                        <p id="previewFileName" class="font-medium text-navy"></p>
+                                        <p id="previewFileType" class="text-xs text-gray-500"></p>
+                                    </div>
+                                </div>
+                                <div class="mt-3">
+                                    <iframe id="previewFrame" class="w-full h-48 border rounded hidden" title="File preview"></iframe>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-4 flex justify-center">
+                            <button class="btn-primary" type="button" id="uploadBtn">⬆ Upload File</button>
+                        </div>
+                        <div id="uploadStatus" class="mt-2 text-sm text-gray-600"></div>
+                    </div>
+                </div>
+
+                <div class="doc-history mt-8">
+                    <div class="modern-card">
+                        <div class="flex justify-between items-center gap-3 mb-4 flex-wrap">
+                            <div>
+                                <h3 class="text-lg font-semibold text-navy">Document History</h3>
+                                <p class="text-sm text-gray-500">Recently uploaded and processed files</p>
+                            </div>
+                            <div class="doc-history-controls flex gap-2 flex-wrap">
+                                <input id="docSearch" type="text" class="form-input search-box" placeholder="🔍 Search documents..." />
+                                <button id="clearHistoryBtn" class="modern-btn modern-btn-secondary" type="button">Clear</button>
+                            </div>
+                        </div>
+
+                        <div id="docList" class="doc-grid grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                            <div class="doc-card">
+                                <div class="doc-card-header">
+                                    <span class="doc-badge pdf">PDF</span>
+                                    <button class="doc-menu" type="button">⋮</button>
+                                </div>
+                                <h4 class="doc-title">Sample_File.pdf</h4>
+                                <p class="doc-meta">275 KB • Sep 30, 2025</p>
+                                <div class="doc-preview">Preview</div>
+                                <div class="doc-actions">
+                                    <button class="modern-btn modern-btn-primary" type="button">Open</button>
+                                    <button class="modern-btn modern-btn-secondary" type="button">Copy Link</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ===================== PUSH TO EXAM ===================== -->
             <section id="panel-push" class="route" data-route="push">
                 <div class="card">
-                    <h2 class="panel-title">PUSH to Exam</h2>
-                    <p class="panel-subtitle">Convert the selected or uploaded document into a JSON payload.</p>
+                    <div class="card-head">
+                        <div>
+                            <h2 class="panel-title">Push to Exam</h2>
+                            <p class="panel-subtitle">Convert the selected or uploaded document into a JSON payload.</p>
+                        </div>
+                    </div>
+
                     <div class="grid-cols responsive-2">
                         <div>
                             <label class="form-label">Active Document</label>
                             <select id="activeDocSelect" class="form-input"></select>
                         </div>
                         <div class="flex items-end">
-                            <button id="pushToExamBtn" class="btn-primary w-full accent-hover">PUSH to Exam</button>
+                            <button id="pushToExamBtn" class="btn-primary w-full accent-hover" type="button">PUSH to Exam</button>
                         </div>
                     </div>
 
                     <div id="jsonPreviewWrap" class="json-preview hidden mt-4">
-                        <div class="flex items-center justify-between mb-2">
+                        <div class="flex items-center justify-between mb-2 gap-2 flex-wrap">
                             <h4 class="text-navy font-semibold">Generated JSON</h4>
-                            <div class="flex gap-2">
-                                <button id="copyJsonBtn" class="btn-secondary">Copy</button>
-                                <button id="downloadJsonBtn" class="btn-secondary">Download JSON</button>
+                            <div class="flex gap-2 flex-wrap">
+                                <button id="copyJsonBtn" class="btn-secondary" type="button">Copy</button>
+                                <button id="downloadJsonBtn" class="btn-secondary" type="button">Download JSON</button>
                             </div>
                         </div>
                         <textarea id="jsonPreview" class="code-area" rows="10" readonly></textarea>
@@ -434,103 +661,115 @@
                 </div>
             </section>
 
-            <!-- GENERATE LINK -->
+            <!-- ===================== GENERATE LINK ===================== -->
             <section id="panel-link" class="route" data-route="link">
                 <div class="card">
-                    <h2 class="panel-title">Generate Candidate Link</h2>
+                    <div class="card-head">
+                        <div>
+                            <h2 class="panel-title">Generate Candidate Link</h2>
+                            <p class="panel-subtitle">Create and manage candidate access links quickly</p>
+                        </div>
+                    </div>
+
                     <div class="grid grid-cols-1 gap-3">
                         <div>
                             <label class="form-label">Candidate Login Link</label>
-                            <div class="flex gap-2">
+                            <div class="flex gap-2 flex-wrap">
                                 <input id="candidateLink" type="text" class="form-input flex-1" placeholder="No link generated" />
-                                <button id="generateLinkBtn" class="btn-primary">Generate</button>
-                                <button id="copyLinkBtn" class="btn-secondary">Copy</button>
-                                <button id="openLinkBtn" class="btn-secondary" data-action="open-candidate-login">Open</button>
+                                <button id="generateLinkBtn" class="btn-primary" type="button">Generate</button>
+                                <button id="copyLinkBtn" class="btn-secondary" type="button">Copy</button>
+                                <button id="openLinkBtn" class="btn-secondary" data-action="open-candidate-login" type="button">Open</button>
                             </div>
                         </div>
-                        <div class="flex gap-2">
-                            <button id="autoLinkBtn" class="btn-secondary">Auto-generate &amp; Save</button>
-                            <button id="regenLinkBtn" class="btn-secondary">Regenerate</button>
+
+                        <div class="flex gap-2 flex-wrap">
+                            <button id="autoLinkBtn" class="btn-secondary" type="button">Auto-generate &amp; Save</button>
+                            <button id="regenLinkBtn" class="btn-secondary" type="button">Regenerate</button>
                         </div>
                     </div>
                 </div>
             </section>
 
-           <!-- GENERATE CREDENTIALS -->
-<section id="panel-credentials" class="route" data-route="credentials">
-  <div class="card cred-panel">
-    <h2 class="panel-title">🔑 Generate Credentials</h2>
+            <!-- ===================== GENERATE CREDENTIALS ===================== -->
+            <section id="panel-credentials" class="route" data-route="credentials">
+                <div class="card cred-panel">
+                    <div class="card-head">
+                        <div>
+                            <h2 class="panel-title">🔑 Generate Credentials</h2>
+                            <p class="panel-subtitle">Create secure candidate usernames and passwords with a cleaner workflow.</p>
+                        </div>
+                    </div>
 
-    <form id="credentialForm" class="space-y-4">
+                    <form id="credentialForm" class="space-y-4" onsubmit="return false;">
+                        <div class="grid-cols responsive-3 form-grid">
+                            <div class="form-card">
+                                <label class="form-label">Number of Students</label>
+                                <input id="studentCount" type="number" class="form-input" min="1" value="1" />
+                            </div>
+                            <div class="form-card">
+                                <label class="form-label">Username Prefix</label>
+                                <input id="usernamePrefix" type="text" class="form-input" value="candidate" />
+                            </div>
+                            <div class="form-card">
+                                <label class="form-label">Password Length</label>
+                                <input id="passwordLength" type="number" class="form-input" min="6" max="20" value="8" />
+                            </div>
+                        </div>
 
-      <!-- Input fields -->
-      <div class="grid-cols responsive-3 form-grid">
-        <div class="form-card">
-          <label class="form-label">Number of Students</label>
-          <input id="studentCount" type="number" class="form-input" min="1" value="10" />
-        </div>
-        <div class="form-card">
-          <label class="form-label">Username Prefix</label>
-          <input id="usernamePrefix" type="text" class="form-input" value="candidate" />
-        </div>
-        <div class="form-card">
-          <label class="form-label">Password Length</label>
-          <input id="passwordLength" type="number" class="form-input" min="6" max="20" value="8" />
-        </div>
-      </div>
+                        <div class="flex flex-wrap gap-2">
+                            <button type="button" class="preset-btn" data-count="1">1</button>
+                            <button type="button" class="preset-btn" data-count="2">2</button>
+                            <button type="button" class="preset-btn" data-count="3">3</button>
+                            <button type="button" class="preset-btn" data-count="4">4</button>
+                            <button type="button" class="preset-btn" data-count="5">5</button>
+                        </div>
 
-      <!-- Presets -->
-      <div class="flex flex-wrap gap-2">
-        <button type="button" class="preset-btn" data-preset="small">Preset: 10</button>
-        <button type="button" class="preset-btn" data-preset="medium">Preset: 50</button>
-        <button type="button" class="preset-btn" data-preset="large">Preset: 100</button>
-      </div>
+                        <div class="flex gap-2 flex-wrap">
+                            <button id="panelGenerateCredsBtn" type="button" class="modern-btn primary">Generate</button>
+                            <button id="panelGenerateCredsLinkBtn" type="button" class="modern-btn secondary">Generate + Link</button>
+                            <button id="panelClearCredsBtn" type="button" class="modern-btn secondary">Clear</button>
+                            <button id="panelDownloadCredsBtn" type="button" class="modern-btn secondary">Download</button>
+                            <button id="panelPrintCredsBtn" type="button" class="modern-btn secondary">Print</button>
+                        </div>
 
-      <!-- Action buttons -->
-      <div class="flex gap-2 flex-wrap">
-        <button id="autoCredsBtn" type="button" class="modern-btn primary">Generate</button>
-        <button id="generateAllBtn" type="button" class="modern-btn secondary">Generate + Link</button>
-        <button id="clearCredsBtn" type="button" class="modern-btn secondary">Clear</button>
-        <button id="downloadCredsBtn" type="button" class="modern-btn secondary">Download</button>
-        <button id="printCredsBtn" type="button" class="modern-btn secondary">Print</button>
-      </div>
+                        <div id="bulkBar" class="hidden bulk-bar">
+                            <div class="text-sm text-navy"><span id="bulkCount">0</span> selected</div>
+                            <div class="flex gap-2 flex-wrap">
+                                <button type="button" class="modern-btn secondary" id="bulkCopy">Copy</button>
+                                <button type="button" class="modern-btn secondary" id="bulkDelete">Delete</button>
+                                <button type="button" class="modern-btn secondary" id="bulkExport">Export</button>
+                            </div>
+                        </div>
 
-      <!-- Bulk bar -->
-      <div id="bulkBar" class="hidden bulk-bar">
-        <div class="text-sm text-navy"><span id="bulkCount">0</span> selected</div>
-        <div class="flex gap-2">
-          <button type="button" class="modern-btn secondary" id="bulkCopy">Copy</button>
-          <button type="button" class="modern-btn secondary" id="bulkDelete">Delete</button>
-          <button type="button" class="modern-btn secondary" id="bulkExport">Export</button>
-        </div>
-      </div>
+                        <div class="mt-4">
+                            <div class="flex items-center justify-between gap-2 mb-2 flex-wrap">
+                                <div>Total Students: <span id="totalStudents">0</span></div>
+                                <input id="searchCredentials" class="form-input w-48" placeholder="Search usernames..." />
+                            </div>
+                            <div id="credentialsSection" class="hidden overflow-auto max-h-72 creds-table-wrap">
+                                <table id="credentialsTable" class="w-full table-auto text-sm modern-table"></table>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </section>
 
-      <!-- Results -->
-      <div class="mt-4">
-        <div class="flex items-center justify-between mb-2">
-          <div>Total Students: <span id="totalStudents">0</span></div>
-          <input id="searchCredentials" class="form-input w-48" placeholder="Search usernames..." />
-        </div>
-        <div id="credentialsSection" class="hidden overflow-auto max-h-72 creds-table-wrap">
-          <table id="credentialsTable" class="w-full table-auto text-sm modern-table"></table>
-        </div>
-      </div>
-    </form>
-  </div>
-</section>
-
-
-            <!-- MANAGE CREDENTIALS -->
+            <!-- ===================== MANAGE CREDENTIALS ===================== -->
             <section id="panel-manage" class="route" data-route="manage">
                 <div class="card">
-                    <h2 class="panel-title">Manage Credentials</h2>
-                    <p class="text-sm text-gray-600">You can download, print or clear stored credentials.</p>
+                    <div class="card-head">
+                        <div>
+                            <h2 class="panel-title">Manage Credentials</h2>
+                            <p class="panel-subtitle">Download, review or clear stored credentials.</p>
+                        </div>
+                    </div>
+
                     <div class="mt-3">
-                        <div class="flex items-center justify-between mb-2">
+                        <div class="flex items-center justify-between mb-2 gap-2 flex-wrap">
                             <div>Stored credentials: <span id="totalStudentsC">0</span></div>
-                            <div class="flex gap-2">
-                                <button id="downloadCredsBtnC" class="btn-secondary">Download</button>
-                                <button id="clearCredsBtnC" class="btn-secondary">Clear</button>
+                            <div class="flex gap-2 flex-wrap">
+                                <button id="manageDownloadCredsBtn" class="btn-secondary" type="button">Download</button>
+                                <button id="manageClearCredsBtn" class="btn-secondary" type="button">Clear</button>
                             </div>
                         </div>
                         <div id="credentialsSectionC" class="hidden overflow-auto max-h-72">
@@ -540,55 +779,178 @@
                 </div>
             </section>
 
-            <!-- RESULTS -->
-            <section id="panel-results" class="route" data-route="results">
-                <div class="card">
-                    <h2 class="panel-title">Results</h2>
-                    <div class="flex items-center justify-between mb-2">
-                        <input id="searchResults" class="form-input w-48" placeholder="Search results name..." />
-                        <div class="flex gap-2">
-                            <button id="downloadResultsBtn" class="btn-secondary">Download</button>
-                            <button id="printResultsBtn" class="btn-secondary">Print</button>
-                        </div>
-                    </div>
-                    <div class="overflow-auto max-h-64">
-                        <table id="resultsTable" class="w-full table-auto text-sm"></table>
-                    </div>
-                </div>
-            </section>
+            <!-- ===================== RESULTS ===================== -->
+ <!-- ===================== RESULTS ===================== -->
+<section id="panel-results" class="route" data-route="results">
+    <div class="card advanced-results-card">
+        <div class="card-head">
+            <div>
+                <h2 class="panel-title">Results Control Center</h2>
+                <p class="panel-subtitle">Search, filter, sort, preview, print, export and send candidate results.</p>
+            </div>
+            <div class="flex gap-2 flex-wrap">
+                <button id="panelRefreshResultsBtn" class="btn-secondary" type="button">Refresh</button>
+                <button id="panelCompactToggleBtn" class="btn-secondary" type="button">Compact View</button>
+                <button id="panelOpenResultsModalBtn" class="btn-secondary" type="button">Open Modal</button>
+            </div>
+        </div>
 
-            <!-- CANDIDATES (placeholder for future) -->
+        <!-- Summary strip -->
+        <div id="resultsSummaryCards" class="results-summary-grid"></div>
+
+        <!-- Filters / actions -->
+        <div class="results-toolbar">
+            <div class="results-toolbar-row">
+                <input id="panelSearchResults" class="form-input results-search" placeholder="Search name, username, email, subject..." />
+
+                <select id="resultsSubjectFilter" class="form-input">
+                    <option value="">All Subjects</option>
+                </select>
+
+                <select id="resultsStatusFilter" class="form-input">
+                    <option value="">All Status</option>
+                    <option value="completed">Completed</option>
+                    <option value="timeout">Timeout</option>
+                    <option value="disqualified">Disqualified</option>
+                </select>
+
+                <select id="resultsScoreFilter" class="form-input">
+                    <option value="">All Scores</option>
+                    <option value="90-100">90 - 100</option>
+                    <option value="70-89">70 - 89</option>
+                    <option value="50-69">50 - 69</option>
+                    <option value="0-49">0 - 49</option>
+                </select>
+
+                <select id="resultsSortBy" class="form-input">
+                    <option value="submitted_desc">Latest First</option>
+                    <option value="submitted_asc">Oldest First</option>
+                    <option value="score_desc">Highest Score</option>
+                    <option value="score_asc">Lowest Score</option>
+                    <option value="name_asc">Name A - Z</option>
+                    <option value="subject_asc">Subject A - Z</option>
+                </select>
+
+                <select id="resultsPageSize" class="form-input">
+                    <option value="10">10 rows</option>
+                    <option value="20" selected>20 rows</option>
+                    <option value="50">50 rows</option>
+                    <option value="100">100 rows</option>
+                </select>
+            </div>
+
+            <div class="results-toolbar-row">
+                <button id="panelDownloadResultsBtn" class="btn-secondary" type="button">Download CSV</button>
+                <button id="panelDownloadSelectedResultsBtn" class="btn-secondary" type="button">Download Selected</button>
+                <button id="panelPrintResultsBtn" class="btn-secondary" type="button">Print All</button>
+                <button id="panelPrintSelectedResultsBtn" class="btn-secondary" type="button">Print Selected</button>
+                <button id="panelSendSelectedToEdaBtn" class="btn-primary" type="button">Send Selected to EDA</button>
+                <button id="panelResetResultsFiltersBtn" class="btn-clear" type="button">Reset Filters</button>
+            </div>
+        </div>
+
+        <!-- Bulk bar -->
+        <div id="resultsBulkBar" class="bulk-bar hidden">
+            <div class="text-sm text-navy">
+                <span id="resultsBulkCount">0</span> result(s) selected
+            </div>
+            <div class="flex gap-2 flex-wrap">
+                <button id="resultsBulkSelectAllVisibleBtn" type="button" class="modern-btn secondary">Select Visible</button>
+                <button id="resultsBulkClearBtn" type="button" class="modern-btn secondary">Clear Selection</button>
+                <button id="resultsBulkExportBtn" type="button" class="modern-btn secondary">Export Selected</button>
+                <button id="resultsBulkPrintBtn" type="button" class="modern-btn secondary">Print Selected</button>
+                <button id="resultsBulkSendBtn" type="button" class="modern-btn primary">Send to EDA</button>
+            </div>
+        </div>
+
+        <!-- Table area -->
+        <div class="overflow-auto max-h-[70vh] results-table-wrap">
+            <table id="resultsTable" class="w-full table-auto text-sm modern-table results-modern-table"></table>
+        </div>
+
+        <!-- Footer / pagination -->
+        <div class="results-footer-bar">
+            <div id="resultsMetaText" class="text-sm text-slate-500">0 results</div>
+            <div class="flex gap-2 items-center flex-wrap">
+                <button id="resultsPrevPageBtn" class="btn-secondary" type="button">Prev</button>
+                <span id="resultsPageLabel" class="text-sm font-semibold text-navy">Page 1</span>
+                <button id="resultsNextPageBtn" class="btn-secondary" type="button">Next</button>
+            </div>
+        </div>
+    </div>
+</section>
+
+            <!-- ===================== CANDIDATES ===================== -->
             <section id="panel-candidates" class="route" data-route="candidates">
                 <div class="card">
-                    <h2 class="panel-title">Candidates</h2>
-                    <p class="muted">Search, filter and manage candidate records (upcoming module).</p>
+                    <div class="card-head">
+                        <div>
+                            <h2 class="panel-title">Candidates</h2>
+                            <p class="panel-subtitle">Search, filter and manage candidate records.</p>
+                        </div>
+                    </div>
+
+                    <div class="empty-state">
+                        <div class="empty-state-icon"><i class="fas fa-user-group"></i></div>
+                        <p class="muted">Search, filter and manage candidate records (upcoming module).</p>
+                    </div>
                 </div>
             </section>
 
-            <!-- NOTIFICATIONS -->
+            <!-- ===================== NOTIFICATIONS ===================== -->
             <section id="panel-notifications" class="route" data-route="notifications">
                 <div class="card">
-                    <h2 class="panel-title">Notifications</h2>
-                    <div id="notificationsPanelFull" class="list-auto">
+                    <div class="card-head">
+                        <div>
+                            <h2 class="panel-title">Notifications Center</h2>
+                            <p class="panel-subtitle">System alerts, file notices, exam activity and updates.</p>
+                        </div>
+                        <div class="flex gap-2 flex-wrap">
+                            <button class="btn-secondary" type="button">Mark all read</button>
+                            <button class="btn-secondary" type="button">Clear feed</button>
+                        </div>
+                    </div>
+
+                    <div class="notification-toolbar mb-4">
+                        <button class="mini-chip active" type="button">All</button>
+                        <button class="mini-chip" type="button">Unread</button>
+                        <button class="mini-chip" type="button">System</button>
+                        <button class="mini-chip" type="button">Exam</button>
+                        <button class="mini-chip" type="button">Uploads</button>
+                    </div>
+
+                    <div id="notificationsPanelFull" class="list-auto modern-list">
                         <p class="muted">No notifications yet</p>
                     </div>
                 </div>
             </section>
 
-            <!-- ACTIVITY -->
+            <!-- ===================== ACTIVITY ===================== -->
             <section id="panel-activity" class="route" data-route="activity">
                 <div class="card">
-                    <h2 class="panel-title">Recent Activity</h2>
+                    <div class="card-head">
+                        <div>
+                            <h2 class="panel-title">Recent Activity</h2>
+                            <p class="panel-subtitle">Track admin actions and workflow history.</p>
+                        </div>
+                    </div>
+
                     <div id="recentActivityFull" class="timeline">
                         <p class="muted">No activity logged</p>
                     </div>
                 </div>
             </section>
 
-            <!-- STATUS -->
+            <!-- ===================== STATUS ===================== -->
             <section id="panel-status" class="route" data-route="status">
                 <div class="card">
-                    <h2 class="panel-title">System Status</h2>
+                    <div class="card-head">
+                        <div>
+                            <h2 class="panel-title">System Status</h2>
+                            <p class="panel-subtitle">Essential infrastructure overview.</p>
+                        </div>
+                    </div>
+
                     <ul class="status-grid">
                         <li><span>Database</span><span class="badge-success">Online</span></li>
                         <li><span>Exam Server</span><span class="badge-success">Running</span></li>
@@ -597,34 +959,44 @@
                 </div>
             </section>
 
-            <!-- QUICK TOOLS -->
+            <!-- ===================== QUICK TOOLS ===================== -->
             <section id="panel-tools" class="route" data-route="tools">
                 <div class="card">
-                    <h2 class="panel-title">Quick Tools</h2>
-                    <div class="actions-row">
-                        <button class="btn-secondary" data-action="notify-director">Notify Director</button>
-                        <button class="btn-secondary" data-action="send-admit-mails">Send Admit Emails</button>
-                        <button class="btn-secondary" data-action="send-reject-mails">Send Reject Emails</button>
-                        <button class="btn-secondary" data-action="open-candidate-login">Open Candidate Login</button>
+                    <div class="card-head">
+                        <div>
+                            <h2 class="panel-title">Quick Tools</h2>
+                            <p class="panel-subtitle">Fast shortcuts for common admin tasks.</p>
+                        </div>
+                    </div>
+
+                    <div class="actions-row flex flex-wrap gap-3">
+                        <button class="btn-secondary" data-action="notify-director" type="button">Notify Director</button>
+                        <button class="btn-secondary" data-action="send-admit-mails" type="button">Send Admit Emails</button>
+                        <button class="btn-secondary" data-action="send-reject-mails" type="button">Send Reject Emails</button>
+                        <button class="btn-secondary" data-action="open-candidate-login" type="button">Open Candidate Login</button>
                     </div>
                 </div>
             </section>
 
-            <!-- SETTINGS -->
+            <!-- ===================== SETTINGS ===================== -->
             <section id="panel-settings" class="route" data-route="settings">
                 <div class="card">
-                    <h2 class="panel-title">Settings</h2>
+                    <div class="card-head">
+                        <div>
+                            <h2 class="panel-title">Settings</h2>
+                            <p class="panel-subtitle">Personalize your dashboard and notification preferences.</p>
+                        </div>
+                    </div>
+
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <!-- Theme Switch -->
                         <div class="pref">
                             <label class="form-label">Theme</label>
-                            <div class="flex gap-2">
-                                <button class="btn-secondary" data-theme="light">Light</button>
-                                <button class="btn-secondary" data-theme="dark">Dark</button>
+                            <div class="flex gap-2 flex-wrap">
+                                <button class="btn-secondary" data-theme="light" type="button">Light</button>
+                                <button class="btn-secondary" data-theme="dark" type="button">Dark</button>
                             </div>
                         </div>
 
-                        <!-- Notification Preferences -->
                         <div class="pref">
                             <label class="form-label">Notifications</label>
                             <div class="flex flex-col gap-2">
@@ -636,19 +1008,21 @@
                                     <input type="checkbox" class="form-checkbox" />
                                     SMS Alerts
                                 </label>
+                                <label class="inline-flex items-center gap-2">
+                                    <input type="checkbox" class="form-checkbox" checked />
+                                    In-app Notifications
+                                </label>
                             </div>
                         </div>
 
-                        <!-- Account Management -->
                         <div class="pref">
                             <label class="form-label">Account</label>
-                            <div class="flex gap-2">
-                                <button class="btn-secondary">Change Password</button>
-                                <button class="btn-danger">Deactivate</button>
+                            <div class="flex gap-2 flex-wrap">
+                                <button class="btn-secondary" type="button">Change Password</button>
+                                <button class="btn-danger" type="button">Deactivate</button>
                             </div>
                         </div>
 
-                        <!-- Language -->
                         <div class="pref">
                             <label class="form-label">Language</label>
                             <select class="form-input">
@@ -661,84 +1035,98 @@
                 </div>
             </section>
 
+            <!-- ===================== HELP ===================== -->
+            <section id="panel-help" class="route" data-route="help">
+                <div class="card">
+                    <div class="card-head">
+                        <div>
+                            <h2 class="panel-title">Help & Support</h2>
+                            <p class="panel-subtitle">Need guidance with exams, uploads or candidate access?</p>
+                        </div>
+                    </div>
 
-        </div><!-- End of .route-container -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="info-tile">
+                            <i class="fas fa-book-open"></i>
+                            <h4>User Guide</h4>
+                            <p>Read platform usage tips and workflow steps.</p>
+                        </div>
+                        <div class="info-tile">
+                            <i class="fas fa-headset"></i>
+                            <h4>Support</h4>
+                            <p>Contact the portal administrator for urgent help.</p>
+                        </div>
+                        <div class="info-tile">
+                            <i class="fas fa-shield-halved"></i>
+                            <h4>Security Tips</h4>
+                            <p>Protect credentials and candidate exam access.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
 
-<!-- Credential Modal -->
-<div id="cred-modal" class="cred-overlay hidden fixed inset-0 z-50 flex items-center justify-center p-4">
-  <div class="cred-container bg-white/90 backdrop-blur-md rounded-2xl shadow-2xl w-full max-w-lg p-6 relative animate-fadeIn">
+        </div>
 
-    <!-- Close button -->
-    <button id="closeCredModal"
-      class="absolute top-3 right-3 w-9 h-9 flex items-center justify-center rounded-full bg-gray-100 text-gray-500 hover:bg-red-500 hover:text-white transition duration-300 shadow-sm">
-      ✕
-    </button>
+        <!-- Credential Modal -->
+        <div id="cred-modal" class="cred-overlay hidden fixed inset-0 z-[120] flex items-center justify-center p-4">
+            <div class="cred-container bg-white/90 backdrop-blur-md rounded-2xl shadow-2xl w-full max-w-lg p-6 relative animate-fadeIn">
 
-    <!-- Header -->
-    <div class="text-center mb-6">
-      <h3 class="text-2xl font-semibold text-navy bg-gradient-to-r from-blue-700 to-indigo-600 text-transparent bg-clip-text">
-        Generate Credentials
-      </h3>
-      <p class="text-sm text-gray-600 mt-1">Quickly create secure candidate login credentials.</p>
-    </div>
+                <button id="closeCredModal" type="button"
+                    class="absolute top-3 right-3 w-9 h-9 flex items-center justify-center rounded-full bg-gray-100 text-gray-500 hover:bg-red-500 hover:text-white transition duration-300 shadow-sm">
+                    ✕
+                </button>
 
-    <!-- Quick buttons -->
-    <div class="grid grid-cols-3 gap-3 mb-5">
-      <button class="quick-gen-btn">1</button>
-      <button class="quick-gen-btn">2</button>
-      <button class="quick-gen-btn">3</button>
-    </div>
+                <div class="text-center mb-6">
+                    <h3 class="text-2xl font-semibold text-navy bg-gradient-to-r from-blue-700 to-indigo-600 text-transparent bg-clip-text">
+                        Generate Credentials
+                    </h3>
+                    <p class="text-sm text-gray-600 mt-1">Quickly create secure candidate login credentials.</p>
+                </div>
 
-    <!-- Divider -->
-    <div class="divider mb-4">
-      <span>or</span>
-    </div>
+                <div class="grid grid-cols-5 gap-2 mb-5">
+                    <button type="button" class="quick-gen-btn" data-count="1">1</button>
+                    <button type="button" class="quick-gen-btn" data-count="2">2</button>
+                    <button type="button" class="quick-gen-btn" data-count="3">3</button>
+                    <button type="button" class="quick-gen-btn" data-count="4">4</button>
+                    <button type="button" class="quick-gen-btn" data-count="5">5</button>
+                </div>
 
-    <!-- Custom count -->
-    <div class="mb-4">
-      <label class="block text-sm font-medium text-gray-700 mb-1">Generate multiple credentials</label>
-      <input id="credCount" type="number" min="4" max="50" value="4"
-             class="cred-input" />
-    </div>
+                <div class="divider mb-4">
+                    <span>or</span>
+                </div>
 
-    <!-- Buttons -->
-    <div class="flex justify-between items-center mb-4">
-      <button id="downloadCSVBtn" class="btn-csv hidden">⬇ Save CSV</button>
-      <button id="generateNowBtn" class="btn-generate">⚙️ Generate</button>
-    </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Generate any number of credentials</label>
+                    <input id="credCount" type="number" min="1" value="1" class="cred-input" />
+                </div>
 
-    <!-- Info -->
-    <div id="credInstruction"
-         class="text-sm text-red-600 font-medium animate-pulse hidden mb-2 text-center">
-      ⚠️ Handle carefully! These are candidate login credentials.
-    </div>
+                <div class="flex justify-between items-center mb-4 gap-2 flex-wrap">
+                    <button id="downloadCSVBtn" type="button" class="btn-csv hidden">⬇ Save CSV</button>
+                    <button id="generateNowBtn" type="button" class="btn-generate">⚙️ Generate</button>
+                </div>
 
-    <!-- Results -->
-    <div id="credResults" class="space-y-4 mt-4 max-h-[300px] overflow-y-auto pr-1"></div>
+                <div id="credInstruction" class="text-sm text-red-600 font-medium animate-pulse hidden mb-2 text-center">
+                    ⚠️ Handle carefully! These are candidate login credentials.
+                </div>
 
-    <!-- Footer -->
-    <div id="credSummary" class="text-center text-xs text-gray-500 mt-3 hidden"></div>
-  </div>
+                <div id="credResults" class="space-y-4 mt-4 max-h-[300px] overflow-y-auto pr-1"></div>
+                <div id="credSummary" class="text-center text-xs text-gray-500 mt-3 hidden"></div>
+            </div>
+        </div>
+
+    </section>
 </div>
-
-
-    </section><!-- End of .content-area -->
-</div><!-- End of .admin-layout -->
-
-
 {% endblock %}
 
 {% block scripts %}
-<!-- ______________________ SCRIPTS ______________________ -->
 <script>
-  // Inject dynamic Flask URL for candidate login
-  window.USER_LOGIN_URL = "{{ url_for('user_login') }}";
+    window.USER_LOGIN_URL = "{{ url_for('user_login') }}";
 </script>
 
 <script src="{{ url_for('static', filename='js/admin1.js') }}"></script>
 <script src="{{ url_for('static', filename='js/admin2.js') }}"></script>
 <script src="{{ url_for('static', filename='js/admin-routes.js') }}"></script>
-<script src="{{ url_for('static', filename='js/admin_exam_collapse.js') }}"></script>
+<!-- <script src="{{ url_for('static', filename='js/admin_exam_collapse.js') }}"></script> -->
 <script src="{{ url_for('static', filename='js/search_hist.js') }}"></script>
 <script src="{{ url_for('static', filename='js/user_credentials.js') }}"></script>
 <script src="{{ url_for('static', filename='js/doc_upload.js') }}"></script>
