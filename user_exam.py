@@ -136,20 +136,54 @@ def get_exam_results(limit=100):
     ]
 
 
-def delete_result(username):
-    """Delete all exam results for a given username from the database and CSV logs."""
+def delete_result(username, subject=None, submitted_at=None, email=None):
+    """Delete one specific exam result from the database and CSV logs."""
     init_db()
+
+    username = (username or "").strip()
+    subject = (subject or "").strip()
+    submitted_at = (submitted_at or "").strip()
+    email = (email or "").strip()
+
+    if not username:
+        return False
+
+    # -------------------------
+    # Delete from SQLite DB
+    # -------------------------
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
 
-    cursor.execute("DELETE FROM exam_results WHERE username = ?", (username,))
+    query = "DELETE FROM exam_results WHERE username = ?"
+    params = [username]
+
+    if subject:
+        query += " AND subject = ?"
+        params.append(subject)
+
+    if submitted_at:
+        query += " AND submitted_at = ?"
+        params.append(submitted_at)
+
+    if email:
+        query += " AND email = ?"
+        params.append(email)
+
+    cursor.execute(query, tuple(params))
     deleted_count = cursor.rowcount
     conn.commit()
     conn.close()
 
+    # -------------------------
+    # Delete matching row(s) from CSV logs
+    # -------------------------
+    csv_deleted = 0
+
     for file in LOGS_DIR.glob("exam_results_*.csv"):
         try:
             kept_rows = []
+            file_deleted = 0
+
             fieldnames = [
                 "username", "fullname", "email", "subject",
                 "score", "correct", "total", "answered",
@@ -158,21 +192,44 @@ def delete_result(username):
 
             with open(file, "r", encoding="utf-8") as f:
                 reader = csv.DictReader(f)
+
                 if reader.fieldnames:
                     fieldnames = reader.fieldnames
+
                 for row in reader:
-                    if row.get("username") != username:
+                    row_username = (row.get("username") or "").strip()
+                    row_subject = (row.get("subject") or "").strip()
+                    row_submitted_at = (row.get("submitted_at") or "").strip()
+                    row_email = (row.get("email") or "").strip()
+
+                    matches = row_username == username
+
+                    if matches and subject:
+                        matches = row_subject == subject
+
+                    if matches and submitted_at:
+                        matches = row_submitted_at == submitted_at
+
+                    if matches and email:
+                        matches = row_email == email
+
+                    if matches:
+                        file_deleted += 1
+                    else:
                         kept_rows.append(row)
 
-            with open(file, "w", newline="", encoding="utf-8") as f:
-                writer = csv.DictWriter(f, fieldnames=fieldnames)
-                writer.writeheader()
-                writer.writerows(kept_rows)
+            if file_deleted > 0:
+                with open(file, "w", newline="", encoding="utf-8") as f:
+                    writer = csv.DictWriter(f, fieldnames=fieldnames)
+                    writer.writeheader()
+                    writer.writerows(kept_rows)
+
+            csv_deleted += file_deleted
 
         except Exception as e:
             print(f"⚠️ Error cleaning CSV {file}: {e}")
 
-    return deleted_count > 0
+    return (deleted_count > 0) or (csv_deleted > 0)
 
 
 def get_user_latest_result(username):

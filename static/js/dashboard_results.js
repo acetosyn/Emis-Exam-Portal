@@ -1,5 +1,5 @@
 /* ===========================================================
-   dashboard_results.js — EMIS Admin v5 Advanced Results Suite
+   dashboard_results.js — EMIS Admin v6 Advanced Results Suite
    Features:
    - rich results table
    - live search / subject / status / score filters
@@ -8,7 +8,8 @@
    - compact mode
    - summary cards
    - row selection + bulk actions
-   - per-row view / print / csv / copy email / send to EDA / delete(ui)
+   - per-row view / print / csv / copy email / send to EDA / delete(db)
+   - bulk delete selected
    - dashboard wrappers + modals still work
 =========================================================== */
 
@@ -45,6 +46,7 @@
     const panelPrintResultsBtn = document.getElementById("panelPrintResultsBtn");
     const panelPrintSelectedResultsBtn = document.getElementById("panelPrintSelectedResultsBtn");
     const panelSendSelectedToEdaBtn = document.getElementById("panelSendSelectedToEdaBtn");
+    const panelDeleteSelectedResultsBtn = document.getElementById("panelDeleteSelectedResultsBtn");
     const panelResetResultsFiltersBtn = document.getElementById("panelResetResultsFiltersBtn");
 
     const resultsSubjectFilter = document.getElementById("resultsSubjectFilter");
@@ -60,6 +62,7 @@
     const resultsBulkExportBtn = document.getElementById("resultsBulkExportBtn");
     const resultsBulkPrintBtn = document.getElementById("resultsBulkPrintBtn");
     const resultsBulkSendBtn = document.getElementById("resultsBulkSendBtn");
+    const resultsBulkDeleteBtn = document.getElementById("resultsBulkDeleteBtn");
 
     const resultsSummaryCards = document.getElementById("resultsSummaryCards");
     const resultsMetaText = document.getElementById("resultsMetaText");
@@ -107,7 +110,9 @@
       t.className = `toast toast-${type}`;
       t.textContent = msg;
       document.body.appendChild(t);
+
       requestAnimationFrame(() => t.classList.add("visible"));
+
       setTimeout(() => {
         t.classList.remove("visible");
         setTimeout(() => t.remove(), 300);
@@ -141,7 +146,9 @@
       let html = "<table class='modern-table w-full'><tbody>";
       for (let i = 0; i < rows; i++) {
         html += "<tr>";
-        for (let j = 0; j < cols; j++) html += "<td><div class='skeleton'></div></td>";
+        for (let j = 0; j < cols; j++) {
+          html += "<td><div class='skeleton'></div></td>";
+        }
         html += "</tr>";
       }
       html += "</tbody></table>";
@@ -150,10 +157,10 @@
 
     function getResultKey(r) {
       return [
-        r.username || "",
-        r.subject || "",
-        r.submitted_at || "",
-        r.email || ""
+        r?.username || "",
+        r?.subject || "",
+        r?.submitted_at || "",
+        r?.email || ""
       ].join("|");
     }
 
@@ -380,6 +387,7 @@
         "username", "fullname", "email", "subject", "score",
         "correct", "total", "answered", "time_taken", "status", "submitted_at"
       ];
+
       const lines = [
         cols.join(","),
         ...rows.map((r) =>
@@ -388,6 +396,7 @@
             .join(",")
         )
       ];
+
       return lines.join("\n");
     }
 
@@ -396,6 +405,7 @@
         showToast("No results to export", "error");
         return;
       }
+
       downloadBlob(filename, resultsToCSV(rows), "text/csv;charset=utf-8");
       showToast(`${filename} exported`, "success");
     }
@@ -463,25 +473,42 @@
           </body>
         </html>
       `);
+
       printWin.document.close();
       printWin.focus();
       setTimeout(() => printWin.print(), 300);
     }
 
-    function enableSearch(input, container) {
-      if (!input || !container) return;
+    function enableSearch(input) {
+      if (!input) return;
       input.addEventListener("input", () => applyResultFilters());
     }
 
     function enableSort(container) {
       if (!container) return;
+
       container.querySelectorAll("th.sortable-head").forEach((th) => {
         th.addEventListener("click", () => {
           const mode = th.dataset.sortMode || "submitted_desc";
-          resultsSortBy.value = mode;
+          if (resultsSortBy) resultsSortBy.value = mode;
+          currentPage = 1;
           applyResultFilters();
         });
       });
+    }
+
+    function syncResultsViews() {
+      if (resultsWrapper) {
+        resultsWrapper.innerHTML = renderResultsTable(latestResults);
+        const wrapperSearch = resultsWrapper.querySelector("#searchResultsDynamic");
+        enableSearch(wrapperSearch);
+      }
+
+      if (resultsModalBody && resultsModal && !resultsModal.classList.contains("hidden")) {
+        resultsModalBody.innerHTML = renderResultsTable(latestResults);
+        const modalSearch = resultsModalBody.querySelector("#searchResultsDynamic");
+        enableSearch(modalSearch);
+      }
     }
 
     // --------------------------------------------------
@@ -524,10 +551,14 @@
     // --------------------------------------------------
     function populateSubjectFilter(rows) {
       if (!resultsSubjectFilter) return;
-      const current = resultsSubjectFilter.value;
-      const subjects = [...new Set(rows.map((r) => String(r.subject || "").trim()).filter(Boolean))].sort();
 
-      resultsSubjectFilter.innerHTML = `<option value="">All Subjects</option>` +
+      const current = resultsSubjectFilter.value;
+      const subjects = [
+        ...new Set(rows.map((r) => String(r.subject || "").trim()).filter(Boolean))
+      ].sort();
+
+      resultsSubjectFilter.innerHTML =
+        `<option value="">All Subjects</option>` +
         subjects.map((s) => `<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join("");
 
       resultsSubjectFilter.value = current && subjects.includes(current) ? current : "";
@@ -546,8 +577,13 @@
       if (term) {
         rows = rows.filter((r) =>
           [
-            r.username, r.fullname, r.email, r.subject,
-            r.status, r.submitted_at, r.score
+            r.username,
+            r.fullname,
+            r.email,
+            r.subject,
+            r.status,
+            r.submitted_at,
+            r.score
           ].join(" ").toLowerCase().includes(term)
         );
       }
@@ -608,12 +644,15 @@
 
     function updateResultsMeta() {
       const totalPages = Math.max(1, Math.ceil(filteredResults.length / pageSize));
+
       if (resultsMetaText) {
         resultsMetaText.textContent = `${filteredResults.length} filtered result(s) • ${latestResults.length} total`;
       }
+
       if (resultsPageLabel) {
         resultsPageLabel.textContent = `Page ${currentPage} of ${totalPages}`;
       }
+
       if (resultsPrevPageBtn) resultsPrevPageBtn.disabled = currentPage <= 1;
       if (resultsNextPageBtn) resultsNextPageBtn.disabled = currentPage >= totalPages;
     }
@@ -677,6 +716,7 @@
 
     function viewSingleResult(row) {
       openModal(resultsModal);
+
       resultsModalBody.innerHTML = `
         <div class="card" style="box-shadow:none;border:1px solid #e6edf5;">
           <div class="card-head">
@@ -720,6 +760,7 @@
         showToast("No email found for this candidate", "error");
         return;
       }
+
       try {
         await navigator.clipboard.writeText(row.email);
         showToast("Candidate email copied", "success");
@@ -736,13 +777,91 @@
       printRows([row], `EMIS Result Summary - ${row.fullname || row.username || "Candidate"}`);
     }
 
-    function deleteSingleRowFromUI(row) {
-      const key = getResultKey(row);
-      latestResults = latestResults.filter((r) => getResultKey(r) !== key);
-      filteredResults = filteredResults.filter((r) => getResultKey(r) !== key);
-      selectedResultKeys.delete(key);
-      applyResultFilters();
-      showToast("Result removed from current view", "info");
+    async function deleteSingleRow(row) {
+      if (!row) return;
+
+      const candidateName = row.fullname || row.username || "this candidate";
+      const ok = window.confirm(`Delete result for ${candidateName}? This cannot be undone.`);
+      if (!ok) return;
+
+      try {
+        const res = await fetch("/delete_result", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            username: row.username || "",
+            subject: row.subject || "",
+            submitted_at: row.submitted_at || "",
+            email: row.email || ""
+          })
+        });
+
+        const data = await res.json().catch(() => ({}));
+
+        if (!res.ok || data.success === false) {
+          throw new Error(data.message || data.error || "Failed to delete result");
+        }
+
+        const key = getResultKey(row);
+        latestResults = latestResults.filter((r) => getResultKey(r) !== key);
+        filteredResults = filteredResults.filter((r) => getResultKey(r) !== key);
+        selectedResultKeys.delete(key);
+
+        applyResultFilters();
+        updateStats(latestResults, latestCredentials);
+        updateBulkBar();
+        syncResultsViews();
+
+        showToast(data.message || "Result deleted successfully", "success");
+      } catch (err) {
+        console.error("[dashboard_results] deleteSingleRow failed:", err);
+        showToast(err.message || "Failed to delete result", "error");
+      }
+    }
+
+    async function deleteSelectedRows(rows) {
+      if (!rows.length) {
+        showToast("No selected results to delete", "error");
+        return;
+      }
+
+      const ok = window.confirm(`Delete ${rows.length} selected result(s)? This cannot be undone.`);
+      if (!ok) return;
+
+      try {
+        const res = await fetch("/delete_results_bulk", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ results: rows })
+        });
+
+        const data = await res.json().catch(() => ({}));
+
+        if (!res.ok || data.success === false) {
+          throw new Error(data.message || data.error || "Bulk delete failed");
+        }
+
+        const deletedKeys = new Set(rows.map(getResultKey));
+
+        latestResults = latestResults.filter((r) => !deletedKeys.has(getResultKey(r)));
+        filteredResults = filteredResults.filter((r) => !deletedKeys.has(getResultKey(r)));
+
+        deletedKeys.forEach((key) => selectedResultKeys.delete(key));
+
+        applyResultFilters();
+        updateStats(latestResults, latestCredentials);
+        updateBulkBar();
+        syncResultsViews();
+
+        showToast(data.message || "Selected results deleted successfully", "success");
+      } catch (err) {
+        console.error("[dashboard_results] deleteSelectedRows failed:", err);
+        showToast(err.message || "Failed to delete selected results", "error");
+      }
     }
 
     async function sendRowsToEda(rows) {
@@ -861,6 +980,7 @@
           ${pageRows.map((r) => {
             const key = getResultKey(r);
             const selected = selectedResultKeys.has(key) ? "checked" : "";
+
             return `
               <tr data-result-key="${escapeHtml(key)}">
                 <td>
@@ -900,9 +1020,11 @@
 
       const pageKeys = pageRows.map(getResultKey);
       const selectAllPage = document.getElementById("resultsSelectAllPage");
+
       if (selectAllPage) {
         const allChecked = pageKeys.length > 0 && pageKeys.every((k) => selectedResultKeys.has(k));
         selectAllPage.checked = allChecked;
+
         selectAllPage.addEventListener("change", (e) => {
           pageKeys.forEach((k) => {
             if (e.target.checked) selectedResultKeys.add(k);
@@ -955,9 +1077,9 @@
       });
 
       resultsTable.querySelectorAll(".action-delete").forEach((btn) => {
-        btn.addEventListener("click", () => {
+        btn.addEventListener("click", async () => {
           const row = latestResults.find((r) => getResultKey(r) === btn.dataset.resultKey);
-          if (row) deleteSingleRowFromUI(row);
+          if (row) await deleteSingleRow(row);
         });
       });
 
@@ -971,7 +1093,9 @@
       if (statTotalStudents) statTotalStudents.textContent = String(creds.length);
 
       if (statActiveExams) {
-        const subjects = new Set(creds.map((c) => String(c.subject || "").trim()).filter(Boolean));
+        const subjects = new Set(
+          creds.map((c) => String(c.subject || "").trim()).filter(Boolean)
+        );
         statActiveExams.textContent = String(subjects.size);
       }
 
@@ -981,8 +1105,9 @@
       }
 
       if (statAvg) {
-        if (!results.length) statAvg.textContent = "--";
-        else {
+        if (!results.length) {
+          statAvg.textContent = "--";
+        } else {
           const total = results.reduce((sum, r) => sum + parseScore(r.score), 0);
           statAvg.textContent = `${Math.round(total / results.length)}%`;
         }
@@ -990,9 +1115,37 @@
     }
 
     function updateFeeds(results = []) {
-      if (!results.length) return;
+      if (!results.length) {
+        if (notificationsPanel) {
+          notificationsPanel.innerHTML = `
+            <div class="empty-state compact-empty">
+              <div class="empty-state-icon"><i class="fas fa-bell-slash"></i></div>
+              <p class="muted">No notifications yet</p>
+            </div>
+          `;
+        }
+
+        if (notificationsPanelFull) {
+          notificationsPanelFull.innerHTML = "<p class='muted'>No notifications yet</p>";
+        }
+
+        if (recentActivity) {
+          recentActivity.innerHTML = `
+            <div class="empty-state compact-empty">
+              <div class="empty-state-icon"><i class="fas fa-wave-square"></i></div>
+              <p class="muted">No activity logged</p>
+            </div>
+          `;
+        }
+
+        if (recentActivityFull) {
+          recentActivityFull.innerHTML = "<p class='muted'>No activity logged</p>";
+        }
+        return;
+      }
 
       const latest = results[0];
+
       const notificationHtml = `
         <div class="mini-feed-item">
           <div class="mini-feed-icon"><i class="fas fa-square-poll-vertical"></i></div>
@@ -1061,11 +1214,12 @@
 
         latestResults = rows;
         filteredResults = [...rows];
+        selectedResultKeys.clear();
         currentPage = 1;
 
         target.innerHTML = renderResultsTable(rows);
-        const modalSearch = target.querySelector("#searchResultsDynamic");
-        enableSearch(modalSearch, target);
+        const dynamicSearch = target.querySelector("#searchResultsDynamic");
+        enableSearch(dynamicSearch);
 
         populateSubjectFilter(latestResults);
         applyResultFilters();
@@ -1094,20 +1248,32 @@
 
     dashboardExportCredsBtn?.addEventListener("click", (e) => {
       e.preventDefault();
-      if (!latestCredentials.length) return showToast("No credentials to export", "error");
-      downloadBlob("credentials_export.csv", [
-        "username,password,subject,issued",
-        ...latestCredentials.map((r) =>
-          `"${r.username || ""}","${r.password || ""}","${r.subject || ""}","${r.issued ? "Yes" : "No"}"`
-        )
-      ].join("\n"), "text/csv;charset=utf-8");
+
+      if (!latestCredentials.length) {
+        showToast("No credentials to export", "error");
+        return;
+      }
+
+      downloadBlob(
+        "credentials_export.csv",
+        [
+          "username,password,subject,issued",
+          ...latestCredentials.map((r) =>
+            `"${r.username || ""}","${r.password || ""}","${r.subject || ""}","${r.issued ? "Yes" : "No"}"`
+          )
+        ].join("\n"),
+        "text/csv;charset=utf-8"
+      );
+
       showToast("credentials_export.csv exported", "success");
     });
 
     dashboardClearCredsBtn?.addEventListener("click", (e) => {
       e.preventDefault();
       latestCredentials = [];
-      if (credentialsWrapper) credentialsWrapper.innerHTML = "<p class='muted'>No credentials data yet.</p>";
+      if (credentialsWrapper) {
+        credentialsWrapper.innerHTML = "<p class='muted'>No credentials data yet.</p>";
+      }
       updateStats(latestResults, latestCredentials);
       showToast("Credentials table cleared", "info");
     });
@@ -1136,9 +1302,14 @@
       latestResults = [];
       filteredResults = [];
       selectedResultKeys.clear();
-      if (resultsWrapper) resultsWrapper.innerHTML = "<p class='muted'>No results yet.</p>";
+
+      if (resultsWrapper) {
+        resultsWrapper.innerHTML = "<p class='muted'>No results yet.</p>";
+      }
+
       renderResultsPanelTable();
       updateStats(latestResults, latestCredentials);
+      updateFeeds(latestResults);
       updateBulkBar();
       showToast("Results table cleared", "info");
     });
@@ -1158,11 +1329,17 @@
 
     exportCredsModal?.addEventListener("click", (e) => {
       e.preventDefault();
+
       const table = credsModalBody?.querySelector("table");
-      if (!table) return showToast("No credentials to export", "error");
+      if (!table) {
+        showToast("No credentials to export", "error");
+        return;
+      }
+
       const rows = Array.from(table.querySelectorAll("tr")).map((tr) =>
         Array.from(tr.children).map((td) => `"${td.innerText.replaceAll('"', '""')}"`).join(",")
       );
+
       downloadBlob("credentials_export.csv", rows.join("\n"), "text/csv;charset=utf-8");
       showToast("credentials_export.csv exported", "success");
     });
@@ -1197,6 +1374,15 @@
       e.preventDefault();
       await fetchResults(resultsWrapper);
       showToast("Results refreshed", "success");
+    });
+
+    panelDeleteSelectedResultsBtn?.addEventListener("click", async (e) => {
+      e.preventDefault();
+      await deleteSelectedRows(getSelectedRows());
+    });
+
+    resultsBulkDeleteBtn?.addEventListener("click", async () => {
+      await deleteSelectedRows(getSelectedRows());
     });
 
     panelCompactToggleBtn?.addEventListener("click", (e) => {
@@ -1244,12 +1430,14 @@
 
     panelResetResultsFiltersBtn?.addEventListener("click", (e) => {
       e.preventDefault();
+
       if (panelSearchResults) panelSearchResults.value = "";
       if (resultsSubjectFilter) resultsSubjectFilter.value = "";
       if (resultsStatusFilter) resultsStatusFilter.value = "";
       if (resultsScoreFilter) resultsScoreFilter.value = "";
       if (resultsSortBy) resultsSortBy.value = "submitted_desc";
       if (resultsPageSize) resultsPageSize.value = "20";
+
       currentPage = 1;
       applyResultFilters();
       showToast("Filters reset", "success");
@@ -1343,7 +1531,7 @@
 
       resultsModalBody.innerHTML = renderResultsTable(results);
       const search = resultsModalBody.querySelector("#searchResultsDynamic");
-      enableSearch(search, resultsModalBody);
+      enableSearch(search);
     };
 
     // --------------------------------------------------
@@ -1353,6 +1541,6 @@
     fetchCredentials(credentialsWrapper);
     fetchResults(resultsWrapper);
 
-    console.log("[dashboard_results] v5 initialized");
+    console.log("[dashboard_results] v6 initialized");
   });
 })();

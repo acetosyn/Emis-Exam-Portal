@@ -604,27 +604,96 @@ def api_exam_results():
 
 
 # -------------------- DELETE SINGLE RESULT --------------------
+# -------------------- DELETE SINGLE RESULT --------------------
 @app.route("/delete_result", methods=["POST"])
 def delete_result():
-    """Delete a specific result permanently (from DB and CSV)."""
+    """Delete one specific result permanently using a composite identity."""
     if session.get("user_type") != "admin":
         return jsonify({"error": "Unauthorized"}), 403
 
-    data = request.json or {}
-    username = data.get("username")
+    data = request.get_json(silent=True) or {}
+
+    username = (data.get("username") or "").strip()
+    subject = (data.get("subject") or "").strip()
+    submitted_at = (data.get("submitted_at") or "").strip()
+    email = (data.get("email") or "").strip()
+
     if not username:
-        return jsonify({"error": "Username required"}), 400
+        return jsonify({"success": False, "message": "Username required"}), 400
 
     try:
-        ok = user_exam.delete_result(username)
-        if ok:
-            print(f"✅ Deleted result for {username}")
-            return jsonify({"success": True, "message": f"Deleted result for {username}"})
-        else:
-            return jsonify({"success": False, "message": "Result not found"})
+        deleted = user_exam.delete_result(
+            username=username,
+            subject=subject,
+            submitted_at=submitted_at,
+            email=email
+        )
+
+        if deleted:
+            app.logger.info(
+                f"Deleted result -> username={username}, subject={subject}, submitted_at={submitted_at}, email={email}"
+            )
+            return jsonify({
+                "success": True,
+                "message": f"Result for {username} deleted successfully"
+            })
+
+        return jsonify({
+            "success": False,
+            "message": "Result not found"
+        }), 404
+
     except Exception as e:
-        print(f"⚠️ Delete result error: {e}")
-        return jsonify({"success": False, "message": str(e)})
+        app.logger.exception(f"Delete result error: {e}")
+        return jsonify({
+            "success": False,
+            "message": str(e)
+        }), 500
+
+
+
+# -------------------- DELETE MULTIPLE RESULTS --------------------
+@app.route("/delete_results_bulk", methods=["POST"])
+def delete_results_bulk():
+    """Delete multiple selected results permanently."""
+    if session.get("user_type") != "admin":
+        return jsonify({"error": "Unauthorized"}), 403
+
+    data = request.get_json(silent=True) or {}
+    results = data.get("results", [])
+
+    if not isinstance(results, list) or not results:
+        return jsonify({
+            "success": False,
+            "message": "No results provided"
+        }), 400
+
+    deleted_count = 0
+
+    try:
+        for row in results:
+            ok = user_exam.delete_result(
+                username=(row.get("username") or "").strip(),
+                subject=(row.get("subject") or "").strip(),
+                submitted_at=(row.get("submitted_at") or "").strip(),
+                email=(row.get("email") or "").strip()
+            )
+            if ok:
+                deleted_count += 1
+
+        return jsonify({
+            "success": True,
+            "deleted": deleted_count,
+            "requested": len(results),
+            "message": f"{deleted_count} result(s) deleted successfully"
+        })
+
+    except Exception as e:
+        app.logger.exception(f"Bulk delete results error: {e}")
+        return jsonify({
+            "success": False,
+            "message": str(e)
+        }), 500
 
 
 # -------------------- CLEAR RESULTS (ALL / SUBJECT / DATE RANGE) --------------------
